@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+//TODO: 补充命名空间
+
+// 区域检测
+message RegionDetection {
+    // 是否在基地内
+    bool in_base = 1;
+}

@@ -1,0 +1,7 @@
+*.cpp
+*.c
+*.h
+*.cs
+*.bundle
+*.tar.gz
+output
