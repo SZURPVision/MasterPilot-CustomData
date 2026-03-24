@@ -53,12 +53,20 @@
 
 ### 电控(C)
 
-1. 安装python3环境
+1. 安装python3环境, 以及python库`types-protobuf`
+
+```bash
+# 提前装好python3
+
+pip install types-protobuf
+
+
+```
 
 2. 生成代码
 
 ```shell
-python3 nanopb/generator/nanopb_generator.py -I src -D [生成位置] src/*.proto
+python3 nanopb/generator/nanopb_generator.py src/*.proto -I src -D [生成位置]
 ```
 
 3. 工程配置：
