@@ -18,7 +18,7 @@
 	
 	- 手动[下载](https://github.com/protocolbuffers/protobuf/releases) `protoc`, 并加入`path`
 
-	- Debian系可使用`apt install protoc`安装
+	- Debian系可使用`apt install protobuf-compiler`安装
 	
 	- RedHat系可使用`dnf install protoc`安装
 
