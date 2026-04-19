@@ -1,9 +1,57 @@
-syntax = "proto3";
+syntax="proto3";
+option csharp_namespace="MasterPilot.Communicator.ProtoMessages";
 
-//TODO: 补充命名空间
-
-// 区域检测
-message RegionDetection {
-    // 是否在基地内
-    bool in_base = 1;
+enum VisionModeT{
+    VISION_MODE_NONE = 0;
+    VISION_MODE_CATCH = 1;   // 自瞄打击 (原 mode 1 或 5)
+    VISION_MODE_DAFU = 2;    // 打符模式2
+    VISION_MODE_DAFU_3 = 3;   // 打符模式3
 }
+// 腿长模式枚举
+enum LegModeT{
+    LEG_MODE_LOW = 0;
+    LEG_MODE_MID = 1;
+    LEG_MODE_HIGH = 2;
+}
+// 底盘姿态数据
+message ChassisAttitude{
+    float pitch_err=1;   // 俯仰角误差 (rad)
+    float theta_err=2;   // 摆角误差 (rad)
+    float yaw_offset=3;  // 底盘方位角偏移 (rad)
+}
+// 底盘与运动状态 (Chassis & Movement)
+message ChassisDisplayData {
+    bool top_flag = 1;            // 陀螺模式
+    bool upstep_flag = 2;         // 上台阶模式
+    bool fly_flag = 3;            // 飞坡模式
+    bool jump_flag = 4;           // 跳跃模式
+    float car_speed = 5;          // 车体线速度 (m/s)
+    LegModeT leg_mode = 6;        // 腿部模式
+    ChassisAttitude chassis = 7;  // 底盘姿态数据
+}
+// 发射机构与云台状态 (Shooter & Gimbal)
+message WeaponDisplayData {
+    bool fric_on = 1;             // 摩擦轮开启
+    bool fric_online = 2;         // 摩擦轮通讯在线
+    int32 bullet_remain = 3;      // 17mm 弹丸剩余数量
+    float gimbal_pitch = 4;       // 云台 pitch 角度 (rad)
+    float gimbal_yaw=5;
+}
+
+// 视觉与自瞄状态 (Vision & Auto-Aim)
+message VisionDisplayData {
+    bool vision_active = 1;       // 视觉功能总激活 (Auto_Catch / Auto_Dafu)
+    bool target_found = 2;        // 当前发现目标
+    VisionModeT vision_mode = 3;  
+}
+
+// 能源与超电状态 (Power & SuperCap)
+message PowerDisplayData {
+    float cap_voltage_ratio = 2;  // 电容电压比 (V^2 / 24^2)
+}
+message RobotDisplayData {
+    optional WeaponDisplayData weapon = 1;
+    optional ChassisDisplayData chassis = 2;
+    optional VisionDisplayData vision = 3;
+    optional PowerDisplayData power = 4;
+} 
