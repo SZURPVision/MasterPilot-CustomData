@@ -2,7 +2,7 @@ syntax = "proto3";
 
 option csharp_namespace = "MasterPilot.Communicator.ProtoMessages.Drone";
 
-import "common/model.proto";
+import "model.proto";
 
 // 云台状态
 message GimbalInfo {
