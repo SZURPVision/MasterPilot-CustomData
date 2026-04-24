@@ -11,6 +11,23 @@
 | `CustomControl` | 自定义客户端 | 75Hz | 30Byte |
 | `CustomByteBlock` | 机器人 | 50Hz | 300Byte |
 
+## 速通教学
+
+### C
+添加submodule:
+```
+git submodule add [仓库url] --recursive
+```
+
+添加文件:
+- `generated/c`
+- `nanopb`
+
+如果是`C99`编译器, 添加宏`PB_C99_STATIC_ASSERT`
+
+编译, 根据自己对应的兵种做适配
+
+
 
 ## 环境配置
 
@@ -80,6 +97,8 @@ python3 nanopb/generator/nanopb_generator.py src/*.proto -I src -D [生成位置
 
 3. 工程配置：
 将生成的 .pb.c 和 .pb.h 文件，以及本仓库 nanopb/ 目录下的核心依赖文件（pb.h, pb_common.h, pb_common.c, pb_encode.h, pb_encode.c, pb_decode.h, pb_decode.c）一并加入到工程中进行编译.
+
+如果使用C99, 记得添加宏`PB_C99_STATIC_ASSERT`
 
 **推荐将代码生成到本仓库/generated, 再通过软链接引用**
 
