@@ -5,3 +5,8 @@
 *.bundle
 *.tar.gz
 output
+.envrc
+.direnv
+result
+nix-env/result
+.codex

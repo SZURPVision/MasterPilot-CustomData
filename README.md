@@ -2,6 +2,8 @@
 
 本仓库基于`Protobuf`开发, 用于约定自定义客户端通信协议中的自定义数据.
 
+前排提示: 生成代码已纳入版本控制, 直接submodule拿代码就能用, 不用配环境
+
 通信协议中有几处自定义数据:
 
 | 消息名 | 发送方 | 频率 | 大小限制 |
@@ -11,6 +13,13 @@
 
 
 ## 环境配置
+
+### Nix（推荐）
+确保装有direnv和nix, 以及vscode的direnv插件, 在项目根目录执行
+```bash
+ln -s .envrc.template .envrc
+direnv allow
+```
 
 ### 通用前置
 
@@ -72,7 +81,7 @@ python3 nanopb/generator/nanopb_generator.py src/*.proto -I src -D [生成位置
 3. 工程配置：
 将生成的 .pb.c 和 .pb.h 文件，以及本仓库 nanopb/ 目录下的核心依赖文件（pb.h, pb_common.h, pb_common.c, pb_encode.h, pb_encode.c, pb_decode.h, pb_decode.c）一并加入到工程中进行编译.
 
-**推荐将代码生成到本仓库/output, 再通过软链接引用**
+**推荐将代码生成到本仓库/generated, 再通过软链接引用**
 
 ### 视觉(C++)
 
