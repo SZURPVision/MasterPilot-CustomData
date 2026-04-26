@@ -2,87 +2,59 @@ syntax = "proto3";
 
 option csharp_namespace = "MasterPilot.Communicator.ProtoMessages.Drone";
 
+enum PidMode {
+  UNKNOWN = 0;
+  MEC_MODE = 1;    // 机械中值模式
+  GYRO_MODE = 2;   // 陀螺仪模式
+  VISION_MODE = 3; // 视觉自瞄模式
+}
+
+enum VisionMode {
+  OFFLINE = 0;
+  NORMAL = 1;  // 普通模式
+  LIT_BUF = 2; // 小能量机关
+  BIG_BUF = 3; // 大能量机关
+  OUTPOST = 4; // 前哨站
+  HERO = 5;    // 英雄机器人
+  BASE = 6;    // 基地
+}
+enum LampCmd {
+  LAMP_CMD_UNKNOWN = 0;
+  RC_OFFLINE_CMD = 1;
+  AWAIT_CMD = 2;
+  BASE_CMD = 3;
+  OUTPOST_CMD = 4;
+  BUF_CMD = 5;
+  FORWARD_CMD = 6;
+  BACK_CMD = 7;
+  LEFT_CMD = 8;
+  RIGHT_CMD = 9;
+  CW_SPIN_CMD = 10;  // 顺时针小陀螺
+  CCW_SPIN_CMD = 11; // 逆时针小陀螺
+  UP_CMD = 12;
+  DOWN_CMD = 13;
+}
+
+enum SpinState {
+  SPIN_UNKNOWN = 0;
+  DEV_SPIN = 1; // 摩擦轮旋转中
+}
 // 云台状态
 message GimbalInfo {
-  // 云台 PID 控制模式
-  enum YawPidMode {
-    YAW_PID_UNKNOWN = 0;
-    MEC_MODE = 1;    // 机械中值模式
-    GYRO_MODE = 2;   // 陀螺仪模式
-    VISION_MODE = 3; // 视觉自瞄模式
-  }
   float yaw = 1;
   float pitch = 2;
-  YawPidMode yaw_pid_mode = 3;
+  PidMode pid_mode = 3; // 云台 PID 控制模式
 }
 
 // 视觉状态
 message VisionInfo {
-  // 视觉发送给下位机的目标模式
-  enum VisionMode {
-    OFFLINE = 0;
-    NORMAL = 1;  // 普通模式
-    LIT_BUF = 2; // 小能量机关
-    BIG_BUF = 3; // 大能量机关
-    OUTPOST = 4; // 前哨站
-    HERO = 5;    // 英雄机器人
-    BASE = 6;    // 基地
-  }
-
-  VisionMode mode = 1;
+  VisionMode mode = 1;   // 视觉发送给下位机的目标模式
   bool found_target = 2; // 自瞄是否锁上目标, 与模式对应
-}
-
-// 无人机/底盘状态
-message DroneInfo {
-  // 整机运行模式
-  enum DroneMode {
-    DRONE_MODE_UNKNOWN = 0;
-    OFFLINE_DRONE = 1; // 离线模式
-    INIT_DRONE = 2;    // 初始化模式
-  }
-
-  DroneMode drone_mode = 1;
-}
-
-// 发射机构状态
-message ShooterInfo {
-  // 摩擦轮旋转状态
-  enum SpinState {
-    SPIN_UNKNOWN = 0;
-    DEV_SPIN = 1; // 摩擦轮旋转中
-  }
-
-  SpinState fric_state = 1;
-}
-
-// 灯效/遥控指令状态
-message LampInfo {
-  // 灯效及动作指令
-  enum LampCmd {
-    LAMP_CMD_UNKNOWN = 0;
-    RC_OFFLINE_CMD = 1;
-    AWAIT_CMD = 2;
-    BASE_CMD = 3;
-    OUTPOST_CMD = 4;
-    BUF_CMD = 5;
-    FORWARD_CMD = 6;
-    BACK_CMD = 7;
-    LEFT_CMD = 8;
-    RIGHT_CMD = 9;
-    CW_SPIN_CMD = 10;  // 顺时针小陀螺
-    CCW_SPIN_CMD = 11; // 逆时针小陀螺
-    UP_CMD = 12;
-    DOWN_CMD = 13;
-  }
-
-  LampCmd lamp_cmd = 1;
 }
 
 message DroneCustomData {
   optional GimbalInfo gimbal_data = 1;
   optional VisionInfo vision_data = 2;
-  optional DroneInfo drone_data = 3;
-  optional ShooterInfo shoot_data = 4;
-  optional LampInfo lamp_data = 5;
+  optional SpinState shoot_data = 3;
+  optional LampCmd lamp_data = 4;
 }
