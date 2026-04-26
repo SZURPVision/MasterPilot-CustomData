@@ -11,22 +11,16 @@ message GimbalInfo {
     GYRO_MODE = 2;   // 陀螺仪模式
     VISION_MODE = 3; // 视觉自瞄模式
   }
-
-  message BaseInfo {
-    float yaw_imu_angle = 1;
-    float pitch_imu_angle = 2;
-    float yaw_mec_angle = 3;
-  }
-
-  BaseInfo base_info = 1;
-  YawPidMode yaw_pid_mode = 2;
+  float yaw = 1;
+  float pitch = 2;
+  YawPidMode yaw_pid_mode = 3;
 }
 
 // 视觉状态
 message VisionInfo {
   // 视觉发送给下位机的目标模式
   enum VisionMode {
-    VISION_MODE_UNKNOWN = 0;
+    OFFLINE = 0;
     NORMAL = 1;  // 普通模式
     LIT_BUF = 2; // 小能量机关
     BIG_BUF = 3; // 大能量机关
@@ -35,9 +29,8 @@ message VisionInfo {
     BASE = 6;    // 基地
   }
 
-  bool is_find_buff = 1;   // 是否找到符
-  bool is_find_target = 2; // 是否找到目标
-  bool vision_online = 3;
+  VisionMode mode = 1;
+  bool found_target = 2; // 自瞄是否锁上目标, 与模式对应
 }
 
 // 无人机/底盘状态
@@ -60,9 +53,7 @@ message ShooterInfo {
     DEV_SPIN = 1; // 摩擦轮旋转中
   }
 
-  message FricInfo { SpinState spin_state = 1; }
-
-  FricInfo fric_all = 1;
+  SpinState fric_state = 1;
 }
 
 // 灯效/遥控指令状态
@@ -89,9 +80,9 @@ message LampInfo {
 }
 
 message DroneCustomData {
-  GimbalInfo gimbal_data = 1;
-  VisionInfo vision_data = 2;
-  DroneInfo drone_data = 3;
-  ShooterInfo shoot_data = 4;
-  LampInfo lamp_data = 5;
+  optional GimbalInfo gimbal_data = 1;
+  optional VisionInfo vision_data = 2;
+  optional DroneInfo drone_data = 3;
+  optional ShooterInfo shoot_data = 4;
+  optional LampInfo lamp_data = 5;
 }
