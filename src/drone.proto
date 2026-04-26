@@ -2,15 +2,13 @@ syntax = "proto3";
 
 option csharp_namespace = "MasterPilot.Communicator.ProtoMessages.Drone";
 
-import "model.proto";
-
 // 云台状态
 message GimbalInfo {
   // 云台 PID 控制模式
   enum YawPidMode {
     YAW_PID_UNKNOWN = 0;
-    MEC_MODE = 1; // 机械中值模式
-    GYRO_MODE = 2; // 陀螺仪模式
+    MEC_MODE = 1;    // 机械中值模式
+    GYRO_MODE = 2;   // 陀螺仪模式
     VISION_MODE = 3; // 视觉自瞄模式
   }
 
@@ -19,7 +17,7 @@ message GimbalInfo {
     float pitch_imu_angle = 2;
     float yaw_mec_angle = 3;
   }
-  
+
   BaseInfo base_info = 1;
   YawPidMode yaw_pid_mode = 2;
 }
@@ -29,17 +27,17 @@ message VisionInfo {
   // 视觉发送给下位机的目标模式
   enum VisionMode {
     VISION_MODE_UNKNOWN = 0;
-    NORMAL = 1; // 普通模式
+    NORMAL = 1;  // 普通模式
     LIT_BUF = 2; // 小能量机关
     BIG_BUF = 3; // 大能量机关
     OUTPOST = 4; // 前哨站
-    HERO = 5; // 英雄机器人
-    BASE = 6; // 基地
+    HERO = 5;    // 英雄机器人
+    BASE = 6;    // 基地
   }
 
-	bool is_find_buff = 1; //是否找到符
-	bool is_find_target = 2; //是否找到目标
-  DeviceState vision_state = 3;
+  bool is_find_buff = 1;   // 是否找到符
+  bool is_find_target = 2; // 是否找到目标
+  bool vision_online = 3;
 }
 
 // 无人机/底盘状态
@@ -48,9 +46,9 @@ message DroneInfo {
   enum DroneMode {
     DRONE_MODE_UNKNOWN = 0;
     OFFLINE_DRONE = 1; // 离线模式
-    INIT_DRONE = 2; // 初始化模式
+    INIT_DRONE = 2;    // 初始化模式
   }
-  
+
   DroneMode drone_mode = 1;
 }
 
@@ -62,10 +60,8 @@ message ShooterInfo {
     DEV_SPIN = 1; // 摩擦轮旋转中
   }
 
-  message FricInfo {
-    SpinState spin_state = 1; 
-  }
-  
+  message FricInfo { SpinState spin_state = 1; }
+
   FricInfo fric_all = 1;
 }
 
@@ -83,12 +79,12 @@ message LampInfo {
     BACK_CMD = 7;
     LEFT_CMD = 8;
     RIGHT_CMD = 9;
-    CW_SPIN_CMD = 10; // 顺时针小陀螺
+    CW_SPIN_CMD = 10;  // 顺时针小陀螺
     CCW_SPIN_CMD = 11; // 逆时针小陀螺
     UP_CMD = 12;
     DOWN_CMD = 13;
   }
-  
+
   LampCmd lamp_cmd = 1;
 }
 

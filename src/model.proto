@@ -1,9 +1,3 @@
 syntax = "proto3";
 
 option csharp_namespace = "MasterPilot.Communicator.ProtoMessages.Common";
-
-// 通用设备在线状态
-enum DeviceState {
-  DEVICE_STATE_OFFLINE = 0;
-  DEVICE_STATE_ONLINE = 1;
-}

@@ -1,12 +1,10 @@
 syntax = "proto3";
 option csharp_namespace = "MasterPilot.Communicator.ProtoMessages.Infantry";
 
-import "model.proto";
-
 enum VisionModeT {
   VISION_MODE_NONE = 0;
-  VISION_MODE_CATCH = 1; // 自瞄打击 (原 mode 1 或 5)
-  VISION_MODE_DAFU = 2; // 打符模式2
+  VISION_MODE_CATCH = 1;  // 自瞄打击 (原 mode 1 或 5)
+  VISION_MODE_DAFU = 2;   // 打符模式2
   VISION_MODE_DAFU_3 = 3; // 打符模式3
 }
 
@@ -23,26 +21,26 @@ enum LegModeT {
 }
 // 底盘姿态数据
 message ChassisAttitude {
-  float pitch_err = 1; // 俯仰角误差 (rad)
-  float theta_err = 2; // 摆角误差 (rad)
+  float pitch_err = 1;  // 俯仰角误差 (rad)
+  float theta_err = 2;  // 摆角误差 (rad)
   float yaw_offset = 3; // 底盘方位角偏移 (rad)
 }
 // 底盘与运动状态 (Chassis & Movement)
 message ChassisDisplayData {
-  bool top_flag = 1; // 陀螺模式
-  bool upstep_flag = 2; // 上台阶模式
-  bool fly_flag = 3; // 飞坡模式
-  bool jump_flag = 4; // 跳跃模式
-  float car_speed = 5; // 车体线速度 (m/s)
-  LegModeT leg_mode = 6; // 腿部模式
+  bool top_flag = 1;           // 陀螺模式
+  bool upstep_flag = 2;        // 上台阶模式
+  bool fly_flag = 3;           // 飞坡模式
+  bool jump_flag = 4;          // 跳跃模式
+  float car_speed = 5;         // 车体线速度 (m/s)
+  LegModeT leg_mode = 6;       // 腿部模式
   ChassisAttitude chassis = 7; // 底盘姿态数据
 }
 // 发射机构与云台状态 (Shooter & Gimbal)
 message WeaponDisplayData {
-  bool fric_on = 1; // 摩擦轮开启
-  DeviceState fric_online = 2; // 摩擦轮通讯在线
+  bool fric_on = 1;        // 摩擦轮开启
+  bool fric_online = 2;    // 摩擦轮通讯在线
   int32 bullet_remain = 3; // 17mm 弹丸剩余数量
-  float gimbal_pitch = 4; // 云台 pitch 角度 (rad)
+  float gimbal_pitch = 4;  // 云台 pitch 角度 (rad)
   float gimbal_yaw = 5;
 }
 
