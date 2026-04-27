@@ -3,7 +3,7 @@ syntax = "proto3";
 option csharp_namespace = "MasterPilot.Communicator.ProtoMessages.Drone";
 
 enum PidMode {
-  UNKNOWN = 0;
+  INACTIVE = 0;
   MEC_MODE = 1;    // 机械中值模式
   GYRO_MODE = 2;   // 陀螺仪模式
   VISION_MODE = 3; // 视觉自瞄模式
@@ -19,7 +19,7 @@ enum VisionMode {
   BASE = 6;    // 基地
 }
 enum LampCmd {
-  LAMP_CMD_UNKNOWN = 0;
+  IDLE = 0;
   RC_OFFLINE_CMD = 1;
   AWAIT_CMD = 2;
   BASE_CMD = 3;
@@ -35,10 +35,6 @@ enum LampCmd {
   DOWN_CMD = 13;
 }
 
-enum SpinState {
-  SPIN_UNKNOWN = 0;
-  DEV_SPIN = 1; // 摩擦轮旋转中
-}
 // 云台状态
 message GimbalInfo {
   float yaw = 1;
@@ -55,6 +51,6 @@ message VisionInfo {
 message DroneCustomData {
   optional GimbalInfo gimbal_data = 1;
   optional VisionInfo vision_data = 2;
-  optional SpinState shoot_data = 3;
+  optional bool fric_on = 3;
   optional LampCmd lamp_data = 4;
 }
