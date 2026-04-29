@@ -70,10 +70,7 @@ message GimbalVisionState {
 message RobotStatus {
   bool p3_lock = 1;                  // P3锁定标志
   bool robot_init_ok = 2;            // 初始化完成
-  bool controlled_by_controller = 3; // 受控模式
-  bool radar_warning = 4;            // 飞镖/雷达预警 (if_dart_comming)
-  uint32 robot_id = 5;               // 机器人ID
-  uint32 robot_camp = 6;             // 机器人阵营
+  bool controlled_by_controller = 3; // 是否被遥控器控制
 }
 
 // 发送给自定义客户端的大包
@@ -84,6 +81,6 @@ message EngineerDataPacketToClient {
 
   optional ChassisState chassis = 5;
   optional ArmState arm = 6;
-  optional GimbalVisionState vision = 7;
+  // optional GimbalVisionState vision = 7; //工程没自瞄了
   optional RobotStatus status = 8;
 }
