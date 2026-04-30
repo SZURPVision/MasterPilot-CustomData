@@ -22,14 +22,6 @@ enum CtrlMode {
   CTRL_CONTROLLER = 3;
 }
 
-// 机器人移动模式
-enum MoveMode {
-  MOVE_NONE = 0;
-  MOVE_NORMAL = 1;
-  MOVE_CLIMBING = 2;
-  MOVE_DOWNSTAIR = 3;
-}
-
 // 底盘实时数据
 message ChassisState {
   float speed_x = 1;    // X轴速度
@@ -54,8 +46,8 @@ message ArmState {
   bool grip_close = 9;       // 夹爪闭合标志位
 }
 
-// 云台/视觉相关状态
-message GimbalVisionState {
+// 视觉相关状态
+message VisionState {
   float visual_yaw_offset = 1; // 视觉补偿Yaw (angle_visualyaw)
   bool is_found_target = 2;    // 是否发现目标 (矿仓等)
   float target_atti_yaw = 3;   // 目标姿态Yaw
@@ -65,6 +57,8 @@ message GimbalVisionState {
   float target_posit_y = 7;    // 目标相对坐标Y
   float target_posit_z = 8;    // 目标相对坐标Z
 }
+
+message GimbalState { float yaw = 1; }
 
 // 机器人全局标志位与裁判系统数据
 message RobotStatus {
@@ -77,10 +71,9 @@ message RobotStatus {
 message EngineerDataPacketToClient {
   optional AutoCtrlProcess current_process = 2;
   optional CtrlMode ctrl_mode = 3;
-  optional MoveMode move_mode = 4;
 
   optional ChassisState chassis = 5;
   optional ArmState arm = 6;
-  // optional GimbalVisionState vision = 7; //工程没自瞄了
+  optional GimbalState gimbal = 7;
   optional RobotStatus status = 8;
 }
