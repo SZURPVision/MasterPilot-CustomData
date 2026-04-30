@@ -1,5 +1,7 @@
 # Middlewares/CustomData/CMakeLists.txt
 
+# 暂时只有nanopb配置
+
 # 定义 Nanopb 运行库源码
 set(NANOPB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/nanopb)
 set(NANOPB_SRCS
