@@ -1,3 +1,19 @@
 syntax = "proto3";
 
 option csharp_namespace = "MasterPilot.Communicator.ProtoMessages.Common";
+
+enum VisionMode {
+  VM_OFFLINE = 0;
+  VM_NORMAL = 1;  // 普通模式
+  VM_LIT_BUF = 2; // 小能量机关
+  VM_BIG_BUF = 3; // 大能量机关
+  VM_OUTPOST = 4; // 前哨站
+  VM_BASE = 5;    // 基地
+  VM_HERO = 6;    // 英雄机器人
+}
+
+// 视觉状态
+message VisionInfo {
+  VisionMode mode = 1;   // 视觉发送给下位机的目标模式
+  bool found_target = 2; // 自瞄是否锁上目标, 与模式对应
+}

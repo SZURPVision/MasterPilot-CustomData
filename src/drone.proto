@@ -2,6 +2,8 @@ syntax = "proto3";
 
 option csharp_namespace = "MasterPilot.Communicator.ProtoMessages.Drone";
 
+import "model.proto";
+
 enum PidMode {
   INACTIVE = 0;
   MEC_MODE = 1;    // 机械中值模式
@@ -9,15 +11,6 @@ enum PidMode {
   VISION_MODE = 3; // 视觉自瞄模式
 }
 
-enum VisionMode {
-  OFFLINE = 0;
-  NORMAL = 1;  // 普通模式
-  LIT_BUF = 2; // 小能量机关
-  BIG_BUF = 3; // 大能量机关
-  OUTPOST = 4; // 前哨站
-  HERO = 5;    // 英雄机器人
-  BASE = 6;    // 基地
-}
 enum LampCmd {
   IDLE = 0;
   RC_OFFLINE_CMD = 1;
@@ -40,12 +33,6 @@ message GimbalInfo {
   float yaw = 1;
   float pitch = 2;
   PidMode pid_mode = 3; // 云台 PID 控制模式
-}
-
-// 视觉状态
-message VisionInfo {
-  VisionMode mode = 1;   // 视觉发送给下位机的目标模式
-  bool found_target = 2; // 自瞄是否锁上目标, 与模式对应
 }
 
 message DroneCustomData {
