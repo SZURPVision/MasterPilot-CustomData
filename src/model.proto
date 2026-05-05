@@ -30,9 +30,15 @@ message VisionData {
 message WeaponState {
   bool fric_on = 1;
   bool fric_online = 2;
-  int32 bullet_remain = 3;
   float pitch = 4; // degree
   float yaw = 5;   // degree
+}
+
+message ChassisModeFlags {
+  bool top_flag = 1;    // 陀螺模式
+  bool upstep_flag = 2; // 上台阶模式
+  bool fly_flag = 3;    // 飞坡模式
+  bool jump_flag = 4;   // 跳跃模式
 }
 
 // 底盘实时状态 (对应 ChassisStatus 部分字段)
@@ -42,7 +48,7 @@ message ChassisState {
   float yaw_offset = 3; // degree
   float pitch = 4;      // degree
   float roll = 5;       // degree
-  uint32 mode_mask = 6; // 模式位掩码 (1=None, 2=Top, 4=Upstep, 8=Fly, 16=Jump)
+  ChassisModeFlags mode_flags = 6;
 }
 
 // 能源与电容状态
