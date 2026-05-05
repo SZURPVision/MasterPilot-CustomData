@@ -2,18 +2,56 @@ syntax = "proto3";
 
 option csharp_namespace = "MasterPilot.Communicator.ProtoMessages.Common";
 
-enum VisionMode {
-  VM_OFFLINE = 0;
-  VM_NORMAL = 1;  // 普通模式
-  VM_LIT_BUF = 2; // 小能量机关
-  VM_BIG_BUF = 3; // 大能量机关
-  VM_OUTPOST = 4; // 前哨站
-  VM_BASE = 5;    // 基地
-  VM_HERO = 6;    // 英雄机器人
+// 视觉目标类型 (对应 VisionTargetType)
+enum VisionTarget {
+  VT_NONE = 0;
+  VT_NORMAL = 1;
+  VT_SMALL_RUNE = 2;
+  VT_LARGE_RUNE = 3;
+  VT_OUTPOST = 4;
+  VT_BASE = 5;
+  VT_HERO = 6;
+}
+
+// 视觉自瞄状态 (对应 VisionStateType)
+enum VisionState {
+  VS_INACTIVE = 0;
+  VS_ACTIVE = 1;
+  VS_TARGET_FOUND = 2;
 }
 
 // 视觉状态
-message VisionInfo {
-  VisionMode mode = 1;   // 视觉发送给下位机的目标模式
-  bool found_target = 2; // 自瞄是否锁上目标, 与模式对应
+message VisionData {
+  VisionTarget target = 1;
+  VisionState state = 2;
+}
+
+// 武器/发射机构状态 (对应 WeaponStatus)
+message WeaponState {
+  bool fric_on = 1;
+  bool fric_online = 2;
+  int32 bullet_remain = 3;
+  float pitch = 4; // degree
+  float yaw = 5;   // degree
+}
+
+// 底盘实时状态 (对应 ChassisStatus 部分字段)
+message ChassisState {
+  float speed = 1;      // m/s
+  float theta = 2;      // 摆角 degree
+  float yaw_offset = 3; // degree
+  float pitch = 4;      // degree
+  float roll = 5;       // degree
+  uint32 mode_mask = 6; // 模式位掩码 (1=None, 2=Top, 4=Upstep, 8=Fly, 16=Jump)
+}
+
+// 能源与电容状态
+message PowerState {
+  float cap_voltage_ratio = 1; // 电容电压比
+}
+
+enum LegMode {
+  LM_LOW = 0;
+  LM_MID = 1;
+  LM_HIGH = 2;
 }

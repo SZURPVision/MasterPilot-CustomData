@@ -2,42 +2,11 @@ syntax = "proto3";
 option csharp_namespace = "MasterPilot.Communicator.ProtoMessages.Infantry";
 
 import "model.proto";
-import "leg.proto";
 
-// 底盘姿态数据
-message ChassisAttitude {
-  float pitch_err = 1;  // 俯仰角误差 (rad)
-  float theta_err = 2;  // 摆角误差 (rad)
-  float yaw_offset = 3; // 底盘方位角偏移 (rad)
-  float theta1 = 4;     // 大腿连杆与水平面夹角
-  float theta2 = 5;     // 小腿连杆与大腿连杆夹角
-}
-// 底盘与运动状态 (Chassis & Movement)
-message ChassisInfo {
-  bool top_flag = 1;           // 陀螺模式
-  bool upstep_flag = 2;        // 上台阶模式
-  bool fly_flag = 3;           // 飞坡模式
-  bool jump_flag = 4;          // 跳跃模式
-  float car_speed = 5;         // 车体线速度 (m/s)
-  LegMode leg_mode = 6;        // 腿部模式
-  ChassisAttitude chassis = 7; // 底盘姿态数据
-}
-// 发射机构与云台状态 (Shooter & Gimbal)
-message WeaponInfo {
-  bool fric_on = 1;        // 摩擦轮开启
-  bool fric_online = 2;    // 摩擦轮通讯在线
-  int32 bullet_remain = 3; // 17mm 弹丸剩余数量
-  float gimbal_pitch = 4;  // 云台 pitch 角度 (rad)
-  float gimbal_yaw = 5;
-}
-
-// 能源与超电状态 (Power & SuperCap)
-message PowerInfo {
-  float cap_voltage_ratio = 2; // 电容电压比 (V^2 / 24^2)
-}
 message InfantryDataPacketToClient {
-  optional WeaponInfo weapon = 1;
-  optional ChassisInfo chassis = 2;
-  optional VisionInfo vision = 3;
-  optional PowerInfo power = 4;
+  optional WeaponState weapon = 1;
+  optional ChassisState chassis = 2;
+  optional VisionData vision = 3;
+  optional PowerState power = 4;
+  optional LegMode leg_mode = 5;
 }

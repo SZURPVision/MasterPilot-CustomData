@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-//TODO: 补充命名空间
+option csharp_namespace = "MasterPilot.Communicator.ProtoMessages.Control";
 
 // 速度线性量
 message SpeedFactor {

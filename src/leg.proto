@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-option csharp_namespace = "MasterPilot.Communicator.ProtoMessages.Common";
-
-enum LegMode {
-  LM_LOW = 0;
-  LM_MID = 1;
-  LM_HIGH = 2;
-}

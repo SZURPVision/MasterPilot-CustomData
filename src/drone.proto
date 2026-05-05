@@ -5,39 +5,32 @@ option csharp_namespace = "MasterPilot.Communicator.ProtoMessages.Drone";
 import "model.proto";
 
 enum PidMode {
-  INACTIVE = 0;
-  MEC_MODE = 1;    // 机械中值模式
-  GYRO_MODE = 2;   // 陀螺仪模式
-  VISION_MODE = 3; // 视觉自瞄模式
+  PM_INACTIVE = 0;
+  PM_MEC = 1;
+  PM_GYRO = 2;
+  PM_VISION = 3;
 }
 
 enum LampCmd {
-  IDLE = 0;
-  RC_OFFLINE_CMD = 1;
-  AWAIT_CMD = 2;
-  BASE_CMD = 3;
-  OUTPOST_CMD = 4;
-  BUF_CMD = 5;
-  FORWARD_CMD = 6;
-  BACK_CMD = 7;
-  LEFT_CMD = 8;
-  RIGHT_CMD = 9;
-  CW_SPIN_CMD = 10;  // 顺时针小陀螺
-  CCW_SPIN_CMD = 11; // 逆时针小陀螺
-  UP_CMD = 12;
-  DOWN_CMD = 13;
+  LC_IDLE = 0;
+  LC_RC_OFFLINE = 1;
+  LC_AWAIT = 2;
+  LC_BASE = 3;
+  LC_OUTPOST = 4;
+  LC_BUF = 5;
+  LC_FORWARD = 6;
+  LC_BACK = 7;
+  LC_LEFT = 8;
+  LC_RIGHT = 9;
+  LC_CW_SPIN = 10;
+  LC_CCW_SPIN = 11;
+  LC_UP = 12;
+  LC_DOWN = 13;
 }
 
-// 云台状态
-message GimbalInfo {
-  float yaw = 1;
-  float pitch = 2;
-  PidMode pid_mode = 3; // 云台 PID 控制模式
-}
-
-message DroneCustomData {
-  optional GimbalInfo gimbal_data = 1;
-  optional VisionInfo vision_data = 2;
-  optional bool fric_on = 3;
-  optional LampCmd lamp_data = 4;
+message DroneDataPacketToClient {
+  optional WeaponState weapon = 1;
+  optional VisionData vision = 2;
+  optional LampCmd lamp = 3;
+  optional PidMode pid = 4;
 }

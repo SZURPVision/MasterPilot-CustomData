@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+option csharp_namespace = "MasterPilot.Communicator.ProtoMessages.Engineer";
+
+import "model.proto";
+
+// 系统控制流程状态
+enum AutoProcess {
+  AP_NONE = 0;
+  AP_RETURN_ORIGIN = 1;
+  AP_CLIMBING = 2;
+  AP_DOWN_STAIR = 3;
+  AP_ENERGY_UNIT = 4;
+  AP_EXCHANGE_ORE = 5;
+  AP_STORE_ORE = 6;
+  AP_GROUND_ORE = 7;
+}
+
+// 控制模式
+enum ControlMode {
+  CM_NONE = 0;
+  CM_RC = 1;
+  CM_KEYBOARD = 2;
+  CM_CONTROLLER = 3;
+}
+
+// 机械臂实时数据
+message ArmState {
+  float angle_yaw = 1;       // 机械臂Yaw
+  float angle_pitch1 = 2;    // 关节1 Pitch
+  float angle_pitch2 = 3;    // 关节2 Pitch
+  float angle_pitch3 = 4;    // 关节3 Pitch
+  float angle_roll = 5;      // 机械臂Roll
+  float angle_end_pitch = 6; // 末端Pitch
+  float angle_end_roll = 7;  // 末端Roll
+  float length_grip = 8;     // 夹爪开合距离
+  bool grip_close = 9;       // 夹爪闭合标志位
+}
+
+// 机器人全局标志位与裁判系统数据
+message RobotStatus {
+  bool p3_lock = 1;                  // P3锁定标志
+  bool robot_init_ok = 2;            // 初始化完成
+  bool controlled_by_controller = 3; // 是否被遥控器控制
+}
+
+// 发送给自定义客户端的大包
+message EngineerDataPacketToClient {
+  optional AutoProcess current_process = 1;
+  optional ControlMode ctrl_mode = 2;
+
+  optional ChassisState chassis = 3;
+  optional ArmState arm = 4;
+  optional WeaponState weapon = 5;
+  optional VisionData vision = 6;
+  optional RobotStatus status = 7;
+}
