@@ -61,3 +61,32 @@ enum LegMode {
   LM_MID = 1;
   LM_HIGH = 2;
 }
+
+enum BuffType {
+  B_NONE = 0;
+  B_RECOVERY = 1;
+  B_COOLING = 2;
+  B_DEFENSE = 3;
+  B_VULNERABILITY = 4;
+  B_ATTACK = 5;
+}
+
+message BuffInfo {
+  BuffType type = 1;
+  uint32 strength = 2; // 参考官方通信手册里说的值. 0x0204
+}
+
+message RobotInfoFromRadio {
+  uint32 id = 1;     // 一位数机器人编号
+  uint32 health = 2; // 血量
+  uint32 ammo = 3;   // 剩余发弹量
+  repeated BuffInfo buffs = 6;
+}
+
+// 雷达无线电解密
+message RadioInfo {
+  uint32 enemy_current_eco = 1;                 // 对方剩余经济
+  uint32 enemy_total_eco = 2;                   // 对方总经济
+  uint32 rfid = 3;                              // 对方一大堆RFID的状态 0x0a04
+  repeated RobotInfoFromRadio enemy_robots = 4; // 对方机器人信息
+}

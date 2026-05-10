@@ -9,4 +9,6 @@ message InfantryDataPacketToClient {
   optional VisionData vision = 3;
   optional PowerState power = 4;
   optional LegMode leg_mode = 5;
+
+  optional RadioInfo radio_info = 8;
 }

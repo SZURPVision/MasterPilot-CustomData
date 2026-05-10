@@ -54,4 +54,6 @@ message EngineerDataPacketToClient {
   optional WeaponState weapon = 5;
   optional VisionData vision = 6;
   optional RobotStatus status = 7;
+
+  optional RadioInfo radio_info = 8;
 }

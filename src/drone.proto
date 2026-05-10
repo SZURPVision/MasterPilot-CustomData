@@ -33,4 +33,5 @@ message DroneDataPacketToClient {
   optional VisionData vision = 2;
   optional LampCmd lamp = 3;
   optional PidMode pid = 4;
+  optional RadioInfo radio_info = 8;
 }
