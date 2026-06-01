@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+option csharp_namespace = "MasterPilot.Communicator.ProtoMessages.Control";
+
+// 英雄发送给自定义客户端的数据
+message HeroDataPacketToClient {
+	// 压缩后的相机画面
+	optional bytes camera_frame = 200;
+}

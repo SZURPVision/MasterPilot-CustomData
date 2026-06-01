@@ -15,15 +15,17 @@
 
 ### `CustomControl` (自定义客户端 -> 机器人)
 
-`[size]` `[custom_data ...]`
+`[size_sent]` `[size_package]` `[custom_data ...]`
 
-- `size`: **uint8** 数据, 表示数据体`custom_data`的长度
+- `size_sent`: **uint8** 数据, 表示此包发送后,数据体`custom_data`已经发送的长度
+- `size_package`: **uint8** 数据, 表示数据体`custom_data`总长度
 - `custom_data`: 使用`ProtoBuf`编码出来的`uint8[]`数据
 
 ### `CustomByteBlock` (机器人 -> 自定义客户端)
-`[size]` `[custom_data ...]`
+`[size_sent]` `[size_package]` `[custom_data ...]`
 
-- `size`: **小端序 uint16** 数据, 表示数据体`custom_data`的长度
+- `size_sent`: **小端序 uint16** 数据, 表示此包发送后,数据体`custom_data`的已经发送的长度
+- `size_package`: **小端序 uint16** 数据, 表示数据体`custom_data`的总长度
 - `custom_data`: 使用`ProtoBuf`编码出来的`uint8[]`数据
 
 ## 通信流程 (重要)
