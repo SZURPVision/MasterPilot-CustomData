@@ -1,6 +1,7 @@
 *.bundle
 *.tar.gz
 output
+generated/
 .envrc
 .direnv
 result
