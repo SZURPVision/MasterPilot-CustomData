@@ -9,13 +9,9 @@
         pkgs.cmake
         pkgs.pkg-config
       ];
-
+      # TODO: 简单粗暴塞个路径, 后续写Test再细调
       shellHook = ''
-        echo "=== MasterPilot CustomData Dev Shell ==="
-        echo "  buf generate      - Regenerate proto code"
-        echo "  buf lint          - Lint proto files"
-        echo "  nix run .#gen-all - Regenerate all"
-        echo "  clangd            - C++ language server"
+        export CPATH="${pkgs.nanopb}/include/nanopb:${pkgs.protobuf}/include''${CPATH:+:$CPATH}"
       '';
     };
   };

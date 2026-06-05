@@ -1,0 +1,7 @@
+{
+    "recommendations": [
+        "pinage404.nix-extension-pack",
+        "llvm-vs-code-extensions.vscode-clangd",
+        "pbkit.vscode-pbkit"
+    ]
+}
