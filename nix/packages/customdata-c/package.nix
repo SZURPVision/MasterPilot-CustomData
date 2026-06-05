@@ -1,4 +1,4 @@
-{ stdenv, customdata-src, nanopb }:
+{ src, stdenv, customdata-src, nanopb }:
 
 stdenv.mkDerivation {
   name = "customdata-c";
@@ -8,10 +8,12 @@ stdenv.mkDerivation {
   installPhase = ''
     mkdir -p $out/src $out/include
 
+    cp ${src}/*.h $out/include/
     cp ${customdata-src}/c/*.h $out/include/
     cp ${nanopb.src}/*.h $out/include/
     
-    cp ${customdata-src}/c/*.c $out/src
-    cp ${nanopb.src}/*.c $out/src
+    cp ${src}/*.c $out/src/
+    cp ${customdata-src}/c/*.c $out/src/
+    cp ${nanopb.src}/*.c $out/src/
   '';
 }

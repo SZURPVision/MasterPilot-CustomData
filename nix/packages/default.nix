@@ -11,7 +11,12 @@
         inherit (config.packages) customdata-src;
       };
       customdata-c = pkgs.callPackage ./customdata-c/package.nix {
+        src = "${self}/src";
         inherit (config.packages) customdata-src;
+      };
+      mp-customdata-test = pkgs.callPackage ./test/package.nix {
+        src = "${self}/test";
+        inherit (config.packages) customdata-c;
       };
       default = config.packages.customdata-src;
 

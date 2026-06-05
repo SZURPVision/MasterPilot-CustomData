@@ -11,10 +11,11 @@
 
 ## 数据格式(对应裁判系统通信协议中的`data`块)
 
-`[package_serial]` `[slice_payload_length]` `[payload ...]`
+`[package_serial]` `[slice_serial]` `[slice_payload_length]` `[payload ...]`
 
-- `package_serial`: **uint16小端** 数据, 表示此包的递增序号.
-- `slice_payload_length`: **uint16小端** 数据, 表示本次切片的载荷大小
+- `package_serial`: **uint8** 数据, 表示此大包的递增序号.
+- `slice_serial`: **uint8** 数据, 表示此分片的递增序号.
+- `slice_payload_length`: **uint16小端** 数据, 表示本次切片的载荷大小. 如果不满则表示发送完成.
 - `payload`: 使用`ProtoBuf`编码出来`uint8[]`数据的一部分
 
 这部分可以使用本仓库中`src`里的代码自动完成.
@@ -35,8 +36,9 @@ end
 
 subgraph DATA["data"]
 	DA["packager_serial(包序列号)"] ---
-	DB["slice_payload_length(分片载荷大小)"] ---
-	DC["payload(protobuf编码出来的数据)"]
+	DB["slice_serial(分片序列号)"] ---
+	DC["slice_payload_length(分片载荷大小)"] ---
+	DD["payload(protobuf编码出来的数据)"]
 end
 ```
 
