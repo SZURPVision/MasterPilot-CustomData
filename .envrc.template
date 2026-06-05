@@ -1,3 +1,1 @@
-watch_file nix-env/flake.nix
-watch_file nix-env/flake.lock
-use flake path:./nix-env
+use flake

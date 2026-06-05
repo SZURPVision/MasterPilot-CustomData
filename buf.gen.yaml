@@ -1,0 +1,11 @@
+version: v1
+plugins:
+  - plugin: cpp
+    out: generated/cpp
+  - plugin: csharp
+    out: generated/csharp
+  - plugin: nanopb
+    out: generated/c
+    opt:
+      - -I
+      - proto
