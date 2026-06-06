@@ -7,16 +7,22 @@
         src = self;
         inherit (config.packages) nanopb-fixed;
       };
-      customdata-cpp = pkgs.callPackage ./customdata-cpp/package.nix {
+      # TODO: 未完成
+      # customdata-cpp = pkgs.callPackage ./customdata-cpp/package.nix {
+      #   src = self;
+      #   inherit (config.packages) customdata-cpp-src;
+      # };
+      customdata-c-src = pkgs.callPackage ./customdata-c-src/package.nix {
+        src = self;
         inherit (config.packages) customdata-src;
       };
-      customdata-c = pkgs.callPackage ./customdata-c/package.nix {
-        src = "${self}/src";
+      customdata-cpp-src = pkgs.callPackage ./customdata-cpp-src/package.nix {
+        src = self;
         inherit (config.packages) customdata-src;
       };
       mp-customdata-test = pkgs.callPackage ./test/package.nix {
-        src = "${self}/test";
-        inherit (config.packages) customdata-c;
+        src = self;
+        inherit (config.packages) customdata-src;
       };
       default = config.packages.customdata-src;
 

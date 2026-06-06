@@ -12,6 +12,11 @@
 stdenv.mkDerivation {
   name = "customdata-src";
   version = "0.1.0";
+
+  meta = {
+    descprtion = "MasterPilot CustomData - buf generated source pack";
+  };
+
   inherit src;
   
   nativeBuildInputs = [

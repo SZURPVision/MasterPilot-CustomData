@@ -6,3 +6,5 @@ generated/
 .direnv
 result
 .codex
+
+compile_commands.json

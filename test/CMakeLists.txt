@@ -1,22 +1,35 @@
-cmake_minimum_required(VERSION 3.16)
-project(mp-customdata-test VERSION 0.1.0 LANGUAGES C)
+# ── C 测试可执行文件 ──────────────────────────────────
+# 编译模式：
+#   1. Nix 模式：CUSTOMDATA_SRC_DIR 指向 customdata-src 包输出，nanopb 通过 find_package 发现
+#   2. 纯 CMake 模式（无 Nix）：需手动设置 CUSTOMDATA_SRC_DIR 到 buf generate 的输出目录
 
-# CustomData-C package path (supplied by Nix cmakeFlags)
-set(CUSTOMDATA_C_DIR "" CACHE PATH "Path to customdata-c package output")
+# 源码集合
+file(GLOB MPC_C_SRCS "${MPC_SRC_DIR}/*.c")
+file(GLOB MPC_GENERATED_C_SRCS "${CUSTOMDATA_SRC_DIR}/c/*.c")
 
-# Collect all C sources from customdata-c
-file(GLOB CUSTOMDATA_C_SRCS "${CUSTOMDATA_C_DIR}/src/*.c")
-
-# Test executable
 add_executable(mp-customdata-test
     main.c
-    ${CUSTOMDATA_C_SRCS}
+    ${MPC_C_SRCS}
+    ${MPC_GENERATED_C_SRCS}
 )
 
-# Include paths
-target_include_directories(mp-customdata-test PRIVATE
-    ${CUSTOMDATA_C_DIR}/include
+# ── 头文件搜索路径 ──
+target_include_directories(mp-customdata-test
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${MPC_SRC_DIR}
+        ${CUSTOMDATA_SRC_DIR}/c
 )
 
-# C11
-target_compile_features(mp-customdata-test PRIVATE c_std_11)
+# ── 依赖 nanopb（仅头文件） ──
+find_package(Nanopb REQUIRED)
+target_link_libraries(mp-customdata-test PRIVATE nanopb::nanopb)
+
+# ── C99（兼容 Keil 嵌入式环境） ──
+target_compile_features(mp-customdata-test PRIVATE c_std_99)
+
+# ── 测试注册 ──
+add_test(NAME mp-customdata-test COMMAND mp-customdata-test)
+
+# ── compile_commands.json（用于 IDE） ──
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

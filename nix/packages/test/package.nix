@@ -1,17 +1,28 @@
-{ src, stdenv, cmake, customdata-c }:
+{
+  src,
+  stdenv,
+  cmake,
+  nanopb,
+  customdata-src,
+  lib,
+}:
 
-stdenv.mkDerivation {
-  inherit src;
-  name = "mp-customdata-test";
+let
+  pname = "mp-customdata-test";
   version = "0.1.0";
-  nativeBuildInputs = [ cmake ];
-  buildInputs = [ customdata-c ];
-
+  # 公共 cmakeFlags — 主构建与 compile-commands 共用
   cmakeFlags = [
-    "-DCUSTOMDATA_C_DIR=${customdata-c}"
-    "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+    "-DBUILD_TESTING=ON"
+    "-DBUILD_CPP=OFF"
     "-DCMAKE_BUILD_TYPE=Debug"
+    "-DCUSTOMDATA_SRC_DIR=${customdata-src}"
   ];
+in
+stdenv.mkDerivation {
+  inherit pname version src;
+  nativeBuildInputs = [ cmake ];
+  buildInputs = [ nanopb ];
+  inherit cmakeFlags;
 
   doCheck = true;
   checkPhase = ''
@@ -20,6 +31,23 @@ stdenv.mkDerivation {
 
   installPhase = ''
     mkdir -p $out/bin
-    cp mp-customdata-test $out/bin/
+    cp test/mp-customdata-test $out/bin/
   '';
+
+  # ── 仅 cmake configure，不触发生成/building ──
+  passthru = {
+    compile-commands = stdenv.mkDerivation {
+      name = "${pname}-compile-commands";
+      inherit src;
+      nativeBuildInputs = [ cmake ];
+      buildInputs = [ nanopb ];
+      cmakeFlags = cmakeFlags ++ [ "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON" ];
+      dontBuild = true;
+      doCheck = false;
+      installPhase = ''
+        mkdir -p $out
+        cp compile_commands.json $out/
+      '';
+    };
+  };
 }
