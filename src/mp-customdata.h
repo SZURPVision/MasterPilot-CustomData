@@ -8,38 +8,18 @@
 extern "C" {
 #endif
 
-#pragma region Constant Definition
+#pragma region Type Definition
 
-/* 发送端配置 */
-#ifndef MP_SENDER_BUFFER_COUNT
-#define MP_SENDER_BUFFER_COUNT 16
-#endif
-
-#ifndef MP_SENDER_MTU
-#define MP_SENDER_MTU 300
-#endif
-
-#define MP_SENDER_PAYLOAD_MAX_SIZE (MP_SENDER_MTU - sizeof(mp_header_t))
-
-/* 接收端配置 */
-#ifndef MP_RECEIVER_BUFFER_COUNT
-#define MP_RECEIVER_BUFFER_COUNT 16
-#endif
-
-#ifndef MP_RECEIVER_MTU
-#define MP_RECEIVER_MTU 30
-#endif
-
-#define MP_RECEIVER_PAYLOAD_MAX_SIZE (MP_RECEIVER_MTU - sizeof(mp_header_t))
-
-
-
-#pragma endregion
+typedef struct {
+    uint8_t *buffer;        // 外部分配的一维 buffer. 注意大小不小于 buffer_count + mtu
+    uint8_t  buffer_count;  // 分片数
+    uint16_t mtu;           // 每个分片大小（含 header）
+} mp_config_t;
 
 /*
  * @brief 帧头定义
 */
-#pragma pack(push)
+#pragma pack(push,1)
 typedef struct {
     // 大包序列号
     uint8_t package_serial;
@@ -51,18 +31,18 @@ typedef struct {
 #pragma pack(pop)
 
 typedef struct {
-    volatile uint8_t head, tail;
-    volatile uint16_t serial; //大包序列号
-    uint8_t buffer[MP_SENDER_BUFFER_COUNT][MP_SENDER_MTU];
+    volatile uint8_t  head, tail;
+    volatile uint16_t serial;   // 大包序列号
+    const mp_config_t       config;
 } mp_sender_t;
 
 typedef struct {
-    volatile uint8_t tail;              /* 已解码消费位置 */
-    volatile uint8_t head;              /* 已收齐但未解码的包边界 */
-    volatile uint8_t slice_base;        /* 当前大包起始块下标 */
-    volatile uint8_t slice_count;       /* 当前大包已收分片数 */
-    volatile bool   package_complete;   /* 是否有完整包待解码 */
-    uint8_t buffer[MP_RECEIVER_BUFFER_COUNT][MP_RECEIVER_MTU];
+    volatile uint8_t  tail;             // 已解码消费位置
+    volatile uint8_t  head;             // 已收齐但未解码的包边界
+    volatile uint8_t  slice_base;       // 当前大包起始块下标
+    volatile uint8_t  slice_count;      // 当前大包已收分片数
+    volatile bool     package_complete; // 是否有完整包待解码
+    const mp_config_t       config;
 } mp_receiver_t;
 
 

@@ -19,15 +19,19 @@ static bool MP_INTERNAL_DecodeStreamCallback(
 {
     mp_decode_state_t *state = stream->state;
     mp_receiver_t *receiver = state->receiver;
+    uint16_t mtu = receiver->config.mtu;
+    uint16_t payload_max = mtu - sizeof(mp_header_t);
+    uint8_t buffer_count = receiver->config.buffer_count;
 
     while (count > 0) {
-        uint8_t next = (state->block + 1) % MP_RECEIVER_BUFFER_COUNT;
+        uint8_t next = (state->block + 1) % buffer_count;
         bool is_last = (next == state->end_block);
 
         /* 当前 block 的实际 payload 大小 */
         size_t payload_size = is_last
-            ? ((mp_header_t *)receiver->buffer[state->block])->slice_payload_size
-            : (size_t)MP_RECEIVER_PAYLOAD_MAX_SIZE;
+            ? ((mp_header_t *)(receiver->config.buffer
+                                + (size_t)state->block * mtu))->slice_payload_size
+            : (size_t)payload_max;
 
         /* 当前 block 剩余未读 payload 字节数 */
         size_t consumed  = state->offset - sizeof(mp_header_t);
@@ -35,7 +39,8 @@ static bool MP_INTERNAL_DecodeStreamCallback(
         size_t to_read   = count < available ? count : available;
 
         memcpy(buf,
-               &receiver->buffer[state->block][state->offset],
+               receiver->config.buffer + (size_t)state->block * mtu
+                                        + state->offset,
                to_read);
 
         buf   += to_read;
@@ -60,18 +65,23 @@ bool MP_Decode(mp_receiver_t *receiver, const pb_msgdesc_t *fields, void *messag
     if (!receiver->package_complete)
         return false;
 
+    uint16_t mtu = receiver->config.mtu;
+    uint16_t payload_max = mtu - sizeof(mp_header_t);
+    uint8_t buffer_count = receiver->config.buffer_count;
+
     /* 计算从 tail 到 head 之间所有 block 的总 payload 字节数 */
     size_t total = 0;
     uint8_t blk  = receiver->tail;
 
     while (blk != receiver->head) {
-        uint8_t next = (blk + 1) % MP_RECEIVER_BUFFER_COUNT;
+        uint8_t next = (blk + 1) % buffer_count;
 
         if (next == receiver->head) {
             /* 末块：payload 大小由 slice_payload_size 指定 */
-            total += ((mp_header_t *)receiver->buffer[blk])->slice_payload_size;
+            total += ((mp_header_t *)(receiver->config.buffer
+                                       + (size_t)blk * mtu))->slice_payload_size;
         } else {
-            total += MP_RECEIVER_PAYLOAD_MAX_SIZE;
+            total += payload_max;
         }
 
         blk = next;
