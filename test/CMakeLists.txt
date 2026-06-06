@@ -25,6 +25,10 @@ target_include_directories(mp-customdata-test
 find_package(Nanopb REQUIRED)
 target_link_libraries(mp-customdata-test PRIVATE nanopb::nanopb)
 
+# ── 依赖 Protobuf ──
+find_package(Protobuf REQUIRED)
+target_link_libraries(mp-customdata-test PRIVATE protobuf::libprotobuf)
+
 # ── C99（兼容 Keil 嵌入式环境） ──
 target_compile_features(mp-customdata-test PRIVATE c_std_99)
 

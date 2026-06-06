@@ -1,7 +1,7 @@
 #ifndef __MP_CUSTOM_DATA_NANOPB_H_
 #define __MP_CUSTOM_DATA_NANOPB_H_
 
-#include "mp-customdata.h"
+#include <mp-customdata.h>
 #include <pb.h>
 
 #ifdef __cplusplus

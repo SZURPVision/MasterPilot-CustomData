@@ -14,6 +14,8 @@ set(CUSTOMDATA_SRC_DIR "" CACHE PATH
     "Path to buf-generated proto sources (customdata-src package output)")
 set(NANOPB_DIR "" CACHE PATH
     "Path to nanopb installation prefix (optional)")
+set(PROROBUF_DIR "" CACHE PATH
+    "Path to protobuf installation prefix (optional)")
 
 # ── C 源码目录（始终为项目内的 src/） ──
 set(MPC_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")

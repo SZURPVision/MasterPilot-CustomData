@@ -19,11 +19,11 @@ stdenv.mkDerivation {
   installPhase = ''
     mkdir -p $out/include/masterpilot $out/include $out/src
 
-    cp ${src}/src/mp-customdata.h $out/include/masterpilot/
-    cp ${src}/src/mp-customdata.c $out/src/
+    cp ${src}/src/*.h $out/include/masterpilot/
+    cp ${src}/src/*.c $out/src/
 
-    cp ${src}/cpp/*.cpp $out/src/
-    cp ${src}/cpp/*.hpp $out/include/masterpilot/
+    cp ${src}/src/cpp/*.cpp $out/src/
+    cp ${src}/src/cpp/*.hpp $out/include/masterpilot/
 
     cp ${customdata-src}/cpp/*.pb.h $out/include/masterpilot/
     cp ${customdata-src}/cpp/*.pb.cc $out/src/

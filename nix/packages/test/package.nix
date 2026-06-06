@@ -3,6 +3,7 @@
   stdenv,
   cmake,
   nanopb,
+  protobuf,
   customdata-src,
   lib,
 }:
@@ -21,7 +22,7 @@ in
 stdenv.mkDerivation {
   inherit pname version src;
   nativeBuildInputs = [ cmake ];
-  buildInputs = [ nanopb ];
+  buildInputs = [ nanopb protobuf ];
   inherit cmakeFlags;
 
   doCheck = true;
@@ -40,7 +41,7 @@ stdenv.mkDerivation {
       name = "${pname}-compile-commands";
       inherit src;
       nativeBuildInputs = [ cmake ];
-      buildInputs = [ nanopb ];
+      buildInputs = [ nanopb protobuf ];
       cmakeFlags = cmakeFlags ++ [ "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON" ];
       dontBuild = true;
       doCheck = false;
