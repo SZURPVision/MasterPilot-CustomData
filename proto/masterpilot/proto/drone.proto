@@ -1,8 +1,9 @@
 syntax = "proto3";
 
+package masterpilot.proto;
 option csharp_namespace = "MasterPilot.Communicator.ProtoMessages.Drone";
 
-import "model.proto";
+import "masterpilot/proto/common.proto";
 
 enum PidMode {
   PM_INACTIVE = 0;

@@ -1,0 +1,2 @@
+masterpilot.proto.RadioInfo.enemy_robots max_count:6
+masterpilot.proto.RobotInfoFromRadio.buffs max_count:6

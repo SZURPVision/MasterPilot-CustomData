@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+package masterpilot.proto;
 option csharp_namespace = "MasterPilot.Communicator.ProtoMessages.Control";
 
 // 速度线性量

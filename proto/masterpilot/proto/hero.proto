@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+package masterpilot.proto;
 option csharp_namespace = "MasterPilot.Communicator.ProtoMessages.Hero";
 
 // 英雄发送给自定义客户端的数据

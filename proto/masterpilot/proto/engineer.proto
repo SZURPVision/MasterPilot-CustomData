@@ -1,8 +1,9 @@
 syntax = "proto3";
 
+package masterpilot.proto;
 option csharp_namespace = "MasterPilot.Communicator.ProtoMessages.Engineer";
 
-import "model.proto";
+import "masterpilot/proto/common.proto";
 
 // 系统控制流程状态
 enum AutoProcess {

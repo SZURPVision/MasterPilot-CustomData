@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+package masterpilot.proto;
 option csharp_namespace = "MasterPilot.Communicator.ProtoMessages.Common";
 
 // 视觉目标类型 (对应 VisionTargetType)

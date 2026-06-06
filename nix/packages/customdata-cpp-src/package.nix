@@ -2,7 +2,7 @@
   src,
   stdenv,
   cmake,
-  customdata-src,
+  customdata-generated,
   lib,
 }:
 
@@ -17,15 +17,16 @@ stdenv.mkDerivation {
   dontUnpack = true;
 
   installPhase = ''
-    mkdir -p $out/include/masterpilot $out/include $out/src
+    mp_inc=$out/include/masterpilot
+    mkdir -p $mp_inc $mp_inc/proto $out/include $out/src
 
-    cp ${src}/src/*.h $out/include/masterpilot/
-    cp ${src}/src/*.c $out/src/
+    cp ${src}/src/core/*.h $mp_inc/
+    cp ${src}/src/core/*.c $out/src/
 
+    cp ${src}/src/cpp/*.hpp $mp_inc/
     cp ${src}/src/cpp/*.cpp $out/src/
-    cp ${src}/src/cpp/*.hpp $out/include/masterpilot/
 
-    cp ${customdata-src}/cpp/*.pb.h $out/include/masterpilot/
-    cp ${customdata-src}/cpp/*.pb.cc $out/src/
+    cp ${customdata-generated}/cpp/masterpilot/proto/*.pb.h $mp_inc/proto/
+    cp ${customdata-generated}/cpp/masterpilot/proto/*.pb.cc $out/src/
   '';
 }

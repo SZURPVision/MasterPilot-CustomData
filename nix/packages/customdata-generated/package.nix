@@ -10,7 +10,7 @@
   makeWrapper,
 }:
 stdenv.mkDerivation {
-  name = "customdata-src";
+  name = "customdata-generated";
   version = "0.1.0";
 
   meta = {
@@ -36,8 +36,4 @@ stdenv.mkDerivation {
   installPhase = ''
     cp -r generated $out
   '';
-
-  passthru = {
-    inherit nanopb-fixed;
-  };
 }

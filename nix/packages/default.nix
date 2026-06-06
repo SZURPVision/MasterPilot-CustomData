@@ -3,28 +3,24 @@
   perSystem = { pkgs, config, ... }:
   {
     packages = {
-      customdata-src = pkgs.callPackage ./customdata-src/package.nix {
+      customdata-generated = pkgs.callPackage ./customdata-generated/package.nix {
         src = self;
         inherit (config.packages) nanopb-fixed;
       };
-      # TODO: 未完成
-      # customdata-cpp = pkgs.callPackage ./customdata-cpp/package.nix {
-      #   src = self;
-      #   inherit (config.packages) customdata-cpp-src;
-      # };
+      # 下游导出用源码包（给没装 Nix 的环境）
       customdata-c-src = pkgs.callPackage ./customdata-c-src/package.nix {
         src = self;
-        inherit (config.packages) customdata-src;
+        inherit (config.packages) customdata-generated;
       };
       customdata-cpp-src = pkgs.callPackage ./customdata-cpp-src/package.nix {
         src = self;
-        inherit (config.packages) customdata-src;
+        inherit (config.packages) customdata-generated;
       };
-      mp-customdata-test = pkgs.callPackage ./test/package.nix {
+      customdata-tools = pkgs.callPackage ./customdata-tools/package.nix {
         src = self;
-        inherit (config.packages) customdata-src;
+        inherit (config.packages) customdata-generated;
       };
-      default = config.packages.customdata-src;
+      default = config.packages.customdata-generated;
 
       nanopb-fixed = pkgs.callPackage ./nanopb-fixed/package.nix { };
     };

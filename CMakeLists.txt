@@ -3,29 +3,38 @@ project(MasterPilot-CustomData VERSION 0.1.0 LANGUAGES C CXX)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-# ── 构建选项 ──────────────────────────────────────────
-option(BUILD_TESTING "Build C test executable" OFF)
-option(BUILD_CPP    "Build C++ wrapper library" OFF)
+# ── 外部可覆盖路径 (Nix 通过 -DXXXX_DIR= 显式传入，否则回退为项目相对路径) ──
+if(NOT DEFINED CUSTOMDATA_GENERATED_DIR)
+    set(CUSTOMDATA_GENERATED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/generated"
+        CACHE PATH "Path to buf-generated protobuf files")
+endif()
 
-# ── 依赖路径（由 Nix cmakeFlags 注入；纯 CMake 环境下可手动设） ──
-#   CUSTOMDATA_SRC_DIR   指向 buf generate 生成的源代码目录（含 c/ cpp/ 等子目录）
-#   NANOPB_DIR           指向 nanopb 安装前缀（可选，通常 find_package 即可解决）
-set(CUSTOMDATA_SRC_DIR "" CACHE PATH
-    "Path to buf-generated proto sources (customdata-src package output)")
-set(NANOPB_DIR "" CACHE PATH
-    "Path to nanopb installation prefix (optional)")
-set(PROROBUF_DIR "" CACHE PATH
-    "Path to protobuf installation prefix (optional)")
+# ── 内部路径 ──
+set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
-# ── C 源码目录（始终为项目内的 src/） ──
-set(MPC_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
+# ── 构建开关 ──
+option(MINIMAL_MODE "Only build what is explicitly enabled" OFF)
+if(MINIMAL_MODE)
+    set(_default_build OFF)
+else()
+    set(_default_build ON)
+    set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+endif()
+option(BUILD_NANOPB "Build nanopb encode/decode layer" ${_default_build})
+option(BUILD_CPP    "Build C++ protobuf wrapper"       ${_default_build})
+option(BUILD_TOOLS  "Build CLI tools"                  ${_default_build})
 
-# ── 子目录 ────────────────────────────────────────────
-if(BUILD_TESTING)
-    enable_testing()
-    add_subdirectory(test)
+
+add_subdirectory(src/core)
+
+if(BUILD_NANOPB)
+    add_subdirectory(src/nanopb)
 endif()
 
 if(BUILD_CPP)
-    add_subdirectory(cpp)
+    add_subdirectory(src/cpp)
+endif()
+
+if(BUILD_TOOLS)
+    add_subdirectory(src/tools)
 endif()
