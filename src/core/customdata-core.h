@@ -75,7 +75,7 @@ typedef struct {
  * @return 已读取的长度
  * @warning 注意不要越界.
 */
-typedef uint16_t mp_consumer_cb_t(uint8_t* source_block, uint16_t block_length, void* user);
+typedef uint16_t mp_consumer_cb_t(const uint8_t* source_block, uint16_t block_length, void* user);
 
 /*
  * @brief 从 ring buffer 逐 block 读出并通过 consumer 回调发送
