@@ -71,14 +71,14 @@ bool mp_session_send_create(uint16_t mtu, uint8_t buffer_count)
 
 bool mp_session_recv_create(uint16_t mtu, uint8_t buffer_count)
 {
-    uint32_t magic          = MP_SESSION_RECV_MAGIC;
-    uint8_t  head           = 0;
-    uint8_t  tail           = 0;
-    uint8_t  slice_base     = 0;
-    uint8_t  slice_count    = 0;
-    uint8_t  pkg_complete    = 0;
-    uint8_t  slices_received = 0;
-    uint8_t  terminal_serial = 0xFF;
+    uint32_t magic            = MP_SESSION_RECV_MAGIC;
+    uint8_t  head             = 0;
+    uint8_t  tail             = 0;
+    uint8_t  slice_base       = 0;
+    uint8_t  slice_bitmap[32] = {0};
+    uint8_t  slices_received  = 0;
+    uint8_t  terminal_serial  = 0xFF;
+    uint8_t  pkg_complete     = 0;
 
     if (!write_full(STDOUT_FILENO, &magic,          4))  return false;
     if (!write_full(STDOUT_FILENO, &buffer_count,   1))  return false;
@@ -86,9 +86,9 @@ bool mp_session_recv_create(uint16_t mtu, uint8_t buffer_count)
     if (!write_full(STDOUT_FILENO, &head,           1))  return false;
     if (!write_full(STDOUT_FILENO, &tail,           1))  return false;
     if (!write_full(STDOUT_FILENO, &slice_base,     1))  return false;
-    if (!write_full(STDOUT_FILENO, &slice_count,    1))  return false;
-    if (!write_full(STDOUT_FILENO, &slices_received, 1))  return false;
-    if (!write_full(STDOUT_FILENO, &terminal_serial, 1))  return false;
+    if (!write_full(STDOUT_FILENO, slice_bitmap,   32))  return false;
+    if (!write_full(STDOUT_FILENO, &slices_received, 1)) return false;
+    if (!write_full(STDOUT_FILENO, &terminal_serial, 1)) return false;
     if (!write_full(STDOUT_FILENO, &pkg_complete,   1))  return false;
     if (!write_zero(STDOUT_FILENO, (size_t)buffer_count * mtu)) return false;
 
@@ -204,7 +204,8 @@ bool mp_session_recv_load(mp_receiver_t *receiver, const char *path)
     uint32_t magic;
     uint8_t  buffer_count;
     uint16_t mtu;
-    uint8_t  head, tail, slice_base, slice_count;
+    uint8_t  head, tail, slice_base;
+    uint8_t  slice_bitmap[32];
     uint8_t  slices_received, terminal_serial, pkg_complete;
 
     bool ok = true;
@@ -214,7 +215,7 @@ bool mp_session_recv_load(mp_receiver_t *receiver, const char *path)
     if (!read_full(fileno(f), &head,            1))  { ok = false; goto out; }
     if (!read_full(fileno(f), &tail,            1))  { ok = false; goto out; }
     if (!read_full(fileno(f), &slice_base,      1))  { ok = false; goto out; }
-    if (!read_full(fileno(f), &slice_count,     1))  { ok = false; goto out; }
+    if (!read_full(fileno(f), slice_bitmap,    32))  { ok = false; goto out; }
     if (!read_full(fileno(f), &slices_received, 1))  { ok = false; goto out; }
     if (!read_full(fileno(f), &terminal_serial, 1))  { ok = false; goto out; }
     if (!read_full(fileno(f), &pkg_complete,    1))  { ok = false; goto out; }
@@ -245,13 +246,13 @@ bool mp_session_recv_load(mp_receiver_t *receiver, const char *path)
             .tail              = tail,
             .head              = head,
             .slice_base        = slice_base,
-            .slice_count       = slice_count,
             .slices_received   = slices_received,
             .terminal_serial   = terminal_serial,
             .package_complete  = (bool)pkg_complete,
             .config            = cfg
         };
-        memcpy(receiver, &r, sizeof(*receiver));
+        memcpy((void *)r.slice_bitmap, slice_bitmap, 32);
+        memcpy((void *)receiver, &r, sizeof(*receiver));
     }
 
 out:
@@ -272,16 +273,15 @@ bool mp_session_recv_save(const mp_receiver_t *receiver, const char *path)
         return false;
     }
 
-    uint32_t magic       = MP_SESSION_RECV_MAGIC;
-    uint8_t  bc          = receiver->config.buffer_count;
-    uint16_t mtu         = receiver->config.mtu;
-    uint8_t  head        = receiver->head;
-    uint8_t  tail        = receiver->tail;
-    uint8_t  slice_base  = receiver->slice_base;
-    uint8_t  slice_count = receiver->slice_count;
-    uint8_t  pkg_complete    = (uint8_t)receiver->package_complete;
+    uint32_t magic           = MP_SESSION_RECV_MAGIC;
+    uint8_t  bc              = receiver->config.buffer_count;
+    uint16_t mtu             = receiver->config.mtu;
+    uint8_t  head            = receiver->head;
+    uint8_t  tail            = receiver->tail;
+    uint8_t  slice_base      = receiver->slice_base;
     uint8_t  slices_received = receiver->slices_received;
     uint8_t  terminal_serial = receiver->terminal_serial;
+    uint8_t  pkg_complete    = (uint8_t)receiver->package_complete;
     size_t   buf_size        = (size_t)bc * mtu;
 
     bool ok = true;
@@ -291,7 +291,7 @@ bool mp_session_recv_save(const mp_receiver_t *receiver, const char *path)
     if (!write_full(fileno(f), &head,            1))  { ok = false; goto out; }
     if (!write_full(fileno(f), &tail,            1))  { ok = false; goto out; }
     if (!write_full(fileno(f), &slice_base,      1))  { ok = false; goto out; }
-    if (!write_full(fileno(f), &slice_count,     1))  { ok = false; goto out; }
+    if (!write_full(fileno(f), (const void *)receiver->slice_bitmap, 32)) { ok = false; goto out; }
     if (!write_full(fileno(f), &slices_received, 1))  { ok = false; goto out; }
     if (!write_full(fileno(f), &terminal_serial, 1))  { ok = false; goto out; }
     if (!write_full(fileno(f), &pkg_complete,    1))  { ok = false; goto out; }

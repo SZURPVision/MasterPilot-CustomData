@@ -40,8 +40,8 @@ typedef struct {
     volatile uint8_t  tail;             // 已解码消费位置
     volatile uint8_t  head;             // 已收齐但未解码的包边界
     volatile uint8_t  slice_base;       // 当前大包起始块下标
-    volatile uint8_t  slice_count;      // 当前大包已收分片数(去重前), 收满后等于分片总数
-    volatile uint8_t  slices_received;  // 已接收的唯一分片数量(用于去重)
+    volatile uint8_t  slice_bitmap[32]; // 去重位图 (支持 buffer_count ≤ 256)
+    volatile uint8_t  slices_received;  // 已接收的唯一分片数量
     volatile uint8_t  terminal_serial;  // 终止帧 slice_serial, 0xFF=未收到
     volatile bool     package_complete; // 是否有完整包待解码
     const mp_config_t       config;
@@ -100,16 +100,32 @@ bool MP_Receive(mp_receiver_t *receiver, const uint8_t *data);
 uint16_t MP_BlockWriter_Begin(mp_block_writer_t *writer, mp_sender_t *sender);
 
 /*
- * @brief 流式写入 payload 数据，自动处理跨块分片
+ * @brief 提取当前连续可写的内存指针, 返回可写长度, 自动处理分片
+ * @return 连续可写的字节数
+ */
+uint16_t MP_BlockWriter_Acquire(mp_block_writer_t *writer, uint8_t **out_ptr);
+
+/*
+ * @brief 提交已写入的字节数, 以推动写入过程
+ */
+void MP_BlockWriter_CommitBytes(mp_block_writer_t *writer, const uint16_t length);
+
+/*
+ * @brief 返回已申请但未使用的字节
+ */
+void MP_BlockWriter_BackUp(mp_block_writer_t *writer, const uint16_t count);
+
+/*
+ * @brief 流式写入 payload 数据，自动处理跨块分片. 是多个拆散原语的简单封装.
  * @return 实际写入的字节数
  */
-uint16_t MP_BlockWriter_Write(mp_block_writer_t *writer, const uint8_t *data, uint16_t length);
+uint16_t MP_BlockWriter_Write(mp_block_writer_t *writer, const uint8_t*data, const uint16_t length);
 
 /*
  * @brief 提交：推进 head、回填所有 block 的帧头、递增 serial
  * @param total_payload 编码出的总 payload 字节数
  */
-void MP_BlockWriter_Commit(mp_block_writer_t *writer, uint16_t total_payload);
+void MP_BlockWriter_Commit(mp_block_writer_t *writer, const uint16_t total_payload);
 
 /*
  * @brief 回滚：恢复 sender->head 到写入前的状态
@@ -127,10 +143,21 @@ void MP_BlockWriter_Rollback(mp_block_writer_t *writer);
 uint16_t MP_BlockReader_Begin(mp_block_reader_t *reader, mp_receiver_t *receiver);
 
 /*
+ * @brief 提取当前连续可写的内存指针, 返回可写长度, 自动处理分片
+ * @return 连续可写的字节数
+ */
+uint16_t MP_BlockReader_Acquire(mp_block_reader_t *reader, const uint8_t **out_ptr);
+
+/*
+ * @brief 标记已消费的字节
+ */
+void MP_BlockReader_Advance(mp_block_reader_t *reader, const uint16_t length);
+
+/*
  * @brief 流式读取 payload 数据，自动处理跨块和末块 payload_size 判断
  * @return 实际读取的字节数
  */
-uint16_t MP_BlockReader_Read(mp_block_reader_t *reader, uint8_t *data, uint16_t length);
+uint16_t MP_BlockReader_Read(mp_block_reader_t *reader, uint8_t *data, const uint16_t length);
 
 /*
  * @brief 完成读取：推进 tail，清除 package_complete 标志

@@ -1,4 +1,6 @@
 #include "customdata-core.h"
+#include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 
 bool MP_Send(mp_sender_t *sender, mp_consumer_cb_t consumer, void *user)
@@ -30,14 +32,16 @@ bool MP_Receive(mp_receiver_t *receiver, const uint8_t *data)
     memcpy(receiver->config.buffer + (size_t)index * receiver->config.mtu,
            data, receiver->config.mtu);
 
-    // 更新 slice_count（单调递增，用于计数去重）
-    uint16_t payload_max = receiver->config.mtu - sizeof(mp_header_t);
-    uint8_t old_count = receiver->slice_count;
-    if (header->slice_serial + 1 > receiver->slice_count)
-        receiver->slice_count = header->slice_serial + 1;
-    receiver->slices_received += (uint8_t)(receiver->slice_count - old_count);
+    // 去重：bitmap 置位，首次出现递增 slices_received
+    uint8_t byte_idx = header->slice_serial >> 3;
+    uint8_t bit_mask = 1 << (header->slice_serial & 7);
+    if (!(receiver->slice_bitmap[byte_idx] & bit_mask)) {
+        receiver->slice_bitmap[byte_idx] |= bit_mask;
+        ++receiver->slices_received;
+    }
 
     // 末帧判定：payload 不满即为终止帧
+    uint16_t payload_max = receiver->config.mtu - sizeof(mp_header_t);
     if (header->slice_payload_size < payload_max)
         receiver->terminal_serial = header->slice_serial;
 
@@ -45,12 +49,12 @@ bool MP_Receive(mp_receiver_t *receiver, const uint8_t *data)
     if (receiver->terminal_serial != 0xFF
         && receiver->slices_received >= receiver->terminal_serial + 1)
     {
-        receiver->head = (receiver->slice_base + receiver->slice_count)
+        receiver->head = (receiver->slice_base + receiver->terminal_serial + 1)
                          % receiver->config.buffer_count;
         receiver->package_complete = true;
 
         receiver->slice_base = receiver->head;
-        receiver->slice_count = 0;
+        memset((void *)receiver->slice_bitmap, 0, sizeof(receiver->slice_bitmap));
         receiver->slices_received = 0;
         receiver->terminal_serial = 0xFF;
 
@@ -80,29 +84,47 @@ uint16_t MP_BlockWriter_Begin(mp_block_writer_t *writer, mp_sender_t *sender)
     return available_blocks * payload_max;
 }
 
-uint16_t MP_BlockWriter_Write(mp_block_writer_t *writer, const uint8_t *data, uint16_t length)
+uint16_t MP_BlockWriter_Acquire(mp_block_writer_t *writer, uint8_t **out_ptr)
 {
     uint16_t mtu = writer->sender->config.mtu;
-    uint8_t  buffer_count = writer->sender->config.buffer_count;
+
+    //没空间了就溜到下一个buffer
+    if (writer->offset_in_block >= mtu)
+    {
+        writer->current_head = (writer->current_head + 1)% writer->sender->config.buffer_count;
+        writer->offset_in_block = sizeof(mp_header_t);
+    }
+
+    *out_ptr = writer->sender->config.buffer + writer->current_head * mtu + writer->offset_in_block;
+    return mtu - writer->offset_in_block;
+}
+
+void MP_BlockWriter_CommitBytes(mp_block_writer_t *writer, uint16_t length)
+{
+    writer->offset_in_block += length;
+}
+
+void MP_BlockWriter_BackUp(mp_block_writer_t* writer, const uint16_t count)
+{
+    writer->offset_in_block -= count;
+}
+
+uint16_t MP_BlockWriter_Write(mp_block_writer_t* restrict writer, const uint8_t* restrict data, const uint16_t length)
+{
     uint16_t written = 0;
 
-    while (length > 0) {
-        size_t available = mtu - writer->offset_in_block;
-        size_t to_write  = length < available ? length : available;
+    while (written < length) {
+        uint8_t* ptr = NULL;
+        uint16_t avaliable = MP_BlockWriter_Acquire(writer, &ptr);
 
-        uint8_t *block = writer->sender->config.buffer
-                         + (size_t)writer->current_head * mtu;
-        memcpy(&block[writer->offset_in_block], data, to_write);
+        if(avaliable == 0)break;
 
-        data   += to_write;
-        length -= to_write;
-        writer->offset_in_block += (uint16_t)to_write;
-        written += (uint16_t)to_write;
+        uint16_t to_write = (length - written) < avaliable ? (length - written) : avaliable;
+        memcpy(ptr, data + written, to_write);
 
-        if (writer->offset_in_block >= mtu) {
-            writer->current_head = (writer->current_head + 1) % buffer_count;
-            writer->offset_in_block = sizeof(mp_header_t);
-        }
+        MP_BlockWriter_CommitBytes(writer, to_write);
+
+        written += to_write;
     }
 
     return written;
@@ -203,47 +225,58 @@ uint16_t MP_BlockReader_Begin(mp_block_reader_t *reader, mp_receiver_t *receiver
     return total;
 }
 
-uint16_t MP_BlockReader_Read(mp_block_reader_t *reader, uint8_t *data, uint16_t length)
+uint16_t MP_BlockReader_Acquire(mp_block_reader_t *reader, const uint8_t **out_ptr)
 {
     mp_receiver_t *receiver = reader->receiver;
     uint16_t mtu = receiver->config.mtu;
-    uint16_t payload_max = mtu - sizeof(mp_header_t);
-    uint8_t  buffer_count = receiver->config.buffer_count;
-    uint16_t read_total = 0;
-
-    while (length > 0) {
-        uint8_t next = (reader->current_block + 1) % buffer_count;
-        bool is_last = (next == reader->end_block);
-
-        /* 当前 block 的实际 payload 大小 */
-        size_t payload_size = is_last
-            ? ((mp_header_t *)(receiver->config.buffer
-                                + (size_t)reader->current_block * mtu))->slice_payload_size
-            : (size_t)payload_max;
-
-        /* 当前 block 剩余未读 payload 字节数 */
-        size_t consumed  = reader->offset_in_block - sizeof(mp_header_t);
-        size_t available = payload_size - consumed;
-        size_t to_read   = length < available ? length : available;
-
-        memcpy(data,
-               receiver->config.buffer + (size_t)reader->current_block * mtu
-                                        + reader->offset_in_block,
-               to_read);
-
-        data   += to_read;
-        length -= to_read;
-        reader->offset_in_block += (uint16_t)to_read;
-        read_total += (uint16_t)to_read;
-
-        /* 当前 block 已读完，切换到下一个 */
-        if (reader->offset_in_block >= sizeof(mp_header_t) + payload_size) {
-            reader->current_block  = next;
-            reader->offset_in_block = sizeof(mp_header_t);
-        }
+    uint8_t buffer_count = receiver->config.buffer_count;
+    
+    if (reader->offset_in_block >= mtu)
+    {
+        reader->current_block = (reader->current_block + 1) % buffer_count;
+        reader->offset_in_block = sizeof(mp_header_t);
     }
 
-    return read_total;
+    bool is_last = (((reader->current_block + 1) % buffer_count) == reader->end_block);
+    size_t payload_size = is_last 
+        ? ((mp_header_t *)(receiver->config.buffer + (size_t)reader->current_block * mtu))->slice_payload_size
+        : (mtu - sizeof(mp_header_t));
+
+    if (reader->offset_in_block - sizeof(mp_header_t) >= payload_size) {
+        return 0;
+    }
+
+    *out_ptr = receiver->config.buffer 
+               + (size_t)reader->current_block * mtu 
+               + reader->offset_in_block;
+               
+    return (uint16_t)(payload_size - (reader->offset_in_block - sizeof(mp_header_t)));
+}
+
+void MP_BlockReader_Advance(mp_block_reader_t *reader, const uint16_t length) {
+    reader->offset_in_block += length;
+}
+
+uint16_t MP_BlockReader_Read(mp_block_reader_t *reader, uint8_t *data, const uint16_t length)
+{
+    //我真是服了, read的完成时还叫read
+    uint16_t red = 0;
+
+    while (red < length)
+    {
+        const uint8_t* ptr = NULL;
+        uint16_t avaliable = MP_BlockReader_Acquire(reader, &ptr);
+        
+        if(avaliable == 0) break;
+        
+        uint16_t to_read = (length - red) < avaliable ? (length - red) : avaliable;
+        memcpy(data + red, ptr, to_read);
+
+        MP_BlockReader_Advance(reader, to_read);
+        red += to_read;
+    }
+    
+    return red;
 }
 
 void MP_BlockReader_Finish(mp_block_reader_t *reader)

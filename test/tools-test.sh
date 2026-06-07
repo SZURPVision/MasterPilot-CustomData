@@ -60,21 +60,36 @@ dd if=/dev/urandom of=tiny.bin bs=97 count=1 2>/dev/null  # 1 byte short of 2-bl
 "$BIN" recv -s recv.sess < encoded.bin > decoded.bin
 diff tiny.bin decoded.bin && pass "tiny-stdin-buf (-b 1)" || fail "tiny-stdin-buf (-b 1)"
 
-# ── slice-reorder (single packet, intra-packet block shuffle) ──
+# ── slice-reorder (packet with terminal frame: exact multiple → shuffle all 6 blocks) ──
 rm -f send.sess recv.sess encoded.bin decoded.bin
 MTU=100
 "$BIN" config -m $MTU -c 8 -t send > send.sess
 "$BIN" config -m $MTU -c 8 -t recv > recv.sess
-# Generate data spanning 5 blocks (5 * 96 = 480 bytes, non-multiple → no terminal frame)
+# 480 = 5 * 96 → exact multiple, Commit appends terminal frame → 6 blocks total
 dd if=/dev/urandom of=reorder.bin bs=96 count=5 2>/dev/null
 "$BIN" send -s send.sess < reorder.bin > encoded.bin
-# Split into mtu-byte blocks, shuffle, reassemble
 mkdir blk_dir
 split -b $MTU encoded.bin blk_dir/blk_
 ls blk_dir/blk_* | shuf | xargs cat > shuffled.bin
 "$BIN" recv -s recv.sess < shuffled.bin > decoded.bin
 diff reorder.bin decoded.bin && pass "slice-reorder" || fail "slice-reorder"
 rm -rf blk_dir
+
+# ── duplicate-blocks (bitmap dedup: duplicate some blocks, receiver ignores dupes) ──
+rm -f send.sess recv.sess encoded.bin decoded.bin
+"$BIN" config -m 100 -c 5 -t send > send.sess
+"$BIN" config -m 100 -c 5 -t recv > recv.sess
+dd if=/dev/urandom of=dup.bin bs=130 count=1 2>/dev/null  # 2 blocks: 96 + 34
+"$BIN" send -s send.sess < dup.bin > encoded.bin
+# Split and duplicate block 0 (first block)
+mkdir dup_dir
+split -b 100 encoded.bin dup_dir/blk_
+# Duplicate first block
+first_blk=$(ls dup_dir/blk_* | head -1)
+cat "$first_blk" $(ls dup_dir/blk_*) > duped.bin
+"$BIN" recv -s recv.sess < duped.bin > decoded.bin
+diff dup.bin decoded.bin && pass "duplicate-blocks" || fail "duplicate-blocks"
+rm -rf dup_dir
 
 # ── mixed-reorder (multi-packet, each packet's blocks shuffled, packets in order) ──
 rm -f send.sess recv.sess
