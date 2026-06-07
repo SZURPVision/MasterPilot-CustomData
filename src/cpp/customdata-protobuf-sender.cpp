@@ -90,7 +90,7 @@ struct Sender::Impl
 
 };
 
-static uint16_t MP_ConsumerTrampoline(uint8_t* block, uint16_t block_length, void* user)
+static uint16_t MP_ConsumerTrampoline(const uint8_t* block, const uint16_t block_length, void* user)
 {
     auto* consumer = static_cast<Sender::Consumer*>(user);
     auto consumed = (*consumer)({block,block_length});

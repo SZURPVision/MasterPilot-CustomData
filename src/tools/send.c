@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-static uint16_t stdout_consumer(uint8_t *source_block, uint16_t block_length, void *user)
+static uint16_t stdout_consumer(const uint8_t *source_block, const uint16_t block_length, void *user)
 {
     (void)user;
     const uint8_t *p = source_block;
