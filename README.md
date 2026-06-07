@@ -151,6 +151,74 @@ void main()
 #### 接收(解码)
 TODO
 
+### C++
+
+以英雄为例
+
+#### 代码拉取
+
+- 第一次使用: git clone [仓库url]/release-cpp
+- 后续更新: git pull
+
+#### 构建系统配置
+
+- 不用配, 拉取下来就有cmake了, `add_directory`就行.
+
+#### 发送
+
+```cpp
+#include <masterpilot/customdata-protobuf-sender.hpp>
+#include <masterpilot/proto/hero.pb.h>
+
+// 定时调用的函数, 用来把缓冲区发给电控
+void call_me_repeatedly(
+	const masterpilot::customdata::Sender& sender
+)
+{
+	//返回值: 是否成功, 可以用来设计重传. 串口应该不会失败.
+	sender.flush();
+}
+
+int main()
+{
+	masterpilot::customdata::Sender sender
+	{
+		300, //mtu
+		16, //buffer数量 会自动分配(底层是vector)
+		[&send_to_my_serial](auto block) -> int //具体的发送实现
+		{
+			//加装帧头, 让串口把span发出去. 假设全发完了没阻塞
+			//注: 电控直接转发这一块即可, 不需要在电控那里再解析.
+			send_to_my_serial(block);
+
+			//发成功多少返回多少.
+			return block.size();
+		}
+	};
+
+	// 这里换成实际编码相机出来的帧.
+	std::string nz2 = "哪吒之魔童闹海";
+
+	HeroDataPacketToClient msg;
+	// 这一步set完后, 会自动带上has, 不用额外处理
+	msg.set_camera_frame(nz2);
+
+	//传进缓冲区
+	sender.Feed(msg);
+}
+
+```
+
+#### 接收
+
+TODO
+
+
+### C#
+
+参考自定义客户端项目`MasterPilot`.
+
+
 
 ## 环境配置
 
