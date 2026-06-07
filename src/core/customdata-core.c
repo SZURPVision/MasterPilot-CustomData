@@ -67,7 +67,7 @@ uint16_t MP_BlockWriter_Begin(mp_block_writer_t *writer, mp_sender_t *sender)
     writer->current_head = sender->head;
     writer->offset_in_block = sizeof(mp_header_t);
 
-    uint8_t available_blocks = (buffer_count + sender->head - sender->tail - 1)
+    uint8_t available_blocks = (buffer_count + sender->head - sender->tail - 2)
                                 % buffer_count;
     return available_blocks * payload_max;
 }
@@ -129,6 +129,23 @@ void MP_BlockWriter_Commit(mp_block_writer_t *writer, uint16_t total_payload)
                                       ? payload_max
                                       : remaining;
         remaining -= header->slice_payload_size;
+    }
+
+    /*
+     * 若 total_payload 恰好是 payload_max 的整数倍, 则最后一个数据 block 的
+     * slice_payload_size == payload_max, receiver 无法区分末帧.
+     * 追加一个 slice_payload_size=0 的空帧作为终止标记.
+     * Begin() 已预留 1 个空闲 block, 此处必然有空位.
+     */
+    if (total_payload > 0 && total_payload % payload_max == 0) {
+        uint8_t *block = sender->config.buffer + (size_t)sender->head * mtu;
+        mp_header_t *header = (mp_header_t *)block;
+        memset(block, 0, mtu);
+        header->package_serial    = sender->serial;
+        header->slice_serial      = slice_serial;
+        header->slice_payload_size = 0;
+
+        sender->head = (sender->head + 1) % buffer_count;
     }
 
     ++sender->serial;
