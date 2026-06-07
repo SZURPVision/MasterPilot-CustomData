@@ -21,7 +21,8 @@ static uint16_t stdout_consumer(uint8_t *source_block, uint16_t block_length, vo
 
 int cmd_send(int argc, char *argv[])
 {
-    const char *session_path = require_session_file(argc, argv);
+    uint16_t stdin_buf_size;
+    const char *session_path = send_parse_args(argc, argv, &stdin_buf_size);
     if (!session_path) return 1;
 
     mp_sender_t sender = {};
@@ -31,10 +32,10 @@ int cmd_send(int argc, char *argv[])
     mp_block_writer_t writer;
     uint16_t remaining = MP_BlockWriter_Begin(&writer, &sender);
     uint16_t total = 0;
-    uint8_t  buf[4096];
+    uint8_t  *buf = (uint8_t *)malloc(stdin_buf_size);
 
     while (remaining > 0) {
-        uint16_t ask = remaining < sizeof(buf) ? remaining : (uint16_t)sizeof(buf);
+        uint16_t ask = remaining < stdin_buf_size ? remaining : stdin_buf_size;
         ssize_t n = read(STDIN_FILENO, buf, ask);
         if (n <= 0) break;
         uint16_t w = MP_BlockWriter_Write(&writer, buf, (uint16_t)n);
@@ -42,6 +43,7 @@ int cmd_send(int argc, char *argv[])
         remaining -= w;
     }
 
+    free(buf);
     MP_BlockWriter_Commit(&writer, total);
     MP_Send(&sender, stdout_consumer, NULL);
 

@@ -40,7 +40,9 @@ typedef struct {
     volatile uint8_t  tail;             // 已解码消费位置
     volatile uint8_t  head;             // 已收齐但未解码的包边界
     volatile uint8_t  slice_base;       // 当前大包起始块下标
-    volatile uint8_t  slice_count;      // 当前大包已收分片数
+    volatile uint8_t  slice_count;      // 当前大包已收分片数(去重前), 收满后等于分片总数
+    volatile uint8_t  slices_received;  // 已接收的唯一分片数量(用于去重)
+    volatile uint8_t  terminal_serial;  // 终止帧 slice_serial, 0xFF=未收到
     volatile bool     package_complete; // 是否有完整包待解码
     const mp_config_t       config;
 } mp_receiver_t;

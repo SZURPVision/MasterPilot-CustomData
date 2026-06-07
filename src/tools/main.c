@@ -80,6 +80,43 @@ int cmd_config(int argc, char *argv[])
     }
 }
 
+#define DEFAULT_STDIN_BUF_SIZE 64
+
+const char *send_parse_args(int argc, char *argv[], uint16_t *stdin_buf_size)
+{
+    static struct option long_options[] = {
+        {"session",   required_argument, 0, 's'},
+        {"stdin-buf", required_argument, 0, 'b'},
+        {"help",      no_argument,       0, 'h'},
+        {0, 0, 0, 0}
+    };
+
+    const char *session_path = NULL;
+    *stdin_buf_size = DEFAULT_STDIN_BUF_SIZE;
+
+    int opt;
+    while ((opt = getopt_long(argc, argv, "s:b:h", long_options, NULL)) != -1) {
+        switch (opt) {
+            case 's': session_path = optarg; break;
+            case 'b': *stdin_buf_size = (uint16_t)atoi(optarg); break;
+            case 'h': return NULL;
+            default:  return NULL;
+        }
+    }
+
+    if (*stdin_buf_size == 0) {
+        fprintf(stderr, "Error: stdin buffer size must be > 0\n");
+        return NULL;
+    }
+
+    if (!session_path) {
+        fprintf(stderr, "Error: -s/--session <path> is required\n");
+        return NULL;
+    }
+
+    return session_path;
+}
+
 const char *require_session_file(int argc, char *argv[])
 {
     static struct option long_options[] = {

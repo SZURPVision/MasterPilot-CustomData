@@ -76,16 +76,20 @@ bool mp_session_recv_create(uint16_t mtu, uint8_t buffer_count)
     uint8_t  tail           = 0;
     uint8_t  slice_base     = 0;
     uint8_t  slice_count    = 0;
-    uint8_t  pkg_complete   = 0;
+    uint8_t  pkg_complete    = 0;
+    uint8_t  slices_received = 0;
+    uint8_t  terminal_serial = 0xFF;
 
-    if (!write_full(STDOUT_FILENO, &magic,         4))  return false;
-    if (!write_full(STDOUT_FILENO, &buffer_count,  1))  return false;
-    if (!write_full(STDOUT_FILENO, &mtu,           2))  return false;
-    if (!write_full(STDOUT_FILENO, &head,          1))  return false;
-    if (!write_full(STDOUT_FILENO, &tail,          1))  return false;
-    if (!write_full(STDOUT_FILENO, &slice_base,    1))  return false;
-    if (!write_full(STDOUT_FILENO, &slice_count,   1))  return false;
-    if (!write_full(STDOUT_FILENO, &pkg_complete,  1))  return false;
+    if (!write_full(STDOUT_FILENO, &magic,          4))  return false;
+    if (!write_full(STDOUT_FILENO, &buffer_count,   1))  return false;
+    if (!write_full(STDOUT_FILENO, &mtu,            2))  return false;
+    if (!write_full(STDOUT_FILENO, &head,           1))  return false;
+    if (!write_full(STDOUT_FILENO, &tail,           1))  return false;
+    if (!write_full(STDOUT_FILENO, &slice_base,     1))  return false;
+    if (!write_full(STDOUT_FILENO, &slice_count,    1))  return false;
+    if (!write_full(STDOUT_FILENO, &slices_received, 1))  return false;
+    if (!write_full(STDOUT_FILENO, &terminal_serial, 1))  return false;
+    if (!write_full(STDOUT_FILENO, &pkg_complete,   1))  return false;
     if (!write_zero(STDOUT_FILENO, (size_t)buffer_count * mtu)) return false;
 
     return true;
@@ -200,17 +204,20 @@ bool mp_session_recv_load(mp_receiver_t *receiver, const char *path)
     uint32_t magic;
     uint8_t  buffer_count;
     uint16_t mtu;
-    uint8_t  head, tail, slice_base, slice_count, pkg_complete;
+    uint8_t  head, tail, slice_base, slice_count;
+    uint8_t  slices_received, terminal_serial, pkg_complete;
 
     bool ok = true;
-    if (!read_full(fileno(f), &magic,         4))  { ok = false; goto out; }
-    if (!read_full(fileno(f), &buffer_count,  1))  { ok = false; goto out; }
-    if (!read_full(fileno(f), &mtu,           2))  { ok = false; goto out; }
-    if (!read_full(fileno(f), &head,          1))  { ok = false; goto out; }
-    if (!read_full(fileno(f), &tail,          1))  { ok = false; goto out; }
-    if (!read_full(fileno(f), &slice_base,    1))  { ok = false; goto out; }
-    if (!read_full(fileno(f), &slice_count,   1))  { ok = false; goto out; }
-    if (!read_full(fileno(f), &pkg_complete,  1))  { ok = false; goto out; }
+    if (!read_full(fileno(f), &magic,           4))  { ok = false; goto out; }
+    if (!read_full(fileno(f), &buffer_count,    1))  { ok = false; goto out; }
+    if (!read_full(fileno(f), &mtu,             2))  { ok = false; goto out; }
+    if (!read_full(fileno(f), &head,            1))  { ok = false; goto out; }
+    if (!read_full(fileno(f), &tail,            1))  { ok = false; goto out; }
+    if (!read_full(fileno(f), &slice_base,      1))  { ok = false; goto out; }
+    if (!read_full(fileno(f), &slice_count,     1))  { ok = false; goto out; }
+    if (!read_full(fileno(f), &slices_received, 1))  { ok = false; goto out; }
+    if (!read_full(fileno(f), &terminal_serial, 1))  { ok = false; goto out; }
+    if (!read_full(fileno(f), &pkg_complete,    1))  { ok = false; goto out; }
 
     if (magic != MP_SESSION_RECV_MAGIC) {
         fprintf(stderr, "mp_session_recv_load: bad magic 0x%08X\n", magic);
@@ -235,12 +242,14 @@ bool mp_session_recv_load(mp_receiver_t *receiver, const char *path)
 
         mp_config_t   cfg = { .buffer = buffer, .buffer_count = buffer_count, .mtu = mtu };
         mp_receiver_t r   = {
-            .tail             = tail,
-            .head             = head,
-            .slice_base       = slice_base,
-            .slice_count      = slice_count,
-            .package_complete = (bool)pkg_complete,
-            .config           = cfg
+            .tail              = tail,
+            .head              = head,
+            .slice_base        = slice_base,
+            .slice_count       = slice_count,
+            .slices_received   = slices_received,
+            .terminal_serial   = terminal_serial,
+            .package_complete  = (bool)pkg_complete,
+            .config            = cfg
         };
         memcpy(receiver, &r, sizeof(*receiver));
     }
@@ -270,18 +279,22 @@ bool mp_session_recv_save(const mp_receiver_t *receiver, const char *path)
     uint8_t  tail        = receiver->tail;
     uint8_t  slice_base  = receiver->slice_base;
     uint8_t  slice_count = receiver->slice_count;
-    uint8_t  pkg_complete = (uint8_t)receiver->package_complete;
-    size_t   buf_size    = (size_t)bc * mtu;
+    uint8_t  pkg_complete    = (uint8_t)receiver->package_complete;
+    uint8_t  slices_received = receiver->slices_received;
+    uint8_t  terminal_serial = receiver->terminal_serial;
+    size_t   buf_size        = (size_t)bc * mtu;
 
     bool ok = true;
-    if (!write_full(fileno(f), &magic,        4))  { ok = false; goto out; }
-    if (!write_full(fileno(f), &bc,           1))  { ok = false; goto out; }
-    if (!write_full(fileno(f), &mtu,          2))  { ok = false; goto out; }
-    if (!write_full(fileno(f), &head,         1))  { ok = false; goto out; }
-    if (!write_full(fileno(f), &tail,         1))  { ok = false; goto out; }
-    if (!write_full(fileno(f), &slice_base,   1))  { ok = false; goto out; }
-    if (!write_full(fileno(f), &slice_count,  1))  { ok = false; goto out; }
-    if (!write_full(fileno(f), &pkg_complete, 1))  { ok = false; goto out; }
+    if (!write_full(fileno(f), &magic,           4))  { ok = false; goto out; }
+    if (!write_full(fileno(f), &bc,              1))  { ok = false; goto out; }
+    if (!write_full(fileno(f), &mtu,             2))  { ok = false; goto out; }
+    if (!write_full(fileno(f), &head,            1))  { ok = false; goto out; }
+    if (!write_full(fileno(f), &tail,            1))  { ok = false; goto out; }
+    if (!write_full(fileno(f), &slice_base,      1))  { ok = false; goto out; }
+    if (!write_full(fileno(f), &slice_count,     1))  { ok = false; goto out; }
+    if (!write_full(fileno(f), &slices_received, 1))  { ok = false; goto out; }
+    if (!write_full(fileno(f), &terminal_serial, 1))  { ok = false; goto out; }
+    if (!write_full(fileno(f), &pkg_complete,    1))  { ok = false; goto out; }
     if (!write_full(fileno(f), receiver->config.buffer, buf_size)) { ok = false; goto out; }
 
 out:

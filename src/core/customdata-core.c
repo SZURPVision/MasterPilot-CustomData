@@ -30,26 +30,34 @@ bool MP_Receive(mp_receiver_t *receiver, const uint8_t *data)
     memcpy(receiver->config.buffer + (size_t)index * receiver->config.mtu,
            data, receiver->config.mtu);
 
-    // 更新已收分片计数（允许乱序到达）
+    // 更新 slice_count（单调递增，用于计数去重）
+    uint16_t payload_max = receiver->config.mtu - sizeof(mp_header_t);
+    uint8_t old_count = receiver->slice_count;
     if (header->slice_serial + 1 > receiver->slice_count)
         receiver->slice_count = header->slice_serial + 1;
+    receiver->slices_received += (uint8_t)(receiver->slice_count - old_count);
 
-    // 末帧判定：payload 不满即为最后一个分片
-    uint16_t payload_max = receiver->config.mtu - sizeof(mp_header_t);
-    if (header->slice_payload_size < payload_max) {
-        // 标记当前大包边界并推进 slice_base 供下一个包使用
+    // 末帧判定：payload 不满即为终止帧
+    if (header->slice_payload_size < payload_max)
+        receiver->terminal_serial = header->slice_serial;
+
+    // 收齐：拿到终止帧 且 所有唯一分片均已到达
+    if (receiver->terminal_serial != 0xFF
+        && receiver->slices_received >= receiver->terminal_serial + 1)
+    {
         receiver->head = (receiver->slice_base + receiver->slice_count)
                          % receiver->config.buffer_count;
         receiver->package_complete = true;
 
-        // 为下一个大包准备起始位置
         receiver->slice_base = receiver->head;
         receiver->slice_count = 0;
+        receiver->slices_received = 0;
+        receiver->terminal_serial = 0xFF;
 
-        return true; // 大包收齐
+        return true;
     }
 
-    return false; // 还需继续接收
+    return false;
 }
 
 /* ================================================================
