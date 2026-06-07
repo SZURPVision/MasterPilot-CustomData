@@ -25,6 +25,19 @@ option(BUILD_CPP    "Build C++ protobuf wrapper"       ${_default_build})
 option(BUILD_TOOLS  "Build CLI tools"                  ${_default_build})
 
 
+# ── 构建虚拟 include 目录（符号链接，不改变源码树物理结构）──
+set(MP_VIRTUAL_INC "${CMAKE_BINARY_DIR}/include/masterpilot")
+file(MAKE_DIRECTORY "${MP_VIRTUAL_INC}")
+
+file(GLOB MP_CORE_HEADERS "${CMAKE_SOURCE_DIR}/src/core/*.h")
+file(GLOB MP_NANOPB_HEADERS "${CMAKE_SOURCE_DIR}/src/nanopb/*.h")
+file(GLOB MP_CPP_HEADERS "${CMAKE_SOURCE_DIR}/src/cpp/*.hpp")
+
+foreach(_hdr IN LISTS MP_CORE_HEADERS MP_NANOPB_HEADERS MP_CPP_HEADERS)
+    get_filename_component(_name "${_hdr}" NAME)
+    file(CREATE_LINK "${_hdr}" "${MP_VIRTUAL_INC}/${_name}" SYMBOLIC)
+endforeach()
+
 add_subdirectory(src/core)
 
 if(BUILD_NANOPB)

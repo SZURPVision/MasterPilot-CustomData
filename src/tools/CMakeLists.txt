@@ -10,9 +10,9 @@ target_link_libraries(mp-customdata-tools
         mp::customdata::core
 )
 target_include_directories(mp-customdata-tools
-    PUBLIC
+    PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
-        "$<INSTALL_INTERFACE:include/masterpilot>"
+        "$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>"
 )
 target_compile_features(mp-customdata-tools PRIVATE c_std_99)
 

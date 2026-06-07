@@ -7,8 +7,8 @@ add_library(mp-customdata-nanopb STATIC
 add_library(mp::customdata::nanopb ALIAS mp-customdata-nanopb)
 target_include_directories(mp-customdata-nanopb
     PUBLIC
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
-        "$<INSTALL_INTERFACE:include/masterpilot>"
+        "$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>"
+        "$<INSTALL_INTERFACE:include>"
 )
 target_link_libraries(mp-customdata-nanopb
     PUBLIC

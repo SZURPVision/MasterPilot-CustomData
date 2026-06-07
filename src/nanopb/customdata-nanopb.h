@@ -1,7 +1,7 @@
 #ifndef __MP_CUSTOM_DATA_NANOPB_H_
 #define __MP_CUSTOM_DATA_NANOPB_H_
 
-#include "customdata-core.h"
+#include <masterpilot/customdata-core.h>
 #include <pb.h>
 
 #ifdef __cplusplus
