@@ -8,13 +8,14 @@
   lib,
   symlinkJoin,
   makeWrapper,
+  fetchurl
 }:
 stdenv.mkDerivation {
   name = "customdata-generated";
   version = "0.1.0";
 
   meta = {
-    descprtion = "MasterPilot CustomData - buf generated source pack";
+    description = "MasterPilot CustomData - buf generated source pack";
   };
 
   inherit src;

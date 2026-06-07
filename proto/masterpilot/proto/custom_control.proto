@@ -1,7 +1,11 @@
 syntax = "proto3";
 
+import "nanopb.proto";
+
 package masterpilot.proto;
-option csharp_namespace = "MasterPilot.Communicator.ProtoMessages.Control";
+option csharp_namespace = "MasterPilot.Communicator.ProtoMessages";
+option (nanopb_fileopt).package = "MP";
+option (nanopb_fileopt).long_names = false;
 
 // 速度线性量
 message SpeedFactor {

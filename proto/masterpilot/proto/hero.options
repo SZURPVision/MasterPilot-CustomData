@@ -1,1 +1,1 @@
-masterpilot.proto.HeroDataPacketToClient.camera_frame max_size:1500
+MP.HeroDataPacketToClient.camera_frame max_size:1500

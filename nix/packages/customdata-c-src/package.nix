@@ -4,7 +4,7 @@ stdenv.mkDerivation {
   name = "customdata-c-src";
   version = "0.1.0";
   meta = {
-    descprtion = "MasterPilot CustomData - C source package";
+    description = "MasterPilot CustomData - C source package";
   };
   dontUnpack = true;
 

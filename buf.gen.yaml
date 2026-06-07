@@ -1,11 +1,10 @@
-version: v1
+version: v2
 plugins:
-  - plugin: cpp
+  - protoc_builtin: cpp
     out: generated/cpp
-  - plugin: csharp
+  - protoc_builtin: csharp
     out: generated/csharp
-  - plugin: nanopb
+  - protoc_builtin: nanopb
     out: generated/c
-    opt:
-      - -I
-      - proto
+inputs:
+  - directory: proto

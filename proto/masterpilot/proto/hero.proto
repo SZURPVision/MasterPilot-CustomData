@@ -1,7 +1,11 @@
 syntax = "proto3";
 
+import "nanopb.proto";
+
 package masterpilot.proto;
-option csharp_namespace = "MasterPilot.Communicator.ProtoMessages.Hero";
+option csharp_namespace = "MasterPilot.Communicator.ProtoMessages";
+option (nanopb_fileopt).package = "MP";
+option (nanopb_fileopt).long_names = false;
 
 // 英雄发送给自定义客户端的数据
 message HeroDataPacketToClient {
