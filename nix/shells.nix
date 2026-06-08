@@ -11,7 +11,6 @@
           pkgs.clang-tools
           pkgs.cmake
           pkgs.pkg-config
-          pkgs.nanopb
           pkgs.protobuf
         ];
         shellHook = ''
