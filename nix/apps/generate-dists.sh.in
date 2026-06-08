@@ -25,6 +25,7 @@ push_dist() {
   if ! git clone --branch "${branch}" --depth 1 "${REPO_URL}" "${workdir}" 2>/dev/null; then
     git init "${workdir}"
     git -C "${workdir}" checkout --orphan "${branch}"
+    git -C "${workdir}" remote add origin "${REPO_URL}"
   fi
 
   # 清空旧内容，平铺产物 (分支根目录 = src/ + include/)
@@ -34,12 +35,12 @@ push_dist() {
   git -C "${workdir}" add -A
   git -C "${workdir}" commit -m "dist(${name}): from ${SOURCE_SHA}" --allow-empty
 
-  if [[ "@dry-run@" = "0" ]]; then
+  if [[ "@dry-run@" = "1" ]]; then
+    echo "dry-run is on (@dry-run@), pushing and removing ignored." 
+  else
     git -C "${workdir}" push origin "${branch}"
     chmod +w -R ${workdir}
     rm -rf "${workdir}"
-  else
-    echo "dry-run is on (@dry-run@), pushing and removing ignored." 
   fi
   echo "==> ${branch} done"
 
