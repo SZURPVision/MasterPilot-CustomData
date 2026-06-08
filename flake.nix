@@ -13,6 +13,7 @@
         ./nix/check.nix
         ./nix/shells.nix
         ./nix/packages
+        ./nix/apps
       ];
     };
 }

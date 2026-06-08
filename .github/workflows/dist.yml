@@ -1,0 +1,14 @@
+name: Generate Dists
+on:
+  push:
+    branches: [main]
+
+jobs:
+  dist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - name: Generate dist branches
+        run: nix run .#generate-dists-no-dry-run

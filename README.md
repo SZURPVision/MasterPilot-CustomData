@@ -69,7 +69,7 @@ end
 
 #### 代码拉取
 
-- 第一次使用: git clone [仓库url]/release-c
+- 第一次使用: git clone [仓库url]/dist/c-src
 - 后续更新: git pull
 
 #### Keil配置
@@ -157,7 +157,7 @@ TODO
 
 #### 代码拉取
 
-- 第一次使用: git clone [仓库url]/release-cpp
+- 第一次使用: git clone [仓库url]/dist/cpp-src
 - 后续更新: git pull
 
 #### 构建系统配置

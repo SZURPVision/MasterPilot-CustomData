@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ── Baked-in derivation paths ──
+C_SRC="@cSrcPath@"
+CPP_SRC="@cppSrcPath@"
+
+SOURCE_SHA=$(git rev-parse HEAD)
+REPO_URL=$(git remote get-url origin)
+
+# ── dist 输出 ──
+push_dist() {
+  local name="$1"       # c-src | cpp-src
+  local src_path="$2"   # derivation $out
+  local branch="dist/${name}"
+  local workdir
+
+  echo "==> Processing ${branch}"
+
+  workdir=$(mktemp -d)
+
+  echo "Using tmp dir: ${workdir}"
+
+  # 浅克隆目标分支；不存在则 init orphan
+  if ! git clone --branch "${branch}" --depth 1 "${REPO_URL}" "${workdir}" 2>/dev/null; then
+    git init "${workdir}"
+    git -C "${workdir}" checkout --orphan "${branch}"
+  fi
+
+  # 清空旧内容，平铺产物 (分支根目录 = src/ + include/)
+  git -C "${workdir}" rm -rf . 2>/dev/null || true
+  cp -rL "${src_path}"/* "${workdir}"/
+
+  git -C "${workdir}" add -A
+  git -C "${workdir}" commit -m "dist(${name}): from ${SOURCE_SHA}" --allow-empty
+
+  if [[ "@dry-run@" = "0" ]]; then
+    git -C "${workdir}" push origin "${branch}"
+    chmod +w -R ${workdir}
+    rm -rf "${workdir}"
+  else
+    echo "dry-run is on (@dry-run@), pushing and removing ignored." 
+  fi
+  echo "==> ${branch} done"
+
+}
+
+push_dist "c-src"   "${C_SRC}"
+push_dist "cpp-src" "${CPP_SRC}"
+
+echo "==> All dist branches updated"
