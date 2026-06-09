@@ -2,8 +2,13 @@
 {
   perSystem = { pkgs, config, ... }:
   {
-    devShells = {
-      default = pkgs.mkShell {
+    devShells =
+    let
+    
+
+    in {
+      default = pkgs.mkShell 
+      {
         inputsFrom = [
           config.packages.customdata-generated
         ];
@@ -12,6 +17,8 @@
           pkgs.cmake
           pkgs.pkg-config
           pkgs.protobuf
+
+          pkgs.dotnet-sdk
         ];
         shellHook = ''
           buf generate

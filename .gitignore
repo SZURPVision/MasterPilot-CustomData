@@ -11,3 +11,6 @@ result
 build
 compile_commands.json
 /.vscode
+
+obj
+bin

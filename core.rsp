@@ -1,0 +1,16 @@
+# Language
+--language=c
+
+# Input and Output Configuration
+--file=src/core/customdata-core.h
+--output=generated/csharp/CustomDataCoreBindings.cs
+--namespace=MasterPilot.CustomData.Bindings
+
+# Isolation Strategy
+--traverse=src/core/customdata-core.h
+
+# Standard Code Generation Tweaks
+--methodClassName=CoreMethods
+--config=latest-codegen
+
+--with-access-specifier="*=internal"

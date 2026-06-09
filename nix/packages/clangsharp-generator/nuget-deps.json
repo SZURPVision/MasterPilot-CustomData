@@ -1,0 +1,12 @@
+[
+  {
+    "pname": "ClangSharpPInvokeGenerator",
+    "version": "21.1.8.2",
+    "hash": "sha256-GWFVTLesaBLnzgTWoL9wl+MnipnkuVV9NjqJuptjhaM="
+  },
+  {
+    "pname": "ClangSharpPInvokeGenerator.linux-x64",
+    "version": "21.1.8.2",
+    "hash": "sha256-zuFSjtU98eCdO2fSj5AeFtiLmD1d8Dqnmmk1kR30MnY="
+  }
+]

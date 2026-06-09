@@ -1,6 +1,6 @@
 { self, ... }:
 {
-  perSystem = { pkgs, config, ... }:
+  perSystem = { pkgs, config, system, ... }:
   {
     packages = {
       customdata-generated = pkgs.callPackage ./customdata-generated/package.nix {
@@ -23,6 +23,11 @@
       default = config.packages.customdata-generated;
 
       nanopb-fixed = pkgs.callPackage ./nanopb-fixed/package.nix { };
+      clangsharp-generator = pkgs.callPackage ./clangsharp-generator/package.nix {
+        inherit (pkgs.llvmPackages) libclang;  
+        inherit (pkgs.dotnetCorePackages) buildDotnetModule buildDotnetGlobalTool systemToDotnetRid;
+        vendor-src = "${self}/vendor/clangsharp";
+      };
     };
   };
 }
