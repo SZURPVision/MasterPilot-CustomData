@@ -3,8 +3,9 @@
 
 # Input and Output Configuration
 --file=src/core/customdata-core.h
---output=generated/csharp/CustomDataCoreBindings.cs
---namespace=MasterPilot.CustomData.Bindings
+--output=generated/csharp
+--namespace=MasterPilot.Communicator.CustomData.Bindings
+--libraryPath=customdata-core
 
 # Isolation Strategy
 --traverse=src/core/customdata-core.h
@@ -12,5 +13,7 @@
 # Standard Code Generation Tweaks
 --methodClassName=CoreMethods
 --config=latest-codegen
+--config=multi-file
+--config=generate-helper-types
 
---with-access-specifier="*=internal"
+--with-access-specifier=*=Internal

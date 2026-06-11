@@ -17,14 +17,21 @@
           pkgs.cmake
           pkgs.pkg-config
           pkgs.protobuf
-
-          pkgs.dotnet-sdk
         ];
         shellHook = ''
           buf generate
           cmake -B build
           ln -s build/compile_commands.json ./
         '';
+      };
+      csharp = pkgs.mkShell
+      {
+          inputsFrom = [
+            config.devShells.default
+          ];
+          packages = [
+            pkgs.dotnet-sdk
+          ];
       };
     };
   };

@@ -16,6 +16,17 @@
         src = self;
         inherit (config.packages) customdata-generated;
       };
+      customdata-core = pkgs.callPackage ./customdata-core/package.nix {
+        src = self;
+      };
+      customdata-core-binding-csharp = pkgs.callPackage ./customdata-core-binding-csharp/package.nix {
+        src = self;
+        inherit (config.packages) clangsharp-generator;
+      };
+      customdata-core-csharp = pkgs.callPackage ./customdata-core-csharp/package.nix {
+        src = self;
+        inherit (config.packages) customdata-core-binding-csharp;
+      };
       customdata-tools = pkgs.callPackage ./customdata-tools/package.nix {
         src = self;
         inherit (config.packages) customdata-generated;
