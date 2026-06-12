@@ -10,7 +10,7 @@ static bool MP_INTERNAL_StreamCallback(pb_ostream_t *stream, const pb_byte_t *bu
     return written == count;
 }
 
-bool MP_Encode(mp_sender_t *sender, const pb_msgdesc_t *fields, const void *message)
+bool MP_Encode(mp_tx_encoder_t *sender, const pb_msgdesc_t *fields, const void *message)
 {
     mp_block_writer_t writer;
 

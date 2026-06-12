@@ -14,7 +14,7 @@ class SenderStream final : public google::protobuf::io::ZeroCopyOutputStream
 {
 
 public:
-    SenderStream(mp_sender_t& sender)
+    SenderStream(mp_tx_encoder_t& sender)
     {
         _total_avaliable = MP_BlockWriter_Begin(&_writer, &sender);
     }
@@ -74,7 +74,7 @@ private:
 struct Sender::Impl
 {
     std::vector<uint8_t> buffer;
-    mp_sender_t sender;
+    mp_tx_encoder_t sender;
 
     Impl(const std::uint16_t mtu, const int buffer_count) :
         buffer(mtu*buffer_count),

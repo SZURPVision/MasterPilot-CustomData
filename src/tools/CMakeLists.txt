@@ -1,7 +1,7 @@
 add_executable(mp-customdata-tools
     main.c
-    send.c
-    recv.c
+    tx.c
+    rx.c
     session.c
 )
 add_executable(mp::customdata::tools ALIAS mp-customdata-tools)
