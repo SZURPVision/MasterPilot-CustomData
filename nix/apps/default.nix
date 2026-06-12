@@ -14,10 +14,16 @@
       generate-dists = {
         type = "app";
         program = "${mkDist true}/bin/generate-dists";
+        meta = {
+          description = "Generate all the dist branches, dry run.";
+        };
       };
       generate-dists-no-dry-run = {
         type = "app";
         program = "${mkDist false}/bin/generate-dists";
+        meta = {
+          description = "Generate all the dist branches, no dry run.";
+        };
       };
     };
   };
