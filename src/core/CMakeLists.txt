@@ -33,9 +33,9 @@ install(TARGETS mp-customdata-core
 )
 install(FILES 
     customdata-common.h
+    customdata-header.h
     customdata-tx.h
     customdata-rx.h
-    customdata-stream-common.h
     customdata-stream-tx.h
     customdata-stream-rx.h
     DESTINATION include/masterpilot

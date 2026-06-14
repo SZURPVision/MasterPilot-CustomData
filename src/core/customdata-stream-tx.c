@@ -1,47 +1,52 @@
 #include "customdata-stream-tx.h"
-#include "customdata-tx.h"
 #include <stddef.h>
 
-mp_tx_stream_context_t mp_tx_stream_init(
-    mp_config_t          config,
-    mp_stream_sink_t     downstream,
-    mp_coordinate_t      start
+void mp_tx_stream_init(
+    mp_tx_stream_t   *s,
+    mp_config_t       config,
+    mp_coordinate_t   start,
+    mp_tx_sink_t      downstream
 )
 {
-    return (mp_tx_stream_context_t){
+    *s = (mp_tx_stream_t){
         .config     = config,
         .cursor     = start,
+        .fill       = 0,
         .downstream = downstream
     };
 }
 
-uint16_t mp_tx_encode_stream(
-    mp_tx_stream_context_t *ctx,
-    const uint8_t          *data,
-    uint16_t                size,
-    bool                    is_final_slice
+void mp_tx_stream_feed(
+    mp_tx_stream_t *s,
+    const uint8_t  *data,
+    uint16_t        size
 )
 {
-    const uint16_t max_p = mp_max_payload(ctx->config);
-    uint16_t sent = 0;
+    const uint16_t max_p = mp_max_payload(s->config);
+    uint16_t off = 0;
 
-    while (sent < size) {
-        const uint16_t chunk = (size - sent) > max_p ? max_p : (uint16_t)(size - sent);
-        const bool     is_last = (sent + chunk >= size) && is_final_slice;
+    while (off < size) {
+        uint16_t take = (uint16_t)(size - off);
+        uint16_t room = (uint16_t)(max_p - s->fill);
+        if (take > room) take = room;
 
-        const mp_tx_slice_t s = mp_tx_prepare(ctx->config, ctx->cursor, chunk, is_last);
-        ctx->downstream.push(ctx->downstream.user, &s.header, data + sent, chunk);
+        s->downstream.push(s->downstream.user, MP_TX_ACT_DATA, NULL, data + off, take);
+        s->fill += take;
+        off += take;
 
-        ctx->cursor = s.next;
-        sent += chunk;
+        if (s->fill == max_p) {
+            mp_tx_slice_t slice = mp_tx_prepare(s->config, s->cursor, max_p, false);
+            s->downstream.push(s->downstream.user, MP_TX_ACT_DATA, &slice.header, NULL, 0);
+            s->cursor = slice.next;
+            s->fill = 0;
+        }
     }
+}
 
-    /* Emit terminal empty slice when is_final and no partial slice was emitted */
-    if (is_final_slice && size == 0) {
-        const mp_tx_slice_t s = mp_tx_prepare(ctx->config, ctx->cursor, 0, true);
-        ctx->downstream.push(ctx->downstream.user, &s.header, NULL, 0);
-        ctx->cursor = s.next;
-    }
-
-    return sent;
+void mp_tx_stream_finalize(mp_tx_stream_t *s)
+{
+    mp_tx_slice_t slice = mp_tx_prepare(s->config, s->cursor, s->fill, true);
+    s->downstream.push(s->downstream.user, MP_TX_ACT_FINALIZE, &slice.header, NULL, 0);
+    s->cursor = slice.next;
+    s->fill = 0;
 }

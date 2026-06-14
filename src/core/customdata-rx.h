@@ -90,15 +90,30 @@ mp_coordinate_t mp_rx_header_to_coordinate(
     const mp_header_t header
 );
 
-/*
- * @brief header 是否表示 package 终止
- *
- * end_of_package == 1 或 payload_size < max_payload (隐式终止)
+/**
+ * @brief 判断 header 是否标记了 package 终止
  */
 MP_PURE
-bool mp_rx_is_slice_eop(
-    const mp_config_t config,
-    const mp_header_t header
+bool mp_rx_is_slice_eop(const mp_header_t header);
+
+/*
+ * @brief 决策动作类型
+ */
+typedef enum {
+    MP_RX_ACT_IGNORE,    // 重复 slice, 忽略
+    MP_RX_ACT_STORE,     // 乱序, 暂存到 coordinator
+    MP_RX_ACT_DELIVER    // 有序/补齐, 将 watermark 区间交付
+} mp_rx_action_t;
+
+/*
+ * @brief 纯决策: 给定当前 bitmap 状态 + 新 slice + watermark, 返回动作
+ */
+MP_PURE
+mp_rx_action_t mp_rx_classify(
+    const mp_rx_slice_state_t *state,
+    uint16_t slice_id,
+    uint32_t offset,
+    uint32_t watermark
 );
 
 /*

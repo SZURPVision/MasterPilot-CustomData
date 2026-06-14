@@ -1,60 +1,51 @@
 #ifndef __MP_CUSTOMDATA_STREAM_TX_H_
 #define __MP_CUSTOMDATA_STREAM_TX_H_
 
-#include "customdata-stream-common.h"
+#include "customdata-tx.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#pragma region TX Stream Context
+typedef enum {
+    MP_TX_ACT_DATA, /**< 下游接收数据 */
+    MP_TX_ACT_FINALIZE /**< 下游根据传来的可空帧头, */
+} mp_tx_action_t;
 
-/*
- * @brief TX 流上下文
- *
- * 维护当前发送坐标，无数据缓存。
- * 每次 mp_tx_encode_stream 调用完全消费输入数据后返回。
- */
+typedef void (*mp_tx_push_cb)(
+    void             *user,
+    mp_tx_action_t    act,
+    const mp_header_t *hdr,
+    const uint8_t    *data,
+    uint16_t          size
+);
+
+typedef struct {
+    mp_tx_push_cb push;
+    void          *user;
+} mp_tx_sink_t;
+
 typedef struct {
     mp_config_t      config;
     mp_coordinate_t  cursor;
-    mp_stream_sink_t downstream;
-} mp_tx_stream_context_t;
+    uint16_t         fill;
+    mp_tx_sink_t     downstream;
+} mp_tx_stream_t;
 
-/*
- * @brief 初始化 TX 流
- * @param start  起始坐标 (由 coordinator 设置 sender_id / package_id)
- */
-mp_tx_stream_context_t mp_tx_stream_init(
-    mp_config_t          config,
-    mp_stream_sink_t     downstream,
-    mp_coordinate_t      start
+void mp_tx_stream_init(
+    mp_tx_stream_t   *s,
+    mp_config_t       config,
+    mp_coordinate_t   start,
+    mp_tx_sink_t      downstream
 );
 
-#pragma endregion
-
-#pragma region TX Encode
-
-/*
- * @brief 流式编码 — 将数据切片并推送给下游
- *
- * 逐 max_payload 切片输入数据，对每片调用 mp_tx_prepare 生成 header，
- * 通过 downstream.push 回调输出 (header, payload_ptr, payload_size)。
- *
- * 不做任何数据缓存：每次调用完全消费 data[0..size-1]。
- * 兼容 nanopb/protobuf 的小 buffer 反复调用模式。
- *
- * @param is_final_slice  本次数据的最后一字节是否为 package 的终止字节
- * @return 实际消费的字节数 (= size，除非错误)
- */
-uint16_t mp_tx_encode_stream(
-    mp_tx_stream_context_t *ctx,
-    const uint8_t          *data,
-    uint16_t                size,
-    bool                    is_final_slice
+void mp_tx_stream_feed(
+    mp_tx_stream_t *s,
+    const uint8_t  *data,
+    uint16_t        size
 );
 
-#pragma endregion
+void mp_tx_stream_finalize(mp_tx_stream_t *s);
 
 #ifdef __cplusplus
 }

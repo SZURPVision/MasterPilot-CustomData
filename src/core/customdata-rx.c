@@ -33,12 +33,27 @@ MP_PURE bool mp_is_complete(
         && state.received_count >= mp_termination_to_slice_count(state.termination, max_payload);
 }
 
-MP_PURE bool mp_rx_is_slice_eop(
-    const mp_config_t config,
-    const mp_header_t header)
+MP_PURE mp_rx_action_t mp_rx_classify(
+    const mp_rx_slice_state_t *state,
+    uint16_t slice_id,
+    uint32_t offset,
+    uint32_t watermark)
 {
-    const uint16_t max_p = mp_max_payload(config);
-    return header.end_of_package == 1 || header.slice_payload_size < max_p;
+    const uint8_t  arr_idx  = (uint8_t)(slice_id >> 5);
+    const uint32_t bit_mask = (uint32_t)(1u << (slice_id & 31));
+
+    if (state->bitmap[arr_idx] & bit_mask)
+        return MP_RX_ACT_IGNORE;
+
+    if (offset > watermark)
+        return MP_RX_ACT_STORE;
+
+    return MP_RX_ACT_DELIVER;
+}
+
+MP_PURE bool mp_rx_is_slice_eop(const mp_header_t header)
+{
+    return header.end_of_package == 1;
 }
 
 MP_PURE mp_coordinate_t mp_rx_header_to_coordinate(

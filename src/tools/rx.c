@@ -5,7 +5,68 @@
 #include <stdio.h>
 #include "main.h"
 #include "session.h"
-#include <masterpilot/customdata-rx.h>
+#include <masterpilot/customdata-stream-rx.h>
+
+typedef struct {
+    mp_rx_session_t *session;
+    uint8_t         *assembly;
+} rx_ctx_t;
+
+static mp_rx_slice_state_t *state_get(void *ctx, mp_coordinate_t coord)
+{
+    rx_ctx_t *c = (rx_ctx_t *)ctx;
+    mp_rx_session_t *s = c->session;
+
+    if (coord.package_id != s->current_package_id
+        || coord.sender_id != s->current_sender_id)
+    {
+        s->current_package_id = coord.package_id;
+        s->current_sender_id  = coord.sender_id;
+        memset(&s->state, 0, sizeof(s->state));
+        s->watermark = 0;
+    }
+    return &s->state;
+}
+
+static void watermark_put(void *ctx, mp_coordinate_t coord, uint32_t wm)
+{
+    rx_ctx_t *c = (rx_ctx_t *)ctx;
+    (void)coord;
+    c->session->watermark = wm;
+}
+
+static uint32_t watermark_get(void *ctx, mp_coordinate_t coord)
+{
+    rx_ctx_t *c = (rx_ctx_t *)ctx;
+    (void)coord;
+    return c->session->watermark;
+}
+
+static void payload_put(void *ctx, mp_coordinate_t coord, const uint8_t *data, uint16_t size)
+{
+    rx_ctx_t *c = (rx_ctx_t *)ctx;
+    memcpy(c->assembly + coord.offset, data, size);
+}
+
+static const uint8_t *payload_get(void *ctx, mp_coordinate_t coord)
+{
+    rx_ctx_t *c = (rx_ctx_t *)ctx;
+    return c->assembly + coord.offset;
+}
+
+static void on_data(void *user, const uint8_t *data, uint32_t offset, uint16_t size, bool eop)
+{
+    (void)offset;
+    (void)eop;
+    const uint8_t *p = data;
+    uint32_t rem = size;
+    while (rem > 0) {
+        ssize_t n = write(STDOUT_FILENO, p, rem);
+        if (n < 0) return;
+        p   += (uint32_t)n;
+        rem -= (uint32_t)n;
+    }
+}
 
 int cmd_rx(int argc, char *argv[])
 {
@@ -16,18 +77,28 @@ int cmd_rx(int argc, char *argv[])
     mp_rx_session_t *session = mp_session_rx_load(&assembly, session_path);
     if (!session) return 1;
 
-    const uint16_t tu   = session->transmission_unit;
-    const uint16_t max_p = tu - sizeof(mp_header_t);
+    const uint16_t tu = session->transmission_unit;
 
-    /* Read blocks one by one */
+    rx_ctx_t rx_ctx = { .session = session, .assembly = assembly };
+
+    mp_rx_coordinator_t coord = {
+        .ctx           = &rx_ctx,
+        .state_get     = state_get,
+        .watermark_put = watermark_put,
+        .watermark_get = watermark_get,
+        .payload_put   = payload_put,
+        .payload_get   = payload_get
+    };
+
+    mp_rx_stream_t stream;
+    mp_rx_stream_init(&stream,
+        (mp_config_t){ .transmission_unit = tu },
+        coord, on_data, NULL);
+
     uint8_t *block = (uint8_t *)malloc(tu);
-    if (!block) {
-        mp_session_rx_save(session, assembly);
-        return 1;
-    }
+    if (!block) { mp_session_rx_save(session, assembly); return 1; }
 
     for (;;) {
-        /* Read exactly one transmission_unit block */
         uint8_t  *p = block;
         uint16_t  remain = tu;
         while (remain > 0) {
@@ -37,49 +108,7 @@ int cmd_rx(int argc, char *argv[])
             remain -= (uint16_t)n;
         }
 
-        const mp_header_t *hdr = (const mp_header_t *)block;
-        const uint8_t *payload = block + sizeof(mp_header_t);
-
-        /* ── Rebuild coordinate ── */
-        mp_coordinate_t coord = mp_rx_header_to_coordinate(
-            (mp_config_t){ .transmission_unit = tu }, *hdr);
-
-        /* ── Check if new package → reset state ── */
-        if (coord.package_id != session->current_package_id
-            || coord.sender_id != session->current_sender_id)
-        {
-            memset(&session->state, 0, sizeof(session->state));
-            session->current_package_id = coord.package_id;
-            session->current_sender_id  = coord.sender_id;
-        }
-
-        /* ── Pure step ── */
-        bool eop = mp_rx_is_slice_eop((mp_config_t){ .transmission_unit = tu }, *hdr);
-        mp_rx_slice_inst_t inst = mp_calc_slice_step(
-            session->state, hdr->slice_serial, hdr->slice_payload_size, max_p, eop);
-
-        if (inst.status == MP_STREAM_DUPLICATE) continue;
-
-        session->state = inst.next_state;
-
-        /* ── Write payload to assembly buffer ── */
-        memcpy(assembly + coord.offset, payload, hdr->slice_payload_size);
-
-        /* ── Check completion ── */
-        if (mp_is_complete(session->state, max_p)) {
-            uint32_t total = session->state.termination;
-            const uint8_t *p_out = assembly;
-            uint32_t remaining = total;
-            while (remaining > 0) {
-                ssize_t n = write(STDOUT_FILENO, p_out, remaining);
-                if (n < 0) goto done;
-                p_out     += (uint32_t)n;
-                remaining -= (uint32_t)n;
-            }
-
-            /* Reset for next package */
-            memset(&session->state, 0, sizeof(session->state));
-        }
+        mp_rx_stream_feed(&stream, block, tu);
     }
 
 done:

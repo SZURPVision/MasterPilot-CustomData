@@ -36,6 +36,7 @@ typedef struct {
     uint16_t             current_sender_id;
     uint16_t             current_package_id;
     mp_rx_slice_state_t  state;
+    uint32_t             watermark;
 } mp_rx_session_t;
 #pragma pack(pop)
 

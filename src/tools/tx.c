@@ -6,23 +6,42 @@
 #include "session.h"
 #include <masterpilot/customdata-stream-tx.h>
 
-static void stdout_block_push(void *user, const mp_header_t *hdr,
-                               const uint8_t *payload, uint16_t payload_size)
+typedef struct {
+    uint16_t tu;
+    uint8_t *acc;
+    uint16_t acc_fill;
+} tx_user_t;
+
+static void push_cb(void *raw, mp_tx_action_t act, const mp_header_t *hdr,
+                    const uint8_t *data, uint16_t size)
 {
-    uint16_t *tu = (uint16_t *)user;
-    uint8_t  block[*tu];
-    memset(block, 0, *tu);
+    tx_user_t *u = (tx_user_t *)raw;
 
-    memcpy(block, hdr, sizeof(mp_header_t));
-    if (payload_size > 0) memcpy(block + sizeof(mp_header_t), payload, payload_size);
-
-    const uint8_t *p = block;
-    uint16_t remaining = *tu;
-    while (remaining > 0) {
-        ssize_t n = write(STDOUT_FILENO, p, remaining);
-        if (n < 0) return;
-        p         += (size_t)n;
-        remaining -= (uint16_t)n;
+    switch (act) {
+    case MP_TX_ACT_DATA:
+        if (data && size) {
+            memcpy(u->acc + u->acc_fill, data, size);
+            u->acc_fill += size;
+        }
+        if (hdr) {
+            uint8_t block[4096];
+            memset(block, 0, u->tu);
+            mp_header_pack(block, hdr);
+            memcpy(block + MP_HEADER_SIZE, u->acc, mp_max_payload((mp_config_t){u->tu}));
+            write(STDOUT_FILENO, block, u->tu);
+            u->acc_fill = 0;
+        }
+        break;
+    case MP_TX_ACT_FINALIZE:
+        {
+            uint8_t block[4096];
+            memset(block, 0, u->tu);
+            mp_header_pack(block, hdr);
+            memcpy(block + MP_HEADER_SIZE, u->acc, u->acc_fill);
+            write(STDOUT_FILENO, block, u->tu);
+            u->acc_fill = 0;
+        }
+        break;
     }
 }
 
@@ -35,49 +54,33 @@ int cmd_tx(int argc, char *argv[])
     mp_tx_session_t *session = mp_session_tx_load(session_path);
     if (!session) return 1;
 
-    mp_config_t cfg   = { .transmission_unit = session->transmission_unit };
-    uint16_t max_p    = mp_max_payload(cfg);
+    mp_config_t cfg = { .transmission_unit = session->transmission_unit };
+    uint16_t max_p = mp_max_payload(cfg);
 
-    mp_stream_sink_t sink = { .push = stdout_block_push, .user = &cfg.transmission_unit };
-    mp_tx_stream_context_t ctx = mp_tx_stream_init(cfg, sink, session->coord);
+    uint8_t *acc = (uint8_t *)malloc(max_p);
+    if (!acc) return 1;
 
-    uint8_t *acc  = (uint8_t *)malloc(max_p);
-    uint8_t *snip = (uint8_t *)malloc(stdin_buf_size);
-    if (!acc || !snip) { free(acc); free(snip); return 1; }
+    tx_user_t user = { .tu = session->transmission_unit, .acc = acc, .acc_fill = 0 };
 
-    ssize_t  nread;
-    uint16_t fill = 0;
+    mp_tx_stream_t stream;
+    mp_tx_stream_init(&stream, cfg, session->coord,
+        (mp_tx_sink_t){ .push = push_cb, .user = &user });
 
-    while ((nread = read(STDIN_FILENO, snip, stdin_buf_size)) > 0) {
-        uint16_t off = 0;
-        while (off < (uint16_t)nread) {
-            uint16_t room = (uint16_t)(max_p - fill);
-            uint16_t take = (uint16_t)((uint16_t)nread - off) < room ? (uint16_t)((uint16_t)nread - off) : room;
+    uint8_t *buf = (uint8_t *)malloc(stdin_buf_size);
+    if (!buf) { free(acc); return 1; }
 
-            memcpy(acc + fill, snip + off, take);
-            fill += take;
-            off  += take;
+    ssize_t n;
+    while ((n = read(STDIN_FILENO, buf, stdin_buf_size)) > 0)
+        mp_tx_stream_feed(&stream, buf, (uint16_t)n);
 
-            if (fill == max_p) {
-                mp_tx_encode_stream(&ctx, acc, max_p, false);
-                fill = 0;
-            }
-        }
-    }
+    mp_tx_stream_finalize(&stream);
 
-    if (fill > 0) {
-        mp_tx_encode_stream(&ctx, acc, fill, true);
-    } else {
-        mp_tx_encode_stream(&ctx, NULL, 0, true);
-    }
+    stream.cursor.package_id++;
+    stream.cursor.offset = 0;
 
-    /* Start next package at offset 0, package_id incremented */
-    ctx.cursor.package_id++;
-    ctx.cursor.offset = 0;
-
-    free(snip);
+    free(buf);
     free(acc);
-    session->coord = ctx.cursor;
+    session->coord = stream.cursor;
     mp_session_tx_save(session);
     return 0;
 }
