@@ -18,7 +18,12 @@ static void print_usage(const char *prog_name)
     fprintf(stderr, "  -m, --mtu <bytes>      Set MTU size (default: %d)\n", DEFAULT_MTU);
     fprintf(stderr, "  -t, --type <type>      Type of session to create (tx or rx)\n");
     fprintf(stderr, "  -h, --help             Show this help message\n\n");
-    fprintf(stderr, "Options for 'tx'/'rx':\n");
+    fprintf(stderr, "Options for 'tx':\n");
+    fprintf(stderr, "  -s, --session <path>   Session file path (required)\n");
+    fprintf(stderr, "  -b, --stdin-buf <n>    Stdin read buffer size (default: 64)\n");
+    fprintf(stderr, "  -S, --sender <id>      Set sender_id (0-7, default: 0)\n");
+    fprintf(stderr, "  -h, --help             Show this help message\n\n");
+    fprintf(stderr, "Options for 'rx':\n");
     fprintf(stderr, "  -s, --session <path>   Session file path (required)\n");
     fprintf(stderr, "  -h, --help             Show this help message\n");
 }
@@ -74,23 +79,26 @@ int cmd_config(int argc, char *argv[])
 
 #define DEFAULT_STDIN_BUF_SIZE 64
 
-const char *tx_parse_args(int argc, char *argv[], uint16_t *stdin_buf_size)
+const char *tx_parse_args(int argc, char *argv[], uint16_t *stdin_buf_size, uint16_t *sender_id)
 {
     static struct option long_options[] = {
         {"session",   required_argument, 0, 's'},
         {"stdin-buf", required_argument, 0, 'b'},
+        {"sender",    required_argument, 0, 'S'},
         {"help",      no_argument,       0, 'h'},
         {0, 0, 0, 0}
     };
 
     const char *session_path = NULL;
     *stdin_buf_size = DEFAULT_STDIN_BUF_SIZE;
+    *sender_id = 0;
 
     int opt;
-    while ((opt = getopt_long(argc, argv, "s:b:h", long_options, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "s:b:S:h", long_options, NULL)) != -1) {
         switch (opt) {
             case 's': session_path = optarg; break;
             case 'b': *stdin_buf_size = (uint16_t)atoi(optarg); break;
+            case 'S': *sender_id = (uint16_t)(atoi(optarg) & 0x7); break;
             case 'h': return NULL;
             default:  return NULL;
         }

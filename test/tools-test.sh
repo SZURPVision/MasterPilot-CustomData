@@ -117,6 +117,32 @@ cat pktA.shuf pktB.shuf pktC.shuf > mixed.bin
 "$BIN" rx -s recv.sess < mixed.bin > decoded.bin
 diff combined.bin decoded.bin && pass "mixed-reorder" || fail "mixed-reorder"
 
+# ── large stdin buffer ──
+rm -f tx.sess rx.sess encoded.bin decoded.bin
+"$BIN" config -m 100 -t tx > send.sess
+"$BIN" config -m 100 -t rx > recv.sess
+dd if=/dev/urandom of=large.bin bs=500 count=1 2>/dev/null
+"$BIN" tx -s send.sess -b 2000 < large.bin > encoded.bin
+"$BIN" rx -s recv.sess < encoded.bin > decoded.bin
+diff large.bin decoded.bin && pass "large-stdin-buf (-b 2000)" || fail "large-stdin-buf (-b 2000)"
+
+# ── multi-sender interleaved ──
+rm -f tx.sess rx.sess
+MTU=80
+"$BIN" config -m $MTU -t tx > send.sess
+"$BIN" config -m $MTU -t rx > recv.sess
+# sender0: pkg0 "AAA", pkg1 "BBBB", pkg2 "CC"
+echo -n "AAA"  | "$BIN" tx -s send.sess -S 0 > p0.bin
+echo -n "BBBB" | "$BIN" tx -s send.sess -S 0 > p1.bin
+echo -n "CC"   | "$BIN" tx -s send.sess -S 0 > p2.bin
+# sender1: pkg0 "DDDDD"
+echo -n "DDDDD" | "$BIN" tx -s send.sess -S 1 > ps1.bin
+# sender0: pkg3 "EE"
+echo -n "EE"    | "$BIN" tx -s send.sess -S 0 > p3.bin
+cat p0.bin p1.bin p2.bin ps1.bin p3.bin > ms_all.bin
+"$BIN" rx -s recv.sess < ms_all.bin > ms_out.bin
+test "$(cat ms_out.bin)" = "AAABBBBCCDDDDDEE" && pass "multi-sender" || fail "multi-sender"
+
 # ── empty input ──
 rm -f tx.sess rx.sess encoded.bin decoded.bin
 "$BIN" config -m 100 -t tx > send.sess

@@ -48,7 +48,8 @@ static void push_cb(void *raw, mp_tx_action_t act, const mp_header_t *hdr,
 int cmd_tx(int argc, char *argv[])
 {
     uint16_t stdin_buf_size;
-    const char *session_path = tx_parse_args(argc, argv, &stdin_buf_size);
+    uint16_t sender_id;
+    const char *session_path = tx_parse_args(argc, argv, &stdin_buf_size, &sender_id);
     if (!session_path) return 1;
 
     mp_tx_session_t *session = mp_session_tx_load(session_path);
@@ -61,6 +62,8 @@ int cmd_tx(int argc, char *argv[])
     if (!acc) return 1;
 
     tx_user_t user = { .tu = session->transmission_unit, .acc = acc, .acc_fill = 0 };
+
+    session->coord.sender_id = sender_id;
 
     mp_tx_stream_t stream;
     mp_tx_stream_init(&stream, cfg, session->coord,
