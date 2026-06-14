@@ -16,12 +16,16 @@ typedef struct {
     uint32_t bitmap[8];      /**< 256位图, 用于判断包是否收齐分片 */
     uint16_t received_count; /**< 已接收大小 */
     uint32_t termination;    /**< 包范围左闭右开区间 [0, termination] 的右端点. 0初始化表示未知 */
+    uint32_t watermark;      /**< 包内已连续接收完毕的最大offset */
 } mp_rx_slice_state_t;
 
+/*
+ * @brief 流状态
+*/
 typedef enum {
-    MP_STREAM_ACCEPT = 0,
-    MP_STREAM_DUPLICATE,
-    MP_STREAM_COMPLETE
+    MP_STREAM_ACCEPT = 0, /**< 接受数据 */
+    MP_STREAM_DUPLICATE, /**< 遇到重复数据 */
+    MP_STREAM_COMPLETE /**< 流结束 */
 } mp_stream_status_t;
 
 typedef struct {
@@ -30,7 +34,7 @@ typedef struct {
 } mp_rx_slice_inst_t;
 
 /*
- * @brief 纯逐步展开计算
+ * @brief RX流状态转移方程
  */
 MP_PURE
 mp_rx_slice_inst_t mp_calc_slice_step(

@@ -10,11 +10,11 @@ extern "C" {
 #pragma region TX Pure Operators
 
 /*
- * @brief TX 一步结果 — header + 下一步坐标
+ * @brief 发送小分片状态
  */
 typedef struct {
-    mp_header_t     header;
-    mp_coordinate_t next;
+    mp_header_t     header /**< 当前分片的header. header跳变即为slice边界 */;
+    mp_coordinate_t next /**< 下一个状态的坐标 */;
 } mp_tx_slice_t;
 
 /*

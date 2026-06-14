@@ -23,23 +23,8 @@ static mp_rx_slice_state_t *state_get(void *ctx, mp_coordinate_t coord)
         s->current_package_id = coord.package_id;
         s->current_sender_id  = coord.sender_id;
         memset(&s->state, 0, sizeof(s->state));
-        s->watermark = 0;
     }
     return &s->state;
-}
-
-static void watermark_put(void *ctx, mp_coordinate_t coord, uint32_t wm)
-{
-    rx_ctx_t *c = (rx_ctx_t *)ctx;
-    (void)coord;
-    c->session->watermark = wm;
-}
-
-static uint32_t watermark_get(void *ctx, mp_coordinate_t coord)
-{
-    rx_ctx_t *c = (rx_ctx_t *)ctx;
-    (void)coord;
-    return c->session->watermark;
 }
 
 static void payload_put(void *ctx, mp_coordinate_t coord, const uint8_t *data, uint16_t size)
@@ -54,9 +39,9 @@ static const uint8_t *payload_get(void *ctx, mp_coordinate_t coord)
     return c->assembly + coord.offset;
 }
 
-static void on_data(void *user, const uint8_t *data, uint32_t offset, uint16_t size, bool eop)
+static void on_data(void *user, const uint8_t *data, mp_coordinate_t coord, uint16_t size, bool eop)
 {
-    (void)offset;
+    (void)coord;
     (void)eop;
     const uint8_t *p = data;
     uint32_t rem = size;
@@ -82,12 +67,10 @@ int cmd_rx(int argc, char *argv[])
     rx_ctx_t rx_ctx = { .session = session, .assembly = assembly };
 
     mp_rx_coordinator_t coord = {
-        .ctx           = &rx_ctx,
-        .state_get     = state_get,
-        .watermark_put = watermark_put,
-        .watermark_get = watermark_get,
-        .payload_put   = payload_put,
-        .payload_get   = payload_get
+        .ctx         = &rx_ctx,
+        .state_get   = state_get,
+        .payload_put = payload_put,
+        .payload_get = payload_get
     };
 
     mp_rx_stream_t stream;

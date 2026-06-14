@@ -134,7 +134,8 @@ MP_PURE mp_rx_slice_inst_t mp_calc_slice_step(
         .bitmap         = { new_bitmap[0], new_bitmap[1], new_bitmap[2], new_bitmap[3],
                             new_bitmap[4], new_bitmap[5], new_bitmap[6], new_bitmap[7] },
         .received_count = new_count,
-        .termination    = new_term
+        .termination    = new_term,
+        .watermark      = state.watermark
     };
 
     mp_stream_status_t new_status = mp_is_complete(next_state, max_payload)

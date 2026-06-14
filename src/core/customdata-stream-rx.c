@@ -35,9 +35,8 @@ void mp_rx_stream_feed(
     mp_coordinate_t coord = mp_rx_header_to_coordinate(s->config, hdr);
 
     mp_rx_slice_state_t *state = s->coordinator.state_get(s->coordinator.ctx, coord);
-    uint32_t wm = s->coordinator.watermark_get(s->coordinator.ctx, coord);
 
-    mp_rx_action_t action = mp_rx_classify(state, hdr.slice_serial, offset, wm);
+    mp_rx_action_t action = mp_rx_classify(state, hdr.slice_serial, offset, state->watermark);
 
     if (action == MP_RX_ACT_IGNORE) return;
 
@@ -50,9 +49,9 @@ void mp_rx_stream_feed(
     }
 
     /* DELIVER */
-    uint32_t old_wm = wm;
+    uint32_t old_wm = state->watermark;
     uint32_t new_wm = mp_rx_advance_watermark(state->bitmap, old_wm, max_p, state->termination);
-    s->coordinator.watermark_put(s->coordinator.ctx, coord, new_wm);
+    state->watermark = new_wm;
 
     uint32_t cur_off = old_wm;
     while (cur_off < new_wm) {
@@ -69,12 +68,11 @@ void mp_rx_stream_feed(
                               : s->coordinator.payload_get(s->coordinator.ctx, dcoord);
         if (!data) { cur_off += max_p; continue; }
 
-        s->on_data(s->user, data, cur_off, sz, eop);
+        s->on_data(s->user, data, dcoord, sz, eop);
         cur_off += max_p;
     }
 
     if (state->termination > 0 && new_wm >= state->termination) {
         memset(state, 0, sizeof(*state));
-        s->coordinator.watermark_put(s->coordinator.ctx, coord, 0);
     }
 }
