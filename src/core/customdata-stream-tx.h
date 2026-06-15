@@ -1,6 +1,7 @@
 #ifndef __MP_CUSTOMDATA_STREAM_TX_H_
 #define __MP_CUSTOMDATA_STREAM_TX_H_
 
+#include "customdata-common.h"
 #include "customdata-tx.h"
 
 #ifdef __cplusplus
@@ -15,16 +16,16 @@ typedef enum {
 /*
  * @brief 发送的下游执行器回调
  * @param act 要进行的操作
- * @param hdr header, 可空. 如果为空, 表示积攒数据, 如果非空, 表示需要回填header并发送.
+ * @param hdr header, 可空(0即空). 如果为空, 表示积攒数据, 如果非空, 表示需要回填header并发送.
  * @param data 数据块, 可空.
  * @param size 数据块大小. data为空时为0.
  */
 typedef void (*mp_tx_push_cb)(
-    void             *user,
-    mp_tx_action_t    act,
-    const mp_header_t *hdr,
-    const uint8_t    *data,
-    uint16_t          size
+    void                    *user,
+    mp_tx_action_t          act,
+    const mp_header_packed_t nullable_header,
+    const uint8_t           *nullable_data,
+    uint16_t                size
 );
 
 typedef struct {
@@ -34,17 +35,10 @@ typedef struct {
 
 typedef struct {
     mp_config_t      config;
-    mp_coordinate_t  cursor;
-    uint16_t         fill;
+    mp_coordinate_t  cursor; /**< 当前坐标. 需要设定sender_id和package_id, offset 0初始化 */
+    uint16_t         fill; /**< 当前已填充大小. 0初始化 */
     mp_tx_sink_t     downstream;
 } mp_tx_stream_t;
-
-void mp_tx_stream_init(
-    mp_tx_stream_t   *s,
-    mp_config_t       config,
-    mp_coordinate_t   start,
-    mp_tx_sink_t      downstream
-);
 
 void mp_tx_stream_feed(
     mp_tx_stream_t *s,

@@ -1,5 +1,7 @@
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <string.h>
 #include "main.h"
@@ -12,33 +14,55 @@ typedef struct {
     uint16_t acc_fill;
 } tx_user_t;
 
-static void push_cb(void *raw, mp_tx_action_t act, const mp_header_t *hdr,
-                    const uint8_t *data, uint16_t size)
+static void push_cb(
+    void *raw,
+    mp_tx_action_t act,
+    const mp_header_packed_t nullable_header,
+    const uint8_t *nullable_data,
+    uint16_t size
+)
 {
     tx_user_t *u = (tx_user_t *)raw;
 
     switch (act) {
     case MP_TX_ACT_DATA:
-        if (data && size) {
-            memcpy(u->acc + u->acc_fill, data, size);
+        if (nullable_data && size) {
+            memcpy(u->acc + u->acc_fill, nullable_data, size);
             u->acc_fill += size;
         }
-        if (hdr) {
+        // 有header 才发送
+        if (nullable_header) {
             uint8_t block[4096];
-            memset(block, 0, u->tu);
-            mp_header_pack(block, hdr);
+            mp_header_packed_t* block_header = (mp_header_packed_t*)block;
+            *block_header = nullable_header;
+
             memcpy(block + MP_HEADER_SIZE, u->acc, mp_max_payload((mp_config_t){u->tu}));
-            write(STDOUT_FILENO, block, u->tu);
+
+            ssize_t n_wrote = write(STDOUT_FILENO, block, u->tu);
+            if(n_wrote != u->tu)
+            {
+                const char errMsg[] = "Failed to write stdout.";
+                ssize_t _ = write(STDERR_FILENO, errMsg, sizeof(errMsg));
+                exit(1);
+            }
             u->acc_fill = 0;
         }
         break;
     case MP_TX_ACT_FINALIZE:
         {
             uint8_t block[4096];
-            memset(block, 0, u->tu);
-            mp_header_pack(block, hdr);
+            mp_header_packed_t* block_header = (mp_header_packed_t*)block;
+            *block_header = nullable_header;
+
             memcpy(block + MP_HEADER_SIZE, u->acc, u->acc_fill);
-            write(STDOUT_FILENO, block, u->tu);
+
+            ssize_t n_wrote = write(STDOUT_FILENO, block, u->tu);
+            if(n_wrote != u->tu)
+            {
+                const char errMsg[] = "Failed to write stdout.";
+                ssize_t _ =write(STDERR_FILENO, errMsg, sizeof(errMsg));
+                exit(1);
+            }
             u->acc_fill = 0;
         }
         break;
@@ -65,14 +89,19 @@ int cmd_tx(int argc, char *argv[])
 
     session->coord.sender_id = sender_id;
 
-    mp_tx_stream_t stream;
-    mp_tx_stream_init(&stream, cfg, session->coord,
-        (mp_tx_sink_t){ .push = push_cb, .user = &user });
+    mp_tx_stream_t stream = {
+        .config = cfg,
+        .cursor = session->coord,
+        .downstream = {
+            .push = push_cb,
+            .user = &user
+        }
+    };
 
     uint8_t *buf = (uint8_t *)malloc(stdin_buf_size);
     if (!buf) { free(acc); return 1; }
 
-    ssize_t n;
+    ssize_t n = -1;
     while ((n = read(STDIN_FILENO, buf, stdin_buf_size)) > 0)
         mp_tx_stream_feed(&stream, buf, (uint16_t)n);
 

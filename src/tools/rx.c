@@ -12,19 +12,19 @@ typedef struct {
     uint8_t         *assembly;
 } rx_ctx_t;
 
-static mp_rx_slice_state_t *state_get(void *ctx, mp_coordinate_t coord)
+static const mp_rx_slice_state_t *state_get(void *ctx, mp_coordinate_t coord)
 {
     rx_ctx_t *c = (rx_ctx_t *)ctx;
     mp_rx_session_t *s = c->session;
 
-    if (coord.package_id != s->current_package_id
-        || coord.sender_id != s->current_sender_id)
-    {
-        s->current_package_id = coord.package_id;
-        s->current_sender_id  = coord.sender_id;
-        memset(&s->state, 0, sizeof(s->state));
-    }
     return &s->state;
+}
+
+static void state_put(void *ctx, mp_coordinate_t coord, const mp_rx_slice_state_t* state)
+{
+    rx_ctx_t *c = (rx_ctx_t *)ctx;
+    mp_rx_session_t *s = c->session;
+    s->state = *state;
 }
 
 static void payload_put(void *ctx, mp_coordinate_t coord, const uint8_t *data, uint16_t size)
@@ -66,17 +66,22 @@ int cmd_rx(int argc, char *argv[])
 
     rx_ctx_t rx_ctx = { .session = session, .assembly = assembly };
 
-    mp_rx_coordinator_t coord = {
+    mp_rx_coordinator_t coordinator = {
         .ctx         = &rx_ctx,
         .state_get   = state_get,
+        .state_put   = state_put,
         .payload_put = payload_put,
         .payload_get = payload_get
     };
 
-    mp_rx_stream_t stream;
-    mp_rx_stream_init(&stream,
-        (mp_config_t){ .transmission_unit = tu },
-        coord, on_data, NULL);
+    mp_rx_stream_t stream = {
+        .config = {
+            .transmission_unit = tu
+        },
+        .coordinator = coordinator,
+        .on_data = on_data,
+        .user = NULL
+    };
 
     uint8_t *block = (uint8_t *)malloc(tu);
     if (!block) { mp_session_rx_save(session, assembly); return 1; }

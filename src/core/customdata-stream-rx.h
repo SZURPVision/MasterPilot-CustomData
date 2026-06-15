@@ -15,7 +15,8 @@ extern "C" {
 typedef struct {
     void *ctx;
 
-    mp_rx_slice_state_t *(*state_get)(void *ctx, mp_coordinate_t coord);
+    const mp_rx_slice_state_t *(*state_get)(void *ctx, mp_coordinate_t coord);
+    void (*state_put)(void *ctx, mp_coordinate_t coord, const mp_rx_slice_state_t* state);
 
 	/*
 	 * @brief 存入临时的乱序 slice payload.
@@ -62,14 +63,6 @@ typedef struct {
     mp_rx_data_cb        on_data;
     void                *user;
 } mp_rx_stream_t;
-
-void mp_rx_stream_init(
-    mp_rx_stream_t      *s,
-    mp_config_t          config,
-    mp_rx_coordinator_t  coordinator,
-    mp_rx_data_cb        on_data,
-    void                *user
-);
 
 /*
  * @brief RX流入口, 从这里传入通信数据.

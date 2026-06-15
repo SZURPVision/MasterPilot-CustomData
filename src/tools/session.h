@@ -33,8 +33,6 @@ typedef struct {
 typedef struct {
     uint32_t             magic;
     uint16_t             transmission_unit;
-    uint16_t             current_sender_id;
-    uint16_t             current_package_id;
     mp_rx_slice_state_t  state;
 } mp_rx_session_t;
 #pragma pack(pop)

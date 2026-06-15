@@ -9,7 +9,7 @@
 /* ── helper ── */
 static size_t rx_total_size(uint16_t transmission_unit)
 {
-    uint16_t max_p    = transmission_unit - sizeof(mp_header_t);
+    uint16_t max_p    = transmission_unit - sizeof(mp_header_meta_t);
     size_t   buf_size = (size_t)256 * max_p;
     return sizeof(mp_rx_session_t) + buf_size;
 }

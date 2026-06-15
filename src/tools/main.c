@@ -61,8 +61,8 @@ int cmd_config(int argc, char *argv[])
         }
     }
 
-    if (mtu < (int)sizeof(mp_header_t) + 1) {
-        fprintf(stderr, "Error: MTU must be > header size (%zu)\n", sizeof(mp_header_t));
+    if (mtu < (int)sizeof(mp_header_meta_t) + 1) {
+        fprintf(stderr, "Error: MTU must be > header size (%zu)\n", sizeof(mp_header_meta_t));
         return 1;
     }
     if (mtu > 65535) {

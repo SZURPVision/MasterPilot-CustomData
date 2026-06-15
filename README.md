@@ -11,11 +11,15 @@
 
 ## 数据格式(对应裁判系统通信协议中的`data`块)
 
-`[package_serial]` `[slice_serial]` `[slice_payload_length]` `[payload ...]`
+`[package_serial]` `[slice_serial]` `[sender_id]` `[eop]` `[slice_payload_length]` `[payload ...]`
 
-- `package_serial`: **uint8** 数据, 表示此大包的递增序号.
-- `slice_serial`: **uint8** 数据, 表示此分片的递增序号.
-- `slice_payload_length`: **uint16小端** 数据, 表示本次切片的载荷大小. 如果不满则表示发送完成.
+**全都是小端序, LSB**
+
+- `package_serial`: **8bit** 数据, 表示此大包的递增序号.
+- `slice_serial`: **8bit** 数据, 表示此分片的递增序号.
+- `sender_id`: **3bit** 数据, 用于标识发送方, 防止链路冲突.
+- `eop`: **1bit** 数据, 1表示当前slice是包最后一片.
+- `slice_payload_length`: **12bit** 数据, 表示本次切片的载荷大小. 如果不满则表示发送完成.
 - `payload`: 使用`ProtoBuf`编码出来`uint8[]`数据的一部分
 
 这部分可以使用本仓库中`src`里的代码自动完成.
@@ -27,45 +31,58 @@
 ```mermaid
 graph TD
 
-subgraph REFREE["裁判系统串口完整帧结构"]
-	RA["frame_header"] ---
-	RB["cmd_id"] ---
-	DATA ---
-	RC["frame_tail"] 
+subgraph R["裁判系统串口完整帧结构"]
+	RH["裁判系统帧头"]
+
+	subgraph RD["裁判系统DATA块"]
+		DH["自定义数据header(上文所述)"]
+		DD["自定义数据payload(表现层, 目前是protobuf编码数据)"]
+	end
+
+	RT["裁判系统帧尾"]
 end
 
-subgraph DATA["data"]
-	DA["packager_serial(包序列号)"] ---
-	DB["slice_serial(分片序列号)"] ---
-	DC["slice_payload_length(分片载荷大小)"] ---
-	DD["payload(protobuf编码出来的数据)"]
-end
+RH --- DH --- DD --- RT
+
 ```
 
 其中:
-- `data`: 不使用通信手册中给的结构体, 使用上文讲的`数据格式`.
+- `DATA块`: 不使用通信手册中给的结构体, 使用上文讲的`数据格式`.
 
 ## 通信流程
 
 ### 发送
 
-1. 填好生成代码中的`XXXDataPacketToClient`结构体
-2. 把上一步的结构体传给`protobuf`库的编码器, 得到`package`字节流
-3. 将`package`切成分片, 加上帧头, 得到`data`
-4. 将`data`打包成裁判系统串口所需的格式, 发送
+```mermaid
+flowchart LR
+
+S[("填好的`XXXDataPacketToClient`结构体(`表现层`)")]
+--"protobuf编码器(表现层编码器)"-->
+P[("表现层数据流")]
+--"customdata-core编码器(传输层编码器)"-->
+T[("传输层数据流")]
+--"缓冲"-->
+TB["发送缓冲区"]
+--"裁判系统编码"-->
+D["发送"]
+
+```
+
 
 ### 接收
 
-1. 解析裁判系统发来数据, 得到`data`
-2. 将`data`按照上文定义的帧头拼接, 得到`package`
-3. 将`package`使用`protobuf`解码, 得到`XXXDataPacketFromClient`结构体
-4. 读取结构体内容
+```mermaid
+flowchart LR
+D["接收"] --"裁判系统解码"--> RB["接收缓冲区"] --"customdata-core解码器(传输层解码器)"--> T["表现层数据流"] --"表现层解码器" --> P["表现层结构体"]
+```
 
 ## 使用教学
 
 以无人机为例.
 
 ### C
+
+TODO: 已过时
 
 #### 代码拉取
 
@@ -152,6 +169,8 @@ void main()
 TODO
 
 ### C++
+
+TODO: 已过时
 
 以英雄为例
 

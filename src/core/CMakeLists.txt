@@ -1,11 +1,9 @@
 option(BUILD_CORE_SHARED "Build customdata-core as shared library" OFF)
 
 set(CORE_SOURCES
-    customdata-common.c
-    customdata-tx.c
-    customdata-rx.c
     customdata-stream-tx.c
     customdata-stream-rx.c
+    customdata-ffi.c
 )
 
 if(BUILD_CORE_SHARED)
