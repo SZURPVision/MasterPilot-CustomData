@@ -20,7 +20,7 @@ else()
     set(_default_build ON)
     set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 endif()
-option(BUILD_NANOPB "Build nanopb encode/decode layer" ${_default_build})
+option(BUILD_EMBEDDED "Build embedded wrapper with nanopb" ${_default_build})
 option(BUILD_CPP    "Build C++ protobuf wrapper"       ${_default_build})
 option(BUILD_TOOLS  "Build CLI tools"                  ${_default_build})
 
@@ -40,8 +40,8 @@ endforeach()
 
 add_subdirectory(src/core)
 
-if(BUILD_NANOPB)
-    add_subdirectory(src/nanopb)
+if(BUILD_EMBEDDED)
+    add_subdirectory(src/embedded)
 endif()
 
 if(BUILD_CPP)

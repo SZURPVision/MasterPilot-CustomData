@@ -86,7 +86,7 @@ TODO: 已过时
 
 #### 代码拉取
 
-- 第一次使用: git clone [仓库url] -b dist/c-src --depth=1
+- 第一次使用: git clone [仓库url] -b dist/embedded-src --depth=1
 - 后续更新: git pull
 
 #### Keil配置
@@ -97,7 +97,7 @@ TODO: 已过时
 
 #### 发送(编码)
 ```c
-#include <masterpilot/customdata-nanopb.h> //这个是编码和收发缓冲区的库
+#include <masterpilot/customdata-embedded.h> //这个是编码和收发缓冲区的库
 #include <masterpilot/proto/drone.h> //这个是与自定义客户端的表现层协议库. 按你的兵种引用.
 
 // 这是把数据块套上裁判系统帧头帧尾,并串口发送的函数

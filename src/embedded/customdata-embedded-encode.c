@@ -1,4 +1,4 @@
-#include <masterpilot/customdata-nanopb.h>
+#include <masterpilot/customdata-embedded.h>
 #include <stdbool.h>
 #include <string.h>
 #include <pb_encode.h>

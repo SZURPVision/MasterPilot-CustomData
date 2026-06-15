@@ -1,7 +1,7 @@
 { src, stdenv, customdata-generated, nanopb }:
 
 stdenv.mkDerivation {
-  name = "customdata-c-src";
+  name = "customdata-enbedded-src";
   version = "0.1.0";
   meta = {
     description = "MasterPilot CustomData - C source package";

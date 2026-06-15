@@ -8,7 +8,7 @@
         inherit (config.packages) nanopb-fixed;
       };
       # 下游导出用源码包（给没装 Nix 的环境）
-      customdata-c-src = pkgs.callPackage ./customdata-c-src/package.nix {
+      customdata-embedded-src = pkgs.callPackage ./customdata-embedded-src/package.nix {
         src = self;
         inherit (config.packages) customdata-generated;
       };
