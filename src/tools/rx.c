@@ -15,16 +15,15 @@ typedef struct {
 static const mp_rx_slice_state_t *state_get(void *ctx, mp_coordinate_t coord)
 {
     rx_ctx_t *c = (rx_ctx_t *)ctx;
-    mp_rx_session_t *s = c->session;
-
-    return &s->state;
+    (void)coord;
+    return &c->session->state;
 }
 
 static void state_put(void *ctx, mp_coordinate_t coord, const mp_rx_slice_state_t* state)
 {
     rx_ctx_t *c = (rx_ctx_t *)ctx;
-    mp_rx_session_t *s = c->session;
-    s->state = *state;
+    (void)coord;
+    c->session->state = *state;
 }
 
 static void payload_put(void *ctx, mp_coordinate_t coord, const uint8_t *data, uint16_t size)
@@ -39,17 +38,57 @@ static const uint8_t *payload_get(void *ctx, mp_coordinate_t coord)
     return c->assembly + coord.offset;
 }
 
-static void on_data(void *user, const uint8_t *data, mp_coordinate_t coord, uint16_t size, bool eop)
+static void on_event(
+    void                       *user,
+    mp_rx_stream_event_t        event,
+    const mp_coordinate_t      *coord,
+    const mp_rx_coordinator_t  *coordinator,
+    const mp_rx_slice_state_t  *state,
+    uint32_t                    old_watermark,
+    const uint8_t              *payload,
+    uint16_t                    payload_size
+)
 {
-    (void)coord;
-    (void)eop;
-    const uint8_t *p = data;
-    uint32_t rem = size;
-    while (rem > 0) {
-        ssize_t n = write(STDOUT_FILENO, p, rem);
-        if (n < 0) return;
-        p   += (uint32_t)n;
-        rem -= (uint32_t)n;
+    rx_ctx_t *c = (rx_ctx_t *)user;
+
+    /* 1. 存当前 payload — 全部非重复 slice 均存入 */
+    if (payload_size > 0) {
+        coordinator->payload_put(coordinator->ctx, *coord, payload, payload_size);
+    }
+
+    /*
+     * 2. 冲刷连续区间 [old_watermark, state->watermark)
+     *   OUT_OF_ORDER: old == new → 空区间, 仅存不冲刷
+     *   IN_ORDER:     old <  new → 冲刷新连续区域
+     *   COMPLETE:     old <  new → 冲刷完整包
+     * event 枚举在此实现中由 watermark 差值隐式承载, 不再显式分支.
+     */
+    if (old_watermark < state->watermark) {
+        const uint16_t max_p = mp_max_payload(
+            (mp_config_t){ .transmission_unit = c->session->transmission_unit }
+        );
+
+        uint32_t cur_off = old_watermark;
+        while (cur_off < state->watermark) {
+            const uint16_t sz = mp_rx_deliver_size(cur_off, state->watermark, max_p);
+            const uint8_t *data = coordinator->payload_get(coordinator->ctx,
+                (mp_coordinate_t){
+                    .sender_id  = coord->sender_id,
+                    .package_id = coord->package_id,
+                    .offset     = cur_off
+                }
+            );
+
+            const uint8_t *p = data;
+            uint32_t rem = sz;
+            while (rem > 0) {
+                ssize_t n = write(STDOUT_FILENO, p, rem);
+                if (n < 0) return;
+                p   += (uint32_t)n;
+                rem -= (uint32_t)n;
+            }
+            cur_off += max_p;
+        }
     }
 }
 
@@ -79,8 +118,8 @@ int cmd_rx(int argc, char *argv[])
             .transmission_unit = tu
         },
         .coordinator = coordinator,
-        .on_data = on_data,
-        .user = NULL
+        .on_event = on_event,
+        .user = &rx_ctx
     };
 
     uint8_t *block = (uint8_t *)malloc(tu);

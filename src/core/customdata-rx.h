@@ -20,16 +20,20 @@ typedef struct {
 } mp_rx_slice_state_t;
 
 /*
- * @brief 流状态
-*/
+ * @brief rx 纯事件. DUPLICATE 由 stream 层拦截, 下游只接收 NEW_SLICE_OUT_OF_ORDER / NEW_SLICE_IN_ORDER / COMPLETE.
+ */
 typedef enum {
-    MP_STREAM_ACCEPT = 0, /**< 接受数据 */
-    MP_STREAM_DUPLICATE, /**< 遇到重复数据 */
-    MP_STREAM_COMPLETE /**< 流结束 */
-} mp_stream_status_t;
+    MP_RX_STREAM_DUPLICATE,              /**< 重复 slice (stream 层拦截, 不下发) */
+    MP_RX_STREAM_NEW_SLICE_OUT_OF_ORDER, /**< 乱序新 slice, watermark 未推进 */
+    MP_RX_STREAM_NEW_SLICE_IN_ORDER,     /**< 有序新 slice, watermark 已推进 */
+    MP_RX_STREAM_COMPLETE                /**< 包已完整 */
+} mp_rx_stream_event_t;
 
+/*
+ * @brief 单个 slice 处理结果
+ */
 typedef struct {
-    mp_stream_status_t   status;
+    mp_rx_stream_event_t event;
     mp_rx_slice_state_t  next_state;
 } mp_rx_slice_inst_t;
 
@@ -38,7 +42,7 @@ typedef struct {
  * @brief offset → slice 序号
  */
 MP_PURE
-inline uint16_t mp_offset_to_slice_idx(const uint32_t offset, const uint16_t max_payload)
+inline uint16_t mp_rx_offset_to_slice_idx(const uint32_t offset, const uint16_t max_payload)
 {
     return (uint16_t)(offset / max_payload);
 }
@@ -47,7 +51,7 @@ inline uint16_t mp_offset_to_slice_idx(const uint32_t offset, const uint16_t max
  * @brief 计算终止大小
  */
 MP_PURE
-inline uint32_t mp_calc_termination(
+inline uint32_t mp_rx_calc_termination(
     const uint16_t slice_idx,
     const uint16_t payload_size,
     const uint16_t max_payload
@@ -60,7 +64,7 @@ inline uint32_t mp_calc_termination(
  * @brief 终止大小 → slice 数
  */
 MP_PURE
-inline uint16_t mp_termination_to_slice_count(
+inline uint16_t mp_rx_termination_to_slice_count(
     const uint32_t termination,
     const uint16_t max_payload
 )
@@ -72,13 +76,13 @@ inline uint16_t mp_termination_to_slice_count(
  * @brief 判断是否收齐
  */
 MP_PURE
-inline bool mp_is_complete(
+inline bool mp_rx_is_complete(
     const mp_rx_slice_state_t* state,
     const uint16_t            max_payload
 )
 {
     return state->termination > 0
-        && state->received_count >= mp_termination_to_slice_count(state->termination, max_payload);
+        && state->received_count >= mp_rx_termination_to_slice_count(state->termination, max_payload);
 }
 
 /*
@@ -96,37 +100,6 @@ inline mp_coordinate_t mp_rx_header_to_coordinate(
         .package_id = header.package_serial,
         .offset     = mp_slice_idx_to_offset(header.slice_serial, max_p)
     };
-}
-
-/*
- * @brief 决策动作类型
- */
-typedef enum {
-    MP_RX_ACT_IGNORE,    // 重复 slice, 忽略
-    MP_RX_ACT_STORE,     // 乱序, 暂存到 coordinator
-    MP_RX_ACT_DELIVER    // 有序/补齐, 将 watermark 区间交付
-} mp_rx_action_t;
-
-/*
- * @brief 纯决策: 给定当前 bitmap 状态 + 新 slice + watermark, 返回动作
- */
-MP_PURE
-inline mp_rx_action_t mp_rx_classify(
-    const mp_rx_slice_state_t* state,
-    uint16_t slice_id,
-    uint32_t offset
-)
-{
-    const uint8_t  arr_idx  = (uint8_t)(slice_id >> 5);
-    const uint32_t bit_mask = (uint32_t)(1u << (slice_id & 31));
-
-    if (state->bitmap[arr_idx] & bit_mask)
-        return MP_RX_ACT_IGNORE;
-
-    if (offset > state->watermark)
-        return MP_RX_ACT_STORE;
-
-    return MP_RX_ACT_DELIVER;
 }
 
 /*
@@ -148,7 +121,7 @@ inline uint32_t mp_rx_advance_watermark(
     while (1) {
         if (termination > 0 && wm >= termination) break;
 
-        const uint16_t  slice_id = mp_offset_to_slice_idx(wm, max_payload);
+        const uint16_t  slice_id = mp_rx_offset_to_slice_idx(wm, max_payload);
         const uint8_t   arr_idx  = (uint8_t)(slice_id >> 5);
         const uint32_t  bit_mask = (uint32_t)(1u << (slice_id & 31));
 
@@ -179,10 +152,16 @@ inline uint16_t mp_rx_deliver_size(uint32_t cur_off, uint32_t new_wm, uint16_t m
 }
 
 /*
- * @brief RX流状态转移方程
+ * @brief rx 流状态转移 & 事件分类
+ *
+ * 纯函数：输入旧状态 + 新 slice 信息，输出事件和下一个纯状态。
+ * - DUPLICATE: next_state 为旧状态 (stream 层拦截, 不下发给下游)
+ * - NEW_SLICE_OUT_OF_ORDER: 有效 slice, offset > watermark
+ * - NEW_SLICE_IN_ORDER: 有效 slice, offset <= watermark, watermark 已推进
+ * - COMPLETE: 包已完整
  */
 MP_PURE
-inline mp_rx_slice_inst_t mp_calc_slice_step(
+inline mp_rx_slice_inst_t mp_rx_calc_slice_step(
     const mp_rx_slice_state_t* state,
     const uint16_t            slice_id,
     const uint16_t            payload_size,
@@ -193,15 +172,15 @@ inline mp_rx_slice_inst_t mp_calc_slice_step(
     const uint8_t  arr_idx  = (uint8_t)(slice_id >> 5);
     const uint32_t bit_mask = (uint32_t)(1u << (slice_id & 31));
 
-    /* Duplicate check */
+    /* Duplicate — stream 层拦截, 不下发 */
     if (state->bitmap[arr_idx] & bit_mask) {
         return (mp_rx_slice_inst_t){
-            .status     = MP_STREAM_DUPLICATE,
+            .event      = MP_RX_STREAM_DUPLICATE,
             .next_state = *state
         };
     }
 
-    /* Construct new pure state */
+    /* Build new bitmap */
     uint32_t new_bitmap[8];
     for (int i = 0; i < 8; ++i) {
         new_bitmap[i] = state->bitmap[i];
@@ -210,13 +189,14 @@ inline mp_rx_slice_inst_t mp_calc_slice_step(
 
     uint32_t new_term = state->termination;
     if (payload_size < max_payload || is_eop) {
-        new_term = mp_calc_termination(slice_id, payload_size, max_payload);
+        new_term = mp_rx_calc_termination(slice_id, payload_size, max_payload);
     }
 
-    /* Empty terminal slice does not count toward received_count */
     const uint16_t new_count = (payload_size == 0 && is_eop)
         ? state->received_count
         : state->received_count + 1;
+
+    const uint32_t offset = mp_slice_idx_to_offset(slice_id, max_payload);
 
     mp_rx_slice_state_t next_state = {
         .bitmap         = { new_bitmap[0], new_bitmap[1], new_bitmap[2], new_bitmap[3],
@@ -226,11 +206,18 @@ inline mp_rx_slice_inst_t mp_calc_slice_step(
         .watermark      = state->watermark
     };
 
-    mp_stream_status_t new_status = mp_is_complete(&next_state, max_payload)
-        ? MP_STREAM_COMPLETE : MP_STREAM_ACCEPT;
+    /* Watermark & event classification */
+    mp_rx_stream_event_t event;
+    if (offset > state->watermark) {
+        event = MP_RX_STREAM_NEW_SLICE_OUT_OF_ORDER;
+    } else {
+        next_state.watermark = mp_rx_advance_watermark(&next_state, max_payload);
+        event = mp_rx_is_complete(&next_state, max_payload)
+            ? MP_RX_STREAM_COMPLETE : MP_RX_STREAM_NEW_SLICE_IN_ORDER;
+    }
 
     return (mp_rx_slice_inst_t){
-        .status     = new_status,
+        .event      = event,
         .next_state = next_state
     };
 }

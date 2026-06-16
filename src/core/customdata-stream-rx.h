@@ -18,36 +18,49 @@ typedef struct {
     const mp_rx_slice_state_t *(*state_get)(void *ctx, mp_coordinate_t coord);
     void (*state_put)(void *ctx, mp_coordinate_t coord, const mp_rx_slice_state_t* state);
 
-	/*
-	 * @brief 存入临时的乱序 slice payload.
-	 * @param payload 要存入的payload
-	*/
+    /*
+     * @brief 存入临时的乱序 slice payload.
+     * @param payload 要存入的payload
+    */
     void (*payload_put)(void *ctx, mp_coordinate_t coord,
                         const uint8_t *payload, uint16_t size);
-	/*
-	 * @brief 取出临时的乱序 slice payload.
-	 * @return payload头部只读指针
-	*/
+    /*
+     * @brief 取出临时的乱序 slice payload.
+     * @return payload头部只读指针
+    */
     const uint8_t *(*payload_get)(void *ctx, mp_coordinate_t coord);
 
 } mp_rx_coordinator_t;
 
 #pragma endregion
 
-#pragma region RX Data Callback
+#pragma region RX Event Callback
 
-/*
- * @brief RX数据下游回调. 在无乱序/恢复有序时向下游推送流式数据.
- * @param data 数据块. 无需额外算offset.
- * @param coord 当前数据块对应坐标起点
- * @param eop 是否终止流. 若为true, 表示当前包的切片流已经全部发完.
-*/
-typedef void (*mp_rx_data_cb)(
-    void            *user,
-    const uint8_t   *data,
-    mp_coordinate_t  coord,
-    uint16_t         size,
-    bool             eop
+/**
+ * @brief rx 下游事件回调. 流发生状态变更时通知下游.
+ *
+ * 事件 + watermark 差值完整描述了发生了什么, 下游无需自行推理:
+ *   OUT_OF_ORDER: old_watermark == state->watermark → 区间为空, 仅 payload_put 暂存.
+ *   IN_ORDER:     old_watermark <  state->watermark → 连续区域补齐, payload_get 冲刷.
+ *   COMPLETE:     old_watermark <  state->watermark → 完整包冲刷, 包边界信号.
+ *
+ * @param event 事件类型 (DUPLICATE 已被 stream 层拦截, 下游不会收到)
+ * @param coord 当前 slice 坐标
+ * @param coordinator 提供 payload_put / payload_get, 下游自行存取数据
+ * @param state 事件后的新状态
+ * @param old_watermark 事件前的 watermark
+ * @param payload 指向当前 frame 的 payload 数据, 仅本次回调有效
+ * @param payload_size payload 大小
+ */
+typedef void (*mp_rx_event_cb)(
+    void                    *user,
+    mp_rx_stream_event_t     event,
+    const mp_coordinate_t   *coord,
+    const mp_rx_coordinator_t* coordinator,
+    const mp_rx_slice_state_t *state,
+    uint32_t                 old_watermark,
+    const uint8_t           *payload,
+    uint16_t                 payload_size
 );
 
 #pragma endregion
@@ -60,7 +73,7 @@ typedef void (*mp_rx_data_cb)(
 typedef struct {
     mp_config_t          config;
     mp_rx_coordinator_t  coordinator;
-    mp_rx_data_cb        on_data;
+    mp_rx_event_cb       on_event;
     void                *user;
 } mp_rx_stream_t;
 
