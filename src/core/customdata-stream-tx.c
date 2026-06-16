@@ -1,5 +1,6 @@
 #include "customdata-stream-tx.h"
 #include "customdata-common.h"
+#include "customdata-tx.h"
 #include <stddef.h>
 
 void mp_tx_stream_feed(
@@ -19,7 +20,7 @@ void mp_tx_stream_feed(
         s->downstream.push(
             s->downstream.user,
             MP_TX_ACT_DATA,
-            (mp_header_packed_t)0,
+            NULL,
             data + off,
             take
         );
@@ -36,7 +37,7 @@ void mp_tx_stream_feed(
             s->downstream.push(
                 s->downstream.user,
                 MP_TX_ACT_DATA,
-                mp_header_pack(slice.header),
+                &slice.header,
                 NULL,
                 0
             );
@@ -52,7 +53,7 @@ void mp_tx_stream_finalize(mp_tx_stream_t *s)
     s->downstream.push(
         s->downstream.user,
         MP_TX_ACT_FINALIZE,
-        mp_header_pack(slice.header),
+        &slice.header,
         NULL,
         0
     );

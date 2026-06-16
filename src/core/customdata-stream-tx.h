@@ -2,7 +2,6 @@
 #define __MP_CUSTOMDATA_STREAM_TX_H_
 
 #include "customdata-common.h"
-#include "customdata-tx.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,11 +18,12 @@ typedef enum {
  * @param hdr header, 可空(0即空). 如果为空, 表示积攒数据, 如果非空, 表示需要回填header并发送.
  * @param data 数据块, 可空.
  * @param size 数据块大小. data为空时为0.
+ * @warning 除data和user外, 其他指针禁止存储, 仅允许读取和拷贝.
  */
 typedef void (*mp_tx_push_cb)(
     void                    *user,
     mp_tx_action_t          act,
-    const mp_header_packed_t nullable_header,
+    const mp_header_meta_t* nullable_header,
     const uint8_t           *nullable_data,
     uint16_t                size
 );

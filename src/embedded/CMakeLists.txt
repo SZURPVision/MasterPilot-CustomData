@@ -21,4 +21,9 @@ install(TARGETS mp-customdata-embedded
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
 )
-install(FILES customdata-embedded.h DESTINATION include/masterpilot)
+install(
+    FILES
+        customdata-embedded-encode.h
+        customdata-embedded-encode.h
+    DESTINATION include/masterpilot
+)

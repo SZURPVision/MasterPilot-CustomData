@@ -58,6 +58,21 @@ typedef uint32_t mp_header_packed_t;
 /** @brief wire header 固定大小 */
 #define MP_HEADER_SIZE sizeof(mp_header_packed_t)
 
+#define MP_PACKED_HEADER_TO_ARRAY(packed)  \
+    (uint8_t[]){                        \
+        [0] = (packed) >> 0, \
+        [1] = (packed) >> 8, \
+        [2] = (packed) >> 16,\
+        [3] = (packed) >> 24 \
+    }
+
+#define MP_ARRAY_TO_PACKED_HEADER(arr) (                        \
+    ((mp_header_packed_t)((uint8_t*)(arr))[0] << 0)  |          \
+    ((mp_header_packed_t)((uint8_t*)(arr))[1] << 8)  |          \
+    ((mp_header_packed_t)((uint8_t*)(arr))[2] << 16) |          \
+    ((mp_header_packed_t)((uint8_t*)(arr))[3] << 24)            \
+)
+
 /**
  * @brief 将header_meta打包为通信使用的header_packed
  */
@@ -70,6 +85,7 @@ inline mp_header_packed_t mp_header_pack(const mp_header_meta_t meta)
            ((uint32_t)(meta.eop ? 1 : 0)          << 19) |
            ((uint32_t)(meta.slice_payload_size & 0x0fff) << 20);
 }
+
 
 /**
  * @brief 从通信中的header_packed解包为header_meta, 方便计算使用
@@ -85,6 +101,14 @@ inline mp_header_meta_t mp_header_unpack(const mp_header_packed_t packed)
         .slice_payload_size = (uint16_t)((packed >> 20) & 0x0fff)
     };
 }
+
+#define MP_PACKED_HEADER_FROM_ARRAY(array)  \
+    {                        \
+        [0] = (packed) >> 0, \
+        [1] = (packed) >> 8, \
+        [2] = (packed) >> 16,\
+        [3] = (packed) >> 24 \
+    }
 
 /**
  * @brief 比较两个 header 是否相等
