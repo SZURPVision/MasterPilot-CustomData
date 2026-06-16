@@ -9,26 +9,48 @@ extern "C" {
 
 #pragma region RX Coordinator
 
+typedef const mp_rx_slice_state_t *(*mp_rx_slice_state_getter_t)(
+    void *ctx,
+    mp_coordinate_t coord
+);
+
+typedef void (*mp_rx_slice_state_setter_t)(
+    void *ctx,
+    mp_coordinate_t coord,
+    const mp_rx_slice_state_t* state
+);
+
+/**
+ * @brief 存入临时的乱序 slice payload.
+ * @param payload 要存入的payload
+*/
+typedef void (*mp_rx_payload_setter_t)(
+    void *ctx,
+    mp_coordinate_t coord,
+    const uint8_t *payload,
+    uint16_t size
+);
+
+/**
+ * @brief 取出临时的乱序 slice payload.
+ * @return payload头部只读指针
+*/
+typedef const uint8_t* (*mp_rx_payload_getter_t)(
+    void *ctx,
+    mp_coordinate_t coord
+);
+
 /*
  * @brief RX的`坐标定位器`, 根据传入的坐标去操作内存
  */
 typedef struct {
     void *ctx;
 
-    const mp_rx_slice_state_t *(*state_get)(void *ctx, mp_coordinate_t coord);
-    void (*state_put)(void *ctx, mp_coordinate_t coord, const mp_rx_slice_state_t* state);
+    mp_rx_slice_state_getter_t state_get;
+    mp_rx_slice_state_setter_t state_put;
 
-    /*
-     * @brief 存入临时的乱序 slice payload.
-     * @param payload 要存入的payload
-    */
-    void (*payload_put)(void *ctx, mp_coordinate_t coord,
-                        const uint8_t *payload, uint16_t size);
-    /*
-     * @brief 取出临时的乱序 slice payload.
-     * @return payload头部只读指针
-    */
-    const uint8_t *(*payload_get)(void *ctx, mp_coordinate_t coord);
+    mp_rx_payload_setter_t payload_put;
+    mp_rx_payload_getter_t payload_get;
 
 } mp_rx_coordinator_t;
 
