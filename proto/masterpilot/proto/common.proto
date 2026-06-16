@@ -85,7 +85,7 @@ message RobotInfoFromRadio {
   uint32 id = 1;     // 一位数机器人编号
   uint32 health = 2; // 血量
   uint32 ammo = 3;   // 剩余发弹量
-  repeated BuffInfo buffs = 6;
+  repeated BuffInfo buffs = 6 [(nanopb).max_count = 6] ;
 }
 
 // 雷达无线电解密
@@ -93,5 +93,5 @@ message RadioInfo {
   uint32 enemy_current_eco = 1;                 // 对方剩余经济
   uint32 enemy_total_eco = 2;                   // 对方总经济
   uint32 rfid = 3;                              // 对方一大堆RFID的状态 0x0a04
-  repeated RobotInfoFromRadio enemy_robots = 4; // 对方机器人信息
+  repeated RobotInfoFromRadio enemy_robots = 4 [(nanopb).max_count = 6] ; // 对方机器人信息
 }

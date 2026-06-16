@@ -10,5 +10,5 @@ option (nanopb_fileopt).long_names = false;
 // 英雄发送给自定义客户端的数据
 message HeroDataPacketToClient {
   // 压缩后的相机画面
-  optional bytes camera_frame = 200;
+  optional bytes camera_frame = 200 [(nanopb).max_size = 1500];
 }
