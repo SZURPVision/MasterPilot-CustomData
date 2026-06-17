@@ -1,4 +1,4 @@
-include(FindNanopb)
+find_package(nanopb REQUIRED)
 
 add_library(mp-customdata-embedded STATIC
     customdata-embedded-encode.c
@@ -13,7 +13,7 @@ target_include_directories(mp-customdata-embedded
 target_link_libraries(mp-customdata-embedded
     PUBLIC
         mp::customdata::core
-        nanopb::nanopb
+        nanopb::protobuf-nanopb-static
 )
 target_compile_features(mp-customdata-embedded PRIVATE c_std_99)
 

@@ -23,6 +23,7 @@ endif()
 option(BUILD_EMBEDDED "Build embedded wrapper with nanopb" ${_default_build})
 option(BUILD_CPP    "Build C++ protobuf wrapper"       ${_default_build})
 option(BUILD_TOOLS  "Build CLI tools"                  ${_default_build})
+option(BUILD_TESTS  "Build test executables"           ${_default_build})
 
 
 # ── 构建虚拟 include 目录（符号链接，不改变源码树物理结构）──
@@ -50,4 +51,8 @@ endif()
 
 if(BUILD_TOOLS)
     add_subdirectory(src/tools)
+endif()
+
+if(BUILD_TESTS AND BUILD_EMBEDDED)
+    add_subdirectory(test)
 endif()

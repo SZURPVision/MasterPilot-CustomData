@@ -1,0 +1,9 @@
+syntax = "proto3";
+import "nanopb.proto";
+
+// 测试用消息
+message TestMessage {
+    uint32 id = 1; // 测试用id
+    bytes  data = 2 [(nanopb).max_size = 200] ; // 测试截断用的大data
+    bytes  extra = 3 [(nanopb).max_size = 200] ; // 测试跨字段截断用的大byte
+}

@@ -73,8 +73,8 @@ bool mp_pb_encode(mp_pb_encoder_inst_t *instance, const pb_msgdesc_t *fields, co
     // nanopb编码流触发
     pb_ostream_t stream = {
         .callback = pb_ostream_pipeline,
-        .bytes_written = SIZE_MAX,
-        .state = instance
+        .state = instance,
+        .max_size = SIZE_MAX
     };
     bool result = pb_encode(&stream, fields, message);
     if(!result) return false;
