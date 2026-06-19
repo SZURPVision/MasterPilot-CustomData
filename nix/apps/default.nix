@@ -5,8 +5,7 @@
     mkDist = dry-run: (import ./generate-dists.nix {
       inherit dry-run;
       inherit (pkgs) runCommand replaceVars makeWrapper git;
-      cSrcPath = config.packages.customdata-embedded-src;
-      cppSrcPath = config.packages.customdata-cpp-src;
+      embeddedSrcPath = config.packages.customdata-embedded-src;
     });
   in
   {
