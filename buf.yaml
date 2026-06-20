@@ -1,7 +1,6 @@
 version: v2
 modules:
   - path: proto
-  - path: vendor/buf
 
 lint:
   use:
@@ -14,5 +13,3 @@ lint:
     - PACKAGE_SAME_CSHARP_NAMESPACE
     - ENUM_VALUE_PREFIX
     - ENUM_ZERO_VALUE_SUFFIX
-  ignore:
-    - vendor/buf

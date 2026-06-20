@@ -6,5 +6,6 @@ plugins:
     out: generated/csharp
   - protoc_builtin: nanopb
     out: generated/c
+
 inputs:
   - directory: proto
