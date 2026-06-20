@@ -39,6 +39,16 @@ typedef struct {
 
 #pragma region Header
 
+#define MP_SENDER_ID_BITS 3
+#define MP_PACKAGE_ID_BITS 8
+#define MP_SLICE_ID_BITS 8
+#define MP_EOP_BITS 1
+#define MP_SLICE_PAYLOAD_SIZE_BITS 12
+
+#define MP_SENDER_ID_MAX ((1<<MP_SENDER_ID_BITS)-1)
+#define MP_PACKAGE_ID_MAX ((1<<MP_PACKAGE_ID_BITS)-1)
+#define MP_SLICE_ID_MAX ((1<<MP_SLICE_ID_BITS)-1)
+
 /**
  * @brief header 元数据. 表示header解析后的内容.
  */
@@ -144,6 +154,12 @@ MP_PURE
 inline uint32_t mp_slice_idx_to_offset(const uint16_t slice_idx, const uint16_t max_payload)
 {
     return (uint32_t)slice_idx * max_payload;
+}
+
+MP_PURE
+inline uint16_t mp_offset_to_slice_idx(const uint32_t offset, const uint16_t max_payload)
+{
+    return offset / max_payload;
 }
 
 #pragma endregion
