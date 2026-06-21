@@ -32,13 +32,19 @@ public sealed class RxDecoder(int transmissionUnit)
         var oldState = slot.State;
         var step = mp_rx_calc_slice_step(oldState, header.slice_serial, payloadSize, maxPayload, header.eop is not 0);
 
+		// 先存 payload，后处理事件（与 mp_rx_stream_feed 中 on_event 顺序一致）
+		if (payloadSize > 0)
+		{
+			slot.EnsurePayloadCapacity(coord.offset + payloadSize);
+			payload[..payloadSize].CopyTo(slot.Payload.AsSpan(coord.offset));
+		}
+
 		switch(step.e)
 		{
 			case MP_RX_STREAM_DUPLICATE:
 				break;
 
 			case MP_RX_STREAM_COMPLETE:
-				// 取 payload 和 termination，然后清零状态
 				var fullPayload = slot.Payload;
 				var termination = step.next_state.termination;
 				slot = default;
@@ -53,15 +59,8 @@ public sealed class RxDecoder(int transmissionUnit)
 
 				break;
 
-			// 不管是不是乱序, 都被coordinator进行数轴排序
 			case MP_RX_STREAM_NEW_SLICE_IN_ORDER or MP_RX_STREAM_NEW_SLICE_OUT_OF_ORDER:
-				if (payloadSize > 0)
-				{
-					slot.EnsurePayloadCapacity(coord.offset + payloadSize);
-					payload[..payloadSize].CopyTo(slot.Payload.AsSpan(coord.offset));
-				}
 				slot.State = step.next_state;
-
 				break;
 
 			default:
