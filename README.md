@@ -325,7 +325,11 @@ TODO
 
 ### C#
 
-参考自定义客户端项目`MasterPilot`.
+通过nix引入`customdata-core-csharp`包, 或引用源码.
+
+发送和接收都是标准接口, 无需多言.
+
+具体使用参考主项目`MasterPilot`.
 
 
 

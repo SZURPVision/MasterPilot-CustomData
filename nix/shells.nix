@@ -35,7 +35,7 @@
           ];
           shellHook = ''
             clangsharp-generator @core.rsp
-            ln -sf $(realpath generated/bindings) src/csharp/generated
+            ln -sf $(realpath generated/csharp/bindings) src/csharp/generated
           '';
       };
     };
