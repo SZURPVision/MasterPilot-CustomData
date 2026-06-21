@@ -25,7 +25,7 @@ static bool mp_pb_slice_pull_callback(pb_istream_t *stream, pb_byte_t *buf, size
     mp_pb_slice_pull_t *st = (mp_pb_slice_pull_t *)stream->state;
 
     while (count > 0) {
-        const uint16_t slice_idx = mp_rx_offset_to_slice_idx(st->consumed, st->max_payload);
+        const uint16_t slice_idx = mp_offset_to_slice_idx(st->consumed, st->max_payload);
         const uint32_t slice_off = mp_slice_idx_to_offset(slice_idx, st->max_payload);
 
         const uint8_t *src = st->coordinator->payload_get(

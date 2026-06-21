@@ -182,10 +182,10 @@ inline mp_rx_slice_inst_t mp_rx_calc_slice_step(
         next_state.termination = mp_rx_calc_termination(slice_id, payload_size, max_payload);
     }
 
-    if (payload_size == 0 && is_eop)
-	{
+    if (!(payload_size == 0 && is_eop))
+    {
         next_state.received_count = (uint16_t)(state.received_count + 1);
-	}
+    }
 
     const uint32_t offset = mp_slice_idx_to_offset(slice_id, max_payload);
 
