@@ -97,7 +97,7 @@ static void mp_pb_state_put(void *ctx, mp_coordinate_t coord, const mp_rx_slice_
 
 static void mp_pb_on_event(
     void                       *user,
-    mp_rx_stream_event_t        event,
+    mp_rx_stream_event_t        e,
     const mp_coordinate_t      *coord,
     const mp_rx_coordinator_t  *coordinator,
     const mp_rx_slice_state_t  *state,
@@ -115,7 +115,7 @@ static void mp_pb_on_event(
     }
 
     /* 包完整 → backpressure 解码 */
-    if (event != MP_RX_STREAM_COMPLETE) return;
+    if (e != MP_RX_STREAM_COMPLETE) return;
 
     /*
      * state->termination 是包总字节数的唯一来源 (mp_rx_calc_slice_step 内部通过

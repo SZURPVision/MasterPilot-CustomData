@@ -40,7 +40,7 @@ static const uint8_t *payload_get(void *ctx, mp_coordinate_t coord)
 
 static void on_event(
     void                       *user,
-    mp_rx_stream_event_t        event,
+    mp_rx_stream_event_t        e,
     const mp_coordinate_t      *coord,
     const mp_rx_coordinator_t  *coordinator,
     const mp_rx_slice_state_t  *state,
@@ -61,7 +61,7 @@ static void on_event(
      *   OUT_OF_ORDER: old == new → 空区间, 仅存不冲刷
      *   IN_ORDER:     old <  new → 冲刷新连续区域
      *   COMPLETE:     old <  new → 冲刷完整包
-     * event 枚举在此实现中由 watermark 差值隐式承载, 不再显式分支.
+     * e 枚举在此实现中由 watermark 差值隐式承载, 不再显式分支.
      */
     if (old_watermark < state->watermark) {
         const uint16_t max_p = mp_max_payload(

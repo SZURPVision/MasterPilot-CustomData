@@ -13,7 +13,7 @@ buildDotnetModule {
   version = "0.1.0";
 
   postPatch = ''
-    cp -rL ${customdata-core-binding-csharp}/generated ./
+    cp -rL ${customdata-core-binding-csharp}/generated/bindings ./generated/
   '';
 
   postInstall = ''

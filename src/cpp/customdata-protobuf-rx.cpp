@@ -145,7 +145,7 @@ struct RxDecoder::Impl
                 .transmission_unit = static_cast<uint16_t>(tu)
             },
             .coordinator = _coordinator,
-            .on_event = +[](void* user, mp_rx_stream_event_t event,
+            .on_event = +[](void* user, mp_rx_stream_event_t e,
                            const mp_coordinate_t* coord,
                            const mp_rx_coordinator_t* coordinator,
                            const mp_rx_slice_state_t* state,
@@ -166,7 +166,7 @@ struct RxDecoder::Impl
                     coordinator->payload_put(coordinator->ctx, *coord, payload, payload_size);
 
                 // 有了上面的内存连续铺垫, 理论组装完毕后的信号在这里直接解码
-                if (event == MP_RX_STREAM_COMPLETE)
+                if (e == MP_RX_STREAM_COMPLETE)
                 {
 
                     MsgPtr p_msg(self._prototype.New()); 

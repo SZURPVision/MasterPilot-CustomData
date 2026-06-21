@@ -1,14 +1,15 @@
 # Language
---language=c
+--language=c++
 
 # Input and Output Configuration
---file=src/core/customdata-core.h
---output=generated/csharp
+--file=src/core/customdata-ffi.c
+--output=generated/csharp/bindings
 --namespace=MasterPilot.Communicator.CustomData.Bindings
 --libraryPath=customdata-core
-
-# Isolation Strategy
---traverse=src/core/customdata-core.h
+--traverse
+src/core/customdata-common.h	
+src/core/customdata-rx.h	
+src/core/customdata-tx.h	
 
 # Standard Code Generation Tweaks
 --methodClassName=CoreMethods
@@ -16,4 +17,20 @@
 --config=multi-file
 --config=generate-helper-types
 
---with-access-specifier=*=Internal
+--with-access-specifier
+*=Internal
+
+--define-macro
+MP_PURE=
+
+--config
+latest-codegen
+--config
+generate-macro-bindings
+--config
+generate-disable-runtime-marshalling
+
+--exclude
+MP_PACKED_HEADER_TO_ARRAY
+--exclude
+MP_ARRAY_TO_PACKED_HEADER

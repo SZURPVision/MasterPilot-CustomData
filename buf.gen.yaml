@@ -3,7 +3,7 @@ plugins:
   - protoc_builtin: cpp
     out: generated/cpp
   - protoc_builtin: csharp
-    out: generated/csharp
+    out: generated/csharp/proto
   - protoc_builtin: nanopb
     out: generated/c
 

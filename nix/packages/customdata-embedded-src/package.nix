@@ -12,12 +12,12 @@ stdenv.mkDerivation {
     mp_inc=$out/include/masterpilot
     mkdir -p $out/src $out/include $mp_inc $mp_inc/proto
 
-    cp ${src}/src/core/*.h $mp_inc/
+    find \${src}/src/core/ -maxdepth 1 -name "*.h" ! -name "*ffi*" -exec cp -t $mp_inc/ {} +
     cp ${src}/src/embedded/*.h $mp_inc/
     cp ${customdata-generated}/c/masterpilot/proto/*.h $mp_inc/proto/
     cp ${nanopb.src}/*.h $out/include/
 
-    cp ${src}/src/core/*.c $out/src/
+    find \${src}/src/core/ -maxdepth 1 -name "*.c" ! -name "*ffi*" -exec cp -t $out/src/ {} +
     cp ${src}/src/embedded/*.c $out/src/
     cp ${customdata-generated}/c/masterpilot/proto/*.c $out/src/
     cp ${nanopb.src}/*.c $out/src/

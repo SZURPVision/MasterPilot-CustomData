@@ -18,8 +18,7 @@ typedef struct {
 } mp_tx_slice_t;
 
 /*
- * @brief 推进坐标 — 步进一个 slice slot (offset += max_payload)
- * sender_id / package_id 不变，package 边界处理由 coordinator 负责
+ * @brief 推进坐标
  */
 MP_PURE
 inline mp_coordinate_t mp_tx_advance(
@@ -28,11 +27,12 @@ inline mp_coordinate_t mp_tx_advance(
 )
 {
     const uint16_t max_payload = mp_max_payload(config);
-    return (mp_coordinate_t){
+    mp_coordinate_t result = {
         .sender_id  = current.sender_id,
         .package_id = current.package_id,
-        .offset     = current.offset + max_payload
+        .offset     = (uint16_t)(current.offset + max_payload)
     };
+	return result;
 }
 
 /*
@@ -48,13 +48,14 @@ inline mp_header_meta_t mp_tx_make_header(
 )
 {
     const uint16_t max_payload = mp_max_payload(config);
-    return (mp_header_meta_t){
-        .package_serial     = current.package_id & 0xFF,
-        .slice_serial       = (uint16_t)((current.offset / max_payload) & 0xFF),
-        .sender_id          = current.sender_id & 0x7,
-        .eop                = eop ? 1 : 0,
+    mp_header_meta_t result = {
+        .package_serial     = current.package_id,
+        .slice_serial       = mp_offset_to_slice_idx(current.offset,max_payload),
+        .sender_id          = (uint8_t)(current.sender_id & 0x7u),
+        .eop                = eop,
         .slice_payload_size = payload_size
     };
+	return result;
 }
 
 /*
@@ -68,10 +69,11 @@ inline mp_tx_slice_t mp_tx_prepare(
     const bool            is_final
 )
 {
-    return (mp_tx_slice_t){
+    mp_tx_slice_t result = {
         .header = mp_tx_make_header(config, current, payload_size, is_final),
         .next   = mp_tx_advance(config, current)
     };
+	return result;
 }
 
 #pragma endregion

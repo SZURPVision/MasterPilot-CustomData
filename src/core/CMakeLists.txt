@@ -13,6 +13,18 @@ if(BUILD_CORE_SHARED)
         VERSION ${PROJECT_VERSION}
         SOVERSION 0
     )
+	# 严判
+	if(CMAKE_C_COMPILER_ID MATCHES "Clang|GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+		target_compile_options(mp-customdata-core PRIVATE
+			-Wall
+			-Wextra
+			
+			-Wno-narrowing
+			
+			-Wconversion
+			-Wsign-conversion
+		)
+	endif()
 else()
     add_library(mp-customdata-core STATIC ${CORE_SOURCES})
 endif()

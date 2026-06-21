@@ -20,19 +20,19 @@ void mp_rx_stream_feed(
 
     const mp_coordinate_t coord = mp_rx_header_to_coordinate(s->config, hdr);
 
-    const mp_rx_slice_state_t* old_state = s->coordinator.state_get(s->coordinator.ctx, coord);
+    const mp_rx_slice_state_t old_state = *s->coordinator.state_get(s->coordinator.ctx, coord);
 
-    const uint32_t old_watermark = old_state->watermark;
+    const uint32_t old_watermark = old_state.watermark;
 
     const mp_rx_slice_inst_t step = mp_rx_calc_slice_step(
         old_state, hdr.slice_serial, payload_size, max_payload, hdr.eop
     );
 
     /* DUPLICATE: 纯丢弃, 不通知下游, 不更新状态 */
-    if (step.event == MP_RX_STREAM_DUPLICATE) return;
+    if (step.e == MP_RX_STREAM_DUPLICATE) return;
 
     /* Persist state */
-    if (step.event == MP_RX_STREAM_COMPLETE) {
+    if (step.e == MP_RX_STREAM_COMPLETE) {
         const mp_rx_slice_state_t zero = {0};
         s->coordinator.state_put(s->coordinator.ctx, coord, &zero);
     } else {
@@ -41,7 +41,7 @@ void mp_rx_stream_feed(
 
     s->on_event(
         s->user,
-        step.event,
+        step.e,
         &coord,
         &s->coordinator,
         &step.next_state,
