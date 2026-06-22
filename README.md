@@ -113,7 +113,8 @@ struct
 // 这是你的crc计算纯函数. 不建议用官方给的append.
 uint16_t calc_crc16(const uint16_t old_crc, const uint8_t* block, const uint16_t size);
 
-// 你的裁判系统图传链路发送.
+// 你的裁判系统图传链路发送缓冲区存入方法
+#warning 缓冲区发送频率为50Hz, 注意不要超了. 编码可以超频率, 发送不能超.
 void refree_vt_send(const uint8_t* block, const uint16_t size);
 
 // crc16计算的中间状态
@@ -208,8 +209,8 @@ void mp_pb_data_send(void* user)
 	refree_vt_send(&refree_customdata_block, sizeof(refree_customdata_block));
 }
 
-// 这是一个以50hz频率调用的函数. 假设在这里发传感器数据.
-void task_call_me_at_50hz(void* args)
+// 这是执行编码的函数, 通常在发送前执行, 编码到裁判系统发送缓冲区 
+void task_call_me_before_send(void* args)
 {
 	// 假设你传入给task的参数是这个
 	mp_pb_encoder_inst_t* encoder_inst = (mp_pb_encoder_inst_t*)args;
@@ -247,26 +248,22 @@ void init()
 		// 随便给个id, 0~7, 不冲突就行.
 		.sender_id = 0, 
 	};
-	// 创建任务, 把这个inst传进去
-	// 换成你的实际任务创建逻辑.
-	create_task_call_me_at_50hz(encoder_inst);
 }
 
 
 ```
 
 #### 接收(解码)
+
 TODO
 
 ### C++
-
-TODO: 已过时
 
 以英雄为例
 
 #### 代码拉取
 
-- 第一次使用: git clone [仓库url] -b dist/cpp-src --depth=1
+- 第一次使用: git clone [仓库url] -b dev --depth=1
 - 后续更新: git pull
 
 #### 构建系统配置
@@ -276,32 +273,20 @@ TODO: 已过时
 #### 发送
 
 ```cpp
-#include <masterpilot/customdata-protobuf-sender.hpp>
+#include <masterpilot/customdata-protobuf-tx.hpp>
 #include <masterpilot/proto/hero.pb.h>
-
-// 定时调用的函数, 用来把缓冲区发给电控
-void call_me_repeatedly(
-	const masterpilot::customdata::Sender& sender
-)
-{
-	//返回值: 是否成功, 可以用来设计重传. 串口应该不会失败.
-	sender.flush();
-}
 
 int main()
 {
-	masterpilot::customdata::Sender sender
+	masterpilot::customdata::TxEncoder<300> encoder
 	{
-		300, //mtu
-		16, //buffer数量 会自动分配(底层是vector)
-		[&send_to_my_serial](auto block) -> int //具体的发送实现
+		1, //sender_id
+		[](auto block) //具体的发送实现. 可以绑对应类的成员函数
 		{
 			//加装帧头, 让串口把span发出去. 假设全发完了没阻塞
 			//注: 电控直接转发这一块即可, 不需要在电控那里再解析.
-			send_to_my_serial(block);
-
-			//发成功多少返回多少.
-			return block.size();
+			//假如说你的send要指针+长度
+			send_to_my_serial(block.data(), block.size());
 		}
 	};
 
@@ -313,7 +298,8 @@ int main()
 	msg.set_camera_frame(nz2);
 
 	//传进缓冲区
-	sender.Feed(msg);
+	auto ok = sender.Push(msg);
+	assert(ok); //通常都要能ok, 提前调试好.
 }
 
 ```
@@ -330,6 +316,15 @@ TODO
 发送和接收都是标准接口, 无需多言.
 
 具体使用参考主项目`MasterPilot`.
+
+#### 发送
+
+TODO
+
+#### 接收
+
+TODO
+
 
 
 
