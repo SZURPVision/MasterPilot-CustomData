@@ -130,13 +130,13 @@ void drone_send_customdata(
 	const MP_DroneDataPacketToClient* msg
 )
 {
-	crc16_user_t* crc16_user = (typeof(crc16_user))inst->user;
+	crc16_user_t* crc16_user = (crc16_user_t*)inst->user;
 	// 按照你的逻辑构造裁判系统帧头.
 	refree_customdata_block.refree_header = make_refree_header();
 
 	// 提前计算前面几字节裁判系统帧头的crc16. 这里可以复用你写过的逻辑.
 	// 这样可以利用这个值进行流式校验, 并追加.
-	crc16_user = (typeof(crc16_user)) {
+	crc16_user = (crc16_user_t*) {
 		.current_crc16 = calc_crc16(
 			REFREE_CRC16_INITIAL,
 			(uint8_t*)refree_customdata_block.refree_header,
@@ -173,7 +173,7 @@ void mp_pb_encode_data_put(
 	uint16_t size
 )
 {
-	crc16_user_t* crc16_user = (typeof(crc16_user))user;
+	crc16_user_t* crc16_user = (crc16_user_t*)user;
 	
 	// 拷贝目标数据块到裁判系统缓冲区.
 	memcpy(
@@ -182,7 +182,7 @@ void mp_pb_encode_data_put(
 		size
 	);
 	// 计算crc16, 并更新状态.
-	crc16_user_t next_state = (typeof(next_state))
+	crc16_user_t next_state = (crc16_user_t)
 	{
 		//更新 crc16
 		.current_crc16 = calc_crc16(
@@ -201,7 +201,7 @@ void mp_pb_encode_data_put(
 void mp_pb_data_send(void* user)
 {
 	// 这个user如果有你需要的东西, 可以用.
-	crc16_user_t* crc16_user = (typeof(crc16_user))user;
+	crc16_user_t* crc16_user = (crc16_user_t*)user;
 
 	// 裁判系统串口的真正发送. 记得是图传链路!!
 	// 这一步建议是阻塞发送. 因为回调结束后有可能会因切包导致破坏缓冲区.
@@ -212,7 +212,7 @@ void mp_pb_data_send(void* user)
 void task_call_me_at_50hz(void* args)
 {
 	// 假设你传入给task的参数是这个
-	mp_pb_encoder_inst_t* encoder_inst = (typeof(encoder_inst))args;
+	mp_pb_encoder_inst_t* encoder_inst = (mp_pb_encoder_inst_t*)args;
 
 	// 这个怎么分配看你. 这里仅做示例.
 	// 如果你消息体比较大(比如英雄), 记得给rtos的栈开大点, 或者用全局静态结构体.

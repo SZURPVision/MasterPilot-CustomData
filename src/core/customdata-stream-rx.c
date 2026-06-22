@@ -11,7 +11,7 @@ void mp_rx_stream_feed(
 {
     if (frame_size < MP_HEADER_SIZE) return;
 
-    const mp_header_packed_t* p_header = (typeof(p_header))frame;
+    const mp_header_packed_t* p_header = (const mp_header_packed_t*)frame;
     const mp_header_meta_t hdr = mp_header_unpack(*p_header);
 
     const uint16_t max_payload  = mp_max_payload(s->config);

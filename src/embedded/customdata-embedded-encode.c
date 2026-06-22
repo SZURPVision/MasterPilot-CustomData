@@ -8,7 +8,7 @@
 
 static bool pb_ostream_pipeline(pb_ostream_t *stream, const pb_byte_t *buf, size_t count)
 {
-    mp_pb_encoder_inst_t* instance = (typeof(instance))stream->state;
+    mp_pb_encoder_inst_t* instance = (mp_pb_encoder_inst_t*)stream->state;
     mp_tx_stream_feed(
         &instance->mp_stream,
         buf,
@@ -26,7 +26,7 @@ static void mp_tx_push_pipeline(
 )
 {
     (void)act; //无论什么情况, 都可以用这段判断操作搞定.
-    mp_pb_encoder_inst_t* instance = (typeof(instance))user;
+    mp_pb_encoder_inst_t* instance = (mp_pb_encoder_inst_t*)user;
 
     if(nullable_data && size)
     {
@@ -76,10 +76,12 @@ bool mp_pb_encode(mp_pb_encoder_inst_t *instance, const pb_msgdesc_t *fields, co
         .state = instance,
         .max_size = SIZE_MAX
     };
-    bool result = pb_encode(&stream, fields, message);
-    if(!result) return false;
+    bool ok = pb_encode(&stream, fields, message);
+    bool empty = stream.bytes_written == 0;
 
-    // finalize
-    mp_tx_stream_finalize(&instance->mp_stream);
-    return true;
+    if(ok && !empty)
+    {
+        mp_tx_stream_finalize(&instance->mp_stream);
+    }
+    return ok;
 }
