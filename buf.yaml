@@ -1,15 +1,15 @@
 version: v2
 modules:
   - path: proto
-    lint:
-      use:
-        - STANDARD
-      except:
-        - DIRECTORY_SAME_PACKAGE
-        - PACKAGE_DIRECTORY_MATCH
-        - PACKAGE_VERSION_SUFFIX
-        - PACKAGE_DEFINED
-        - PACKAGE_SAME_CSHARP_NAMESPACE
-        - ENUM_VALUE_PREFIX
-        - ENUM_ZERO_VALUE_SUFFIX
-  - path: vendor/buf
+
+lint:
+  use:
+    - STANDARD
+  except:
+    - DIRECTORY_SAME_PACKAGE
+    - PACKAGE_DIRECTORY_MATCH
+    - PACKAGE_VERSION_SUFFIX
+    - PACKAGE_DEFINED
+    - PACKAGE_SAME_CSHARP_NAMESPACE
+    - ENUM_VALUE_PREFIX
+    - ENUM_ZERO_VALUE_SUFFIX

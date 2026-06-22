@@ -31,7 +31,12 @@
           ];
           packages = [
             pkgs.dotnet-sdk
+            config.packages.clangsharp-generator
           ];
+          shellHook = ''
+            clangsharp-generator @core.rsp
+            ln -sf $(realpath generated/csharp/bindings) src/csharp/generated
+          '';
       };
     };
   };

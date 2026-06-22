@@ -2,15 +2,14 @@
 set -euo pipefail
 
 # ── Baked-in derivation paths ──
-C_SRC="@cSrcPath@"
-CPP_SRC="@cppSrcPath@"
+EMBEDDED_SRC="@embeddedSrcPath@"
 
 SOURCE_SHA=$(git rev-parse HEAD)
 REPO_URL=$(git remote get-url origin)
 
 # ── dist 输出 ──
 push_dist() {
-  local name="$1"       # c-src | cpp-src
+  local name="$1"       # embedded-src | cpp-src
   local src_path="$2"   # derivation $out
   local branch="dist/${name}"
   local workdir
@@ -46,7 +45,6 @@ push_dist() {
 
 }
 
-push_dist "c-src"   "${C_SRC}"
-push_dist "cpp-src" "${CPP_SRC}"
+push_dist "embedded-src"   "${EMBEDDED_SRC}"
 
 echo "==> All dist branches updated"

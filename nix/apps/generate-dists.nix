@@ -1,7 +1,7 @@
-{ dry-run, runCommand, replaceVars, makeWrapper, git, cSrcPath, cppSrcPath }:
+{ dry-run, runCommand, replaceVars, makeWrapper, git, embeddedSrcPath }:
 let
   script = replaceVars ./generate-dists.sh.in {
-    inherit dry-run cSrcPath cppSrcPath;
+    inherit dry-run embeddedSrcPath;
   };
 in
 runCommand "generate-dists" {

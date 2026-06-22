@@ -1,0 +1,6 @@
+if(BUILD_EMBEDDED)
+    add_subdirectory(embedded)
+endif()
+if(BUILD_CPP)
+    add_subdirectory(cpp)
+endif()

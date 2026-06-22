@@ -8,6 +8,10 @@ if(NOT DEFINED CUSTOMDATA_GENERATED_DIR)
     set(CUSTOMDATA_GENERATED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/generated"
         CACHE PATH "Path to buf-generated protobuf files")
 endif()
+if(NOT DEFINED NANOPB_SRC_DIR AND SRC_DIST)
+    set(NANOPB_SRC_DIR ""
+        CACHE PATH "Path to nanopb source tree (required for SRC_DIST)")
+endif()
 
 # ── 内部路径 ──
 set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
@@ -20,9 +24,11 @@ else()
     set(_default_build ON)
     set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 endif()
-option(BUILD_NANOPB "Build nanopb encode/decode layer" ${_default_build})
+option(BUILD_EMBEDDED "Build embedded wrapper with nanopb" ${_default_build})
 option(BUILD_CPP    "Build C++ protobuf wrapper"       ${_default_build})
 option(BUILD_TOOLS  "Build CLI tools"                  ${_default_build})
+option(BUILD_TESTS  "Build test executables"           ${_default_build})
+option(SRC_DIST "Install source distribution packages" OFF)
 
 
 # ── 构建虚拟 include 目录（符号链接，不改变源码树物理结构）──
@@ -30,7 +36,7 @@ set(MP_VIRTUAL_INC "${CMAKE_BINARY_DIR}/include/masterpilot")
 file(MAKE_DIRECTORY "${MP_VIRTUAL_INC}")
 
 file(GLOB MP_CORE_HEADERS "${CMAKE_SOURCE_DIR}/src/core/*.h")
-file(GLOB MP_NANOPB_HEADERS "${CMAKE_SOURCE_DIR}/src/nanopb/*.h")
+file(GLOB MP_NANOPB_HEADERS "${CMAKE_SOURCE_DIR}/src/embedded/*.h")
 file(GLOB MP_CPP_HEADERS "${CMAKE_SOURCE_DIR}/src/cpp/*.hpp")
 
 foreach(_hdr IN LISTS MP_CORE_HEADERS MP_NANOPB_HEADERS MP_CPP_HEADERS)
@@ -40,8 +46,8 @@ endforeach()
 
 add_subdirectory(src/core)
 
-if(BUILD_NANOPB)
-    add_subdirectory(src/nanopb)
+if(BUILD_EMBEDDED)
+    add_subdirectory(src/embedded)
 endif()
 
 if(BUILD_CPP)
@@ -50,4 +56,8 @@ endif()
 
 if(BUILD_TOOLS)
     add_subdirectory(src/tools)
+endif()
+
+if(BUILD_TESTS )
+    add_subdirectory(test)
 endif()

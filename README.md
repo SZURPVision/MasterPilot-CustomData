@@ -11,11 +11,15 @@
 
 ## 数据格式(对应裁判系统通信协议中的`data`块)
 
-`[package_serial]` `[slice_serial]` `[slice_payload_length]` `[payload ...]`
+`[package_serial]` `[slice_serial]` `[sender_id]` `[eop]` `[slice_payload_length]` `[payload ...]`
 
-- `package_serial`: **uint8** 数据, 表示此大包的递增序号.
-- `slice_serial`: **uint8** 数据, 表示此分片的递增序号.
-- `slice_payload_length`: **uint16小端** 数据, 表示本次切片的载荷大小. 如果不满则表示发送完成.
+**全都是小端序, LSB**
+
+- `package_serial`: **8bit** 数据, 表示此大包的递增序号.
+- `slice_serial`: **8bit** 数据, 表示此分片的递增序号.
+- `sender_id`: **3bit** 数据, 用于标识发送方, 防止链路冲突.
+- `eop`: **1bit** 数据, 1表示当前slice是包最后一片.
+- `slice_payload_length`: **12bit** 数据, 表示本次切片的载荷大小. 如果不满则表示发送完成.
 - `payload`: 使用`ProtoBuf`编码出来`uint8[]`数据的一部分
 
 这部分可以使用本仓库中`src`里的代码自动完成.
@@ -27,39 +31,50 @@
 ```mermaid
 graph TD
 
-subgraph REFREE["裁判系统串口完整帧结构"]
-	RA["frame_header"] ---
-	RB["cmd_id"] ---
-	DATA ---
-	RC["frame_tail"] 
+subgraph R["裁判系统串口完整帧结构"]
+	RH["裁判系统帧头"]
+
+	subgraph RD["裁判系统DATA块"]
+		DH["自定义数据header(上文所述)"]
+		DD["自定义数据payload(表现层, 目前是protobuf编码数据)"]
+	end
+
+	RT["裁判系统帧尾"]
 end
 
-subgraph DATA["data"]
-	DA["packager_serial(包序列号)"] ---
-	DB["slice_serial(分片序列号)"] ---
-	DC["slice_payload_length(分片载荷大小)"] ---
-	DD["payload(protobuf编码出来的数据)"]
-end
+RH --- DH --- DD --- RT
+
 ```
 
 其中:
-- `data`: 不使用通信手册中给的结构体, 使用上文讲的`数据格式`.
+- `DATA块`: 不使用通信手册中给的结构体, 使用上文讲的`数据格式`.
 
 ## 通信流程
 
 ### 发送
 
-1. 填好生成代码中的`XXXDataPacketToClient`结构体
-2. 把上一步的结构体传给`protobuf`库的编码器, 得到`package`字节流
-3. 将`package`切成分片, 加上帧头, 得到`data`
-4. 将`data`打包成裁判系统串口所需的格式, 发送
+```mermaid
+flowchart LR
+
+S[("填好的`XXXDataPacketToClient`结构体(`表现层`)")]
+--"protobuf编码器(表现层编码器)"-->
+P[("表现层数据流")]
+--"customdata-core编码器(传输层编码器)"-->
+T[("传输层数据流")]
+--"缓冲"-->
+TB["发送缓冲区"]
+--"裁判系统编码"-->
+D["发送"]
+
+```
+
 
 ### 接收
 
-1. 解析裁判系统发来数据, 得到`data`
-2. 将`data`按照上文定义的帧头拼接, 得到`package`
-3. 将`package`使用`protobuf`解码, 得到`XXXDataPacketFromClient`结构体
-4. 读取结构体内容
+```mermaid
+flowchart LR
+D["接收"] --"裁判系统解码"--> RB["接收缓冲区"] --"customdata-core解码器(传输层解码器)"--> T["表现层数据流"] --"表现层解码器" --> P["表现层结构体"]
+```
 
 ## 使用教学
 
@@ -67,9 +82,10 @@ end
 
 ### C
 
+
 #### 代码拉取
 
-- 第一次使用: git clone [仓库url] -b dist/c-src --depth=1
+- 第一次使用: git clone [仓库url] -b dist/embedded-src --depth=1
 - 后续更新: git pull
 
 #### Keil配置
@@ -80,54 +96,127 @@ end
 
 #### 发送(编码)
 ```c
-#include <masterpilot/customdata-nanopb.h> //这个是编码和收发缓冲区的库
+#include <masterpilot/customdata-embedded-encode.h> //这个是自定义数据编码库
 #include <masterpilot/proto/drone.h> //这个是与自定义客户端的表现层协议库. 按你的兵种引用.
+#include <stdbool.h>
 
-// 这是把数据块套上裁判系统帧头帧尾,并串口发送的函数
-bool send_to_refree(const uint8_t* block, uint16_t block_length);
+#define REFREE_CUSTOM_BYTE_BLOCK_LENGTH 300 //自定义数据块长度, 恒定为300
 
-// 前面两个参数分别是数据块的指针和长度, 后面的是额外状态参数, 板子上一般只会有一个sender, 不管就行
-uint16_t mp_consumer(const uint8_t* source_block, uint16_t block_length, void* user)
+// 假设这是自定义数据发送的结构体
+struct
 {
-	send_to_refree(source_block, block_length);
-	// 发了多少返回多少, 这里就当作是全发了
-	return block_length;
-}
+	refree_header_t refree_header; //裁判系统帧头, 按你的设计. 长度填300
+	uint8_t block[REFREE_CUSTOM_BYTE_BLOCK_LENGTH]; //即将被编码的数据块
+	uint16_t crc16_tail;
+} refree_customdata_block;
 
-// 封装成轮椅人都会用的编码函数
-// 这里拿飞机当例子. 传入消息结构体
-void mp_drone_encode(mp_sender_t* sender, const MP_DroneDataPacketToClient* msg)
+// 这是你的crc计算纯函数. 不建议用官方给的append.
+uint16_t calc_crc16(const uint16_t old_crc, const uint8_t* block, const uint16_t size);
+
+// 你的裁判系统图传链路发送缓冲区存入方法
+#warning 缓冲区发送频率为50Hz, 注意不要超了. 编码可以超频率, 发送不能超.
+void refree_vt_send(const uint8_t* block, const uint16_t size);
+
+// crc16计算的中间状态
+typedef struct
 {
-	//把包编码进缓冲区, 此时还没发.
-	MP_Encode(sender, MP_DroneDataPacketToClient_fields, msg);
-}
+	uint16_t current_crc16;
+	uint16_t cursor; // 当前填充位置
+} crc16_user_t;
 
-// 这是一个以50hz频率调用的函数.
-void task_call_me_at_50hz(void* args)
+// 顶层封装函数, 操作上面说的 refree_customdata_block.
+// 如果你喜欢直接流式发送, 不喜欢填结构体, 可以自行设计实现.
+void drone_send_customdata(
+	mp_pb_encoder_inst_t* inst,
+	const MP_DroneDataPacketToClient* msg
+)
 {
-	//从你的参数里取出sender, 我假设args就是sender
-	mp_sender_t* sender = (mp_sender_t*)args;
+	crc16_user_t* crc16_user = (crc16_user_t*)inst->user;
+	// 按照你的逻辑构造裁判系统帧头.
+	refree_customdata_block.refree_header = make_refree_header();
 
-	//最后一个参数user是你想传给回调函数的额外参数. 只有一个sender的话可以不管它, 或者把这个线程id传进去.
-	//跑到这一步, 会调用你的consumer, 把包发出去, 并且自动归还一部分缓冲区
-	//返回值是bool, 表示有没有成功, 可以用来写重传. 一般来说串口不会失败.
-	MP_Send(sender, mp_consumer, NULL);
-}
-
-
-// 实例逻辑: 飞机发送灯模式和pid模式, 但是不发其他数据.
-void main()
-{
-	static uint8_t sender_buffer[300*16]; //换成具体的分配逻辑. 不能比mtu*buffer_count小
-	mp_sender_t sender = {
-		.config = {
-			.mtu = 300; //板子到自定义客户端, 目前RM要求必须填300
-			.buffer_count = 16; //看你分配, 这个是缓存编码小包的数量
-			.buffer = sender_buffer;
-		};
+	// 提前计算前面几字节裁判系统帧头的crc16. 这里可以复用你写过的逻辑.
+	// 这样可以利用这个值进行流式校验, 并追加.
+	crc16_user = (crc16_user_t*) {
+		.current_crc16 = calc_crc16(
+			REFREE_CRC16_INITIAL,
+			(uint8_t*)refree_customdata_block.refree_header,
+			sizeof(refree_customdata_block.refree_header)
+		),
+		.cursor = 0 //清零cursor
 	};
 
-	// 这个怎么分配看你. 这里仅做实例
+	/** 自定义数据关键操作: 调用发送编码. **/
+
+	static package_serial = 0; // 递增序号. 也可以存user里, 随你.
+
+	bool result = mp_pb_encode(
+		inst,
+		MP_DroneDataPacketToClient_fields, //看着自己的兵种fileds填, 别填错了.
+		msg,
+		package_serial++
+	);
+	// 跑的时候会自动调用你的所有回调, 所以不用管太多.
+	if(!result)
+	{
+		// 失败处理. 通常结构体填对了就不会失败.
+		return;
+	}
+}
+
+
+// 核心回调, 需要在这里实现裁判系统缓冲区的拷贝, 以及crc16校验.
+// 不要在这里写串口发送.
+void mp_pb_encode_data_put(
+	void* user,
+	const uint16_t offset,
+	const uint8_t* block,
+	uint16_t size
+)
+{
+	crc16_user_t* crc16_user = (crc16_user_t*)user;
+	
+	// 拷贝目标数据块到裁判系统缓冲区.
+	memcpy(
+		refree_customdata_block + crc16_user->cursor,
+		block,
+		size
+	);
+	// 计算crc16, 并更新状态.
+	crc16_user_t next_state = (crc16_user_t)
+	{
+		//更新 crc16
+		.current_crc16 = calc_crc16(
+			crc16_user->current_crc16,
+			block,
+			size
+		),
+		.cursor = crc16_user->cursor + size
+	};
+	// 如果你喜欢发送的时候再加, 可以放在下面那个函数里.
+	refree_customdata_block.crc16_tail = next_state.current_crc16;
+
+	*crc16_user = next_state;
+}
+// 裁判系统物理发送逻辑.
+void mp_pb_data_send(void* user)
+{
+	// 这个user如果有你需要的东西, 可以用.
+	crc16_user_t* crc16_user = (crc16_user_t*)user;
+
+	// 裁判系统串口的真正发送. 记得是图传链路!!
+	// 这一步建议是阻塞发送. 因为回调结束后有可能会因切包导致破坏缓冲区.
+	refree_vt_send(&refree_customdata_block, sizeof(refree_customdata_block));
+}
+
+// 这是执行编码的函数, 通常在发送前执行, 编码到裁判系统发送缓冲区 
+void task_call_me_before_send(void* args)
+{
+	// 假设你传入给task的参数是这个
+	mp_pb_encoder_inst_t* encoder_inst = (mp_pb_encoder_inst_t*)args;
+
+	// 这个怎么分配看你. 这里仅做示例.
+	// 如果你消息体比较大(比如英雄), 记得给rtos的栈开大点, 或者用全局静态结构体.
 	MP_DroneDataPacketToClient msg = {
 		.has_lamp = true, //发灯
 		.lamp = MP_LC_OUTPOST //这里换成具体的值
@@ -135,20 +224,37 @@ void main()
 		.has_pid = true; //发pid模式
 		.pid = MP_PM_MEC; //这里同样换成具体值
 
-		//因为其他字段默认初始化是0, has都是false, 所以最后不会被编码进去, 带宽占用很小.
-		//比如那一大串雷达数据, 因为没标has, 所以不会占用带宽.
+		// 因为其他字段默认初始化是0, has都是false, 所以最后不会被编码进去, 带宽占用很小.
+		// 比如那一大串雷达数据, 因为没标has, 所以不会占用带宽.
+		// 可以根据实际情况, 在无变化时做降频.
 	};
 
-	//编码, 塞进缓冲区
-	mp_drone_encode(&sender, &msg);
+	// 调用前面说的顶层封装函数
+	drone_send_customdata(inst, &msg);
+}
 
-	//因为上面有个task, 所以发送是自动的, 编码就行了.
+
+// 初始化要进行的操作, 在合适的初始化时机调用.
+void init()
+{
+	crc16_user_t crc16_user = {0};
+	// 自定义数据发送器实例.
+	mp_pb_encoder_inst_t encoder_inst = {
+		// 回调中的user. 我们在回调中跑发送和CRC16计算, 传需要使用的指针.
+		.user = &crc16_user,
+		.config = {
+			.transmission_unit = REFREE_CUSTOM_BYTE_BLOCK_LENGTH
+		},
+		// 随便给个id, 0~7, 不冲突就行.
+		.sender_id = 0, 
+	};
 }
 
 
 ```
 
 #### 接收(解码)
+
 TODO
 
 ### C++
@@ -157,7 +263,7 @@ TODO
 
 #### 代码拉取
 
-- 第一次使用: git clone [仓库url] -b dist/cpp-src --depth=1
+- 第一次使用: git clone [仓库url] -b dev --depth=1
 - 后续更新: git pull
 
 #### 构建系统配置
@@ -167,32 +273,20 @@ TODO
 #### 发送
 
 ```cpp
-#include <masterpilot/customdata-protobuf-sender.hpp>
+#include <masterpilot/customdata-protobuf-tx.hpp>
 #include <masterpilot/proto/hero.pb.h>
-
-// 定时调用的函数, 用来把缓冲区发给电控
-void call_me_repeatedly(
-	const masterpilot::customdata::Sender& sender
-)
-{
-	//返回值: 是否成功, 可以用来设计重传. 串口应该不会失败.
-	sender.flush();
-}
 
 int main()
 {
-	masterpilot::customdata::Sender sender
+	masterpilot::customdata::TxEncoder<300> encoder
 	{
-		300, //mtu
-		16, //buffer数量 会自动分配(底层是vector)
-		[&send_to_my_serial](auto block) -> int //具体的发送实现
+		1, //sender_id
+		[](auto block) //具体的发送实现. 可以绑对应类的成员函数
 		{
 			//加装帧头, 让串口把span发出去. 假设全发完了没阻塞
 			//注: 电控直接转发这一块即可, 不需要在电控那里再解析.
-			send_to_my_serial(block);
-
-			//发成功多少返回多少.
-			return block.size();
+			//假如说你的send要指针+长度
+			send_to_my_serial(block.data(), block.size());
 		}
 	};
 
@@ -204,7 +298,8 @@ int main()
 	msg.set_camera_frame(nz2);
 
 	//传进缓冲区
-	sender.Feed(msg);
+	auto ok = sender.Push(msg);
+	assert(ok); //通常都要能ok, 提前调试好.
 }
 
 ```
@@ -216,7 +311,20 @@ TODO
 
 ### C#
 
-参考自定义客户端项目`MasterPilot`.
+通过nix引入`customdata-core-csharp`包, 或引用源码.
+
+发送和接收都是标准接口, 无需多言.
+
+具体使用参考主项目`MasterPilot`.
+
+#### 发送
+
+TODO
+
+#### 接收
+
+TODO
+
 
 
 

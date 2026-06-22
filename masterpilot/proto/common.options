@@ -1,0 +1,4 @@
+masterpilot/proto/common.proto  package:"MP"  long_names:false
+
+MP.RobotInfoFromRadio.buffs  max_count:6
+MP.RadioInfo.enemy_robots  max_count:6
