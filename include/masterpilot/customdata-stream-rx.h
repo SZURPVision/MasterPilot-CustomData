@@ -56,7 +56,7 @@ typedef struct {
 
 #pragma endregion
 
-#pragma region RX Event Callback
+#pragma region RX e Callback
 
 /**
  * @brief rx 下游事件回调. 流发生状态变更时通知下游.
@@ -66,7 +66,7 @@ typedef struct {
  *   IN_ORDER:     old_watermark <  state->watermark → 连续区域补齐, payload_get 冲刷.
  *   COMPLETE:     old_watermark <  state->watermark → 完整包冲刷, 包边界信号.
  *
- * @param event 事件类型 (DUPLICATE 已被 stream 层拦截, 下游不会收到)
+ * @param e 事件类型 (DUPLICATE 已被 stream 层拦截, 下游不会收到)
  * @param coord 当前 slice 坐标
  * @param coordinator 提供 payload_put / payload_get, 下游自行存取数据
  * @param state 事件后的新状态
@@ -76,7 +76,7 @@ typedef struct {
  */
 typedef void (*mp_rx_event_cb)(
     void                    *user,
-    mp_rx_stream_event_t     event,
+    mp_rx_stream_event_t     e,
     const mp_coordinate_t   *coord,
     const mp_rx_coordinator_t* coordinator,
     const mp_rx_slice_state_t *state,
