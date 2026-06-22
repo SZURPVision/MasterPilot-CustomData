@@ -28,7 +28,15 @@ public:
      * @param next 下游观察者. 按值传递, 支持lambda右值
      */
     template<std::derived_from<google::protobuf::Message> T>
-    RxDecoder(const int tu, Observer<T> next);
+    RxDecoder(const int tu, Observer<T> next)
+        : RxDecoder(tu,
+            [next = std::move(next)](MsgPtr msg) {
+                next(static_cast<const T&>(*msg));
+            },
+            T::default_instance()
+        )
+    { }
+
 
     ~RxDecoder();
 
@@ -46,25 +54,9 @@ private:
 
     using MsgPtr = std::unique_ptr<google::protobuf::Message>;
 
-    /** @brief 类型擦除工厂, 定义在cpp中 */
-    static std::unique_ptr<Impl> MakeImpl(
-        int tu,
-        std::function<void(MsgPtr)> observer,
-        const google::protobuf::Message& prototype
-    );
+    // 类型擦除使用
+    RxDecoder(int tu, std::function<void(MsgPtr)> erased_observer, const google::protobuf::Message& prototype);
 };
 
-/*
- * 模板构造函数 — 头文件内定义, 完成 T → MsgPtr 的一次性类型擦除
- */
-template<std::derived_from<google::protobuf::Message> T>
-RxDecoder::RxDecoder(const int tu, Observer<T> next)
-    : _pimpl(MakeImpl(tu,
-        [next = std::move(next)](MsgPtr msg) {
-            next(*msg);
-        },
-        T::default_instance()
-    ))
-{ }
 
 }

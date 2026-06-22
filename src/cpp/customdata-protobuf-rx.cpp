@@ -151,45 +151,44 @@ struct RxDecoder::Impl
                            const mp_rx_slice_state_t* state,
                            uint32_t old_watermark,
                            const uint8_t* payload, uint16_t payload_size) {
-                (void)old_watermark;
-                auto& self = *static_cast<Impl*>(user);
-                auto& specified_coordinator = *static_cast<Coordinator*>(coordinator->ctx);
+                 (void)old_watermark;
+                 auto& self = *static_cast<Impl*>(user);
+                 auto& specified_coordinator = *static_cast<Coordinator*>(coordinator->ctx);
 
-                // 推进 sender generation, 触发 GC clock
-                specified_coordinator.gc_hook(
-                    coord->sender_id,
-                    coord->package_id
-                );
+                 // 推进 sender generation, 触发 GC clock
+                 specified_coordinator.gc_hook(
+                     coord->sender_id,
+                     coord->package_id
+                 );
 
-                // 有payload存payload. 因为直接用了大数组, 按位置放进去, 是免疫乱序的
-                if (payload && payload_size > 0)
-                    coordinator->payload_put(coordinator->ctx, *coord, payload, payload_size);
+                 // 有payload存payload. 因为直接用了大数组, 按位置放进去, 是免疫乱序的
+                 if (payload && payload_size > 0)
+                     coordinator->payload_put(coordinator->ctx, *coord, payload, payload_size);
 
-                // 有了上面的内存连续铺垫, 理论组装完毕后的信号在这里直接解码
-                if (event == MP_RX_STREAM_COMPLETE)
-                {
+                 // 有了上面的内存连续铺垫, 理论组装完毕后的信号在这里直接解码
+                 if (event == MP_RX_STREAM_COMPLETE)
+                 {
+                     MsgPtr p_msg(self._prototype.New()); 
 
-                    MsgPtr p_msg(self._prototype.New()); 
+                     mp_coordinate_t normalized_coord
+                     {
+                         .sender_id = coord->sender_id,
+                         .package_id = coord->package_id,
+                         .offset = 0
+                     };
 
-                    mp_coordinate_t normalized_coord
-                    {
-                        .sender_id = coord->sender_id,
-                        .package_id = coord->package_id,
-                        .offset = 0
-                    };
+                     auto payload_view = specified_coordinator.get_payload(normalized_coord);
 
-                    auto payload_view = specified_coordinator.get_payload(normalized_coord);
+                     assert(payload_view.size() >= state->termination);
 
-                    assert(payload_view.size() >= state->termination);
+                     const bool ok = p_msg->ParseFromArray(
+                         payload_view.data(),
+                         static_cast<int>(state->termination));
 
-                    const bool ok = p_msg->ParseFromArray(
-                        payload_view.data(),
-                        static_cast<int>(state->termination));
+                     if (ok) self._observer(std::move(p_msg));
 
-                    if (ok) self._observer(std::move(p_msg));
-
-                    specified_coordinator.set_state(normalized_coord, {});
-                }
+                     specified_coordinator.set_state(normalized_coord, {});
+                 }
             },
             .user = this
         };
@@ -197,17 +196,17 @@ struct RxDecoder::Impl
 };
 
 
-std::unique_ptr<RxDecoder::Impl> RxDecoder::MakeImpl(
-    int tu,
-    std::function<void(MsgPtr)> observer,
-    const google::protobuf::Message& prototype)
-{
-    return std::make_unique<Impl>(tu, std::move(observer), prototype);
-}
 
 /* ========================================================================= */
 /* RxDecoder 成员函数                                                        */
 /* ========================================================================= */
+
+RxDecoder::RxDecoder(
+    int tu,
+    std::function<void(MsgPtr)> observer,
+    const google::protobuf::Message& prototype)
+    : _pimpl(std::make_unique<Impl>(tu, std::move(observer), prototype))
+{ }
 
 RxDecoder::~RxDecoder() = default;
 
