@@ -1,6 +1,6 @@
-#include "customdata-stream-rx.h"
-#include "customdata-common.h"
-#include "customdata-rx.h"
+#include <masterpilot/customdata-stream-rx.h>
+#include <masterpilot/customdata-common.h>
+#include <masterpilot/customdata-rx.h>
 
 // 本质计算step, 保存状态, 并透传给下游. 作为纯函数的胶水代码.
 void mp_rx_stream_feed(

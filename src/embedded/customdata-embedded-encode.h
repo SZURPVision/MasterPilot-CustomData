@@ -1,7 +1,7 @@
 #ifndef __MP_CUSTOM_DATA_EMBEDDED_ENCODE_H_
 #define __MP_CUSTOM_DATA_EMBEDDED_ENCODE_H_
 
-#include "masterpilot/customdata-stream-tx.h"
+#include <masterpilot/customdata-stream-tx.h>
 #include <masterpilot/customdata-common.h>
 #include <pb.h>
 #include <stdint.h>

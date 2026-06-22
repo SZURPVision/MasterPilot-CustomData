@@ -1,0 +1,11 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: customdata-cpp
+Description: MasterPilot CustomData - C++ protobuf wrapper
+Version: @PROJECT_VERSION@
+Requires: @PKG_CONFIG_REQUIRES@
+Libs: -L${libdir} @PKG_CONFIG_LIBS@
+Cflags: -I${includedir}

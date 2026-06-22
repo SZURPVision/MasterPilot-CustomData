@@ -1,26 +1,32 @@
-{ src, stdenv, customdata-generated, nanopb }:
+{ src, stdenv, cmake, customdata-generated, nanopb }:
 
 stdenv.mkDerivation {
+  inherit src;
   name = "customdata-enbedded-src";
   version = "0.1.0";
   meta = {
     description = "MasterPilot CustomData - Embedded source package";
   };
-  dontUnpack = true;
 
-  installPhase = ''
-    mp_inc=$out/include/masterpilot
-    mkdir -p $out/src $out/include $mp_inc $mp_inc/proto
+  nativeBuildInputs = [ cmake ];
+  buildInputs = [ nanopb ];
 
-    find \${src}/src/core/ -maxdepth 1 -name "*.h" ! -name "*ffi*" -exec cp -t $mp_inc/ {} +
-    cp ${src}/src/embedded/*.h $mp_inc/
-    cp ${customdata-generated}/c/masterpilot/proto/*.h $mp_inc/proto/
-    cp ${nanopb.src}/*.h $out/include/
+  cmakeFlags = [
+    "-DMINIMAL_MODE=ON"
+    "-DBUILD_EMBEDDED=ON"
+    "-DBUILD_TESTS=ON"
+    "-DSRC_DIST=ON"
+    "-DCUSTOMDATA_GENERATED_DIR=${customdata-generated}"
+    "-DNANOPB_SRC_DIR=${nanopb.src}"
+  ];
 
-    find \${src}/src/core/ -maxdepth 1 -name "*.c" ! -name "*ffi*" -exec cp -t $out/src/ {} +
-    cp ${src}/src/embedded/*.c $out/src/
-    cp ${customdata-generated}/c/masterpilot/proto/*.c $out/src/
-    cp ${nanopb.src}/*.c $out/src/
+  doCheck = true;
+  checkPhase = ''
+    ./test/embedded/test-embedded-roundtrip
   '';
 
+  doInstallCheck = true;
+  installCheckPhase = ''
+    cc -I"$out/include" -fsyntax-only $out/src/*.c
+  '';
 }

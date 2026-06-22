@@ -1,0 +1,19 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+find_dependency(Protobuf)
+
+if(NOT TARGET mp-customdata-cpp)
+    add_library(mp-customdata-cpp STATIC IMPORTED)
+    set_target_properties(mp-customdata-cpp PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${PACKAGE_PREFIX_DIR}/include"
+        INTERFACE_LINK_LIBRARIES "protobuf::libprotobuf"
+        IMPORTED_LOCATION "${PACKAGE_PREFIX_DIR}/lib/libmp-customdata-cpp.a"
+    )
+endif()
+
+if(NOT TARGET mp::customdata::cpp)
+    add_library(mp::customdata::cpp ALIAS mp-customdata-cpp)
+endif()
+
+check_required_components(customdata-cpp)

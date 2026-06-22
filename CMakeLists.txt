@@ -8,6 +8,10 @@ if(NOT DEFINED CUSTOMDATA_GENERATED_DIR)
     set(CUSTOMDATA_GENERATED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/generated"
         CACHE PATH "Path to buf-generated protobuf files")
 endif()
+if(NOT DEFINED NANOPB_SRC_DIR AND SRC_DIST)
+    set(NANOPB_SRC_DIR ""
+        CACHE PATH "Path to nanopb source tree (required for SRC_DIST)")
+endif()
 
 # ── 内部路径 ──
 set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
@@ -24,6 +28,7 @@ option(BUILD_EMBEDDED "Build embedded wrapper with nanopb" ${_default_build})
 option(BUILD_CPP    "Build C++ protobuf wrapper"       ${_default_build})
 option(BUILD_TOOLS  "Build CLI tools"                  ${_default_build})
 option(BUILD_TESTS  "Build test executables"           ${_default_build})
+option(SRC_DIST "Install source distribution packages" OFF)
 
 
 # ── 构建虚拟 include 目录（符号链接，不改变源码树物理结构）──

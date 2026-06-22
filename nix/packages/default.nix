@@ -12,12 +12,13 @@
         src = self;
         inherit (config.packages) customdata-generated;
       };
-      customdata-cpp-src = pkgs.callPackage ./customdata-cpp-src/package.nix {
+      customdata-cpp = pkgs.callPackage ./customdata-cpp/package.nix {
         src = self;
         inherit (config.packages) customdata-generated;
       };
       customdata-core = pkgs.callPackage ./customdata-core/package.nix {
         src = self;
+        inherit (config.packages) customdata-generated;
       };
       customdata-core-binding-csharp = pkgs.callPackage ./customdata-core-binding-csharp/package.nix {
         src = self;

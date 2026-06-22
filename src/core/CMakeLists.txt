@@ -37,16 +37,17 @@ target_include_directories(mp-customdata-core
 )
 target_compile_features(mp-customdata-core PRIVATE c_std_99)
 
-install(TARGETS mp-customdata-core
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
-)
-install(FILES 
-    customdata-common.h
-    customdata-header.h
-    customdata-tx.h
-    customdata-rx.h
-    customdata-stream-tx.h
-    customdata-stream-rx.h
-    DESTINATION include/masterpilot
-)
+if(NOT SRC_DIST)
+    install(TARGETS mp-customdata-core
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+    )
+    install(FILES 
+        customdata-common.h
+        customdata-tx.h
+        customdata-rx.h
+        customdata-stream-tx.h
+        customdata-stream-rx.h
+        DESTINATION include/masterpilot
+    )
+endif()

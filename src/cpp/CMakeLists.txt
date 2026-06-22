@@ -26,3 +26,42 @@ install(FILES
     customdata-protobuf-tx.hpp
     customdata-protobuf-rx.hpp
     DESTINATION include/masterpilot)
+
+# ── CMake package config ──────────────────────────────────
+include(CMakePackageConfigHelpers)
+
+set(CPP_CMAKE_CONFIG_DIR "lib/cmake/customdata-cpp")
+
+configure_package_config_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/customdata-cpp-config.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/customdata-cpp-config.cmake"
+    INSTALL_DESTINATION "${CPP_CMAKE_CONFIG_DIR}"
+)
+
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/customdata-cpp-config-version.cmake"
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion
+)
+
+install(
+    FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/customdata-cpp-config.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/customdata-cpp-config-version.cmake"
+    DESTINATION "${CPP_CMAKE_CONFIG_DIR}"
+)
+
+# ── pkg-config ─────────────────────────────────────────────
+set(PKG_CONFIG_REQUIRES "protobuf")
+set(PKG_CONFIG_LIBS "-lmp-customdata-cpp")
+
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/customdata-cpp.pc.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/customdata-cpp.pc"
+    @ONLY
+)
+
+install(
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/customdata-cpp.pc"
+    DESTINATION "lib/pkgconfig"
+)
