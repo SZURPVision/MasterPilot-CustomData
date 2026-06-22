@@ -10,12 +10,10 @@
 #endif
 
 /* Struct definitions */
-typedef PB_BYTES_ARRAY_T(1500) MP_HeroDataPacketToClient_camera_frame_t;
 /* 英雄发送给自定义客户端的数据 */
 typedef struct _MP_HeroDataPacketToClient {
     /* 压缩后的相机画面 */
-    bool has_camera_frame;
-    MP_HeroDataPacketToClient_camera_frame_t camera_frame;
+    pb_callback_t camera_frame;
 } MP_HeroDataPacketToClient;
 
 
@@ -24,16 +22,16 @@ extern "C" {
 #endif
 
 /* Initializer values for message structs */
-#define MP_HeroDataPacketToClient_init_default   {false, {0, {0}}}
-#define MP_HeroDataPacketToClient_init_zero      {false, {0, {0}}}
+#define MP_HeroDataPacketToClient_init_default   {{{NULL}, NULL}}
+#define MP_HeroDataPacketToClient_init_zero      {{{NULL}, NULL}}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define MP_HeroDataPacketToClient_camera_frame_tag 200
 
 /* Struct field encoding specification for nanopb */
 #define MP_HeroDataPacketToClient_FIELDLIST(X, a) \
-X(a, STATIC,   OPTIONAL, BYTES,    camera_frame,    200)
-#define MP_HeroDataPacketToClient_CALLBACK NULL
+X(a, CALLBACK, OPTIONAL, BYTES,    camera_frame,    200)
+#define MP_HeroDataPacketToClient_CALLBACK pb_default_field_callback
 #define MP_HeroDataPacketToClient_DEFAULT NULL
 
 extern const pb_msgdesc_t MP_HeroDataPacketToClient_msg;
@@ -42,8 +40,7 @@ extern const pb_msgdesc_t MP_HeroDataPacketToClient_msg;
 #define MP_HeroDataPacketToClient_fields &MP_HeroDataPacketToClient_msg
 
 /* Maximum encoded size of messages (where known) */
-#define MASTERPILOT_PROTO_MASTERPILOT_PROTO_HERO_PB_H_MAX_SIZE MP_HeroDataPacketToClient_size
-#define MP_HeroDataPacketToClient_size           1504
+/* MP_HeroDataPacketToClient_size depends on runtime parameters */
 
 /* Mapping from canonical names (mangle_names or overridden package name) */
 #define masterpilot_proto_HeroDataPacketToClient MP_HeroDataPacketToClient

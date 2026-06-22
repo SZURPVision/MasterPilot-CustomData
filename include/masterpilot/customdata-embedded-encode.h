@@ -1,7 +1,7 @@
 #ifndef __MP_CUSTOM_DATA_EMBEDDED_ENCODE_H_
 #define __MP_CUSTOM_DATA_EMBEDDED_ENCODE_H_
 
-#include "masterpilot/customdata-stream-tx.h"
+#include <masterpilot/customdata-stream-tx.h>
 #include <masterpilot/customdata-common.h>
 #include <pb.h>
 #include <stdint.h>
@@ -30,6 +30,7 @@ typedef struct
 
 /**
  * @brief 直接从nanopb结构体编码到流式输出口(串口缓冲区)
+ * @param instance 编码器实例, 这会作为nanopb的state(user)传入
  * @param fields nanopb生成的消息名_fields结构体
  * @param message 要发送的 nanopb消息结构体
  * @param package_serial 包序列号. 发完需要自行自增.
