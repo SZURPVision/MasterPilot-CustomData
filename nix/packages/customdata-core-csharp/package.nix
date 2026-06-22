@@ -1,8 +1,5 @@
 {
   src,
-  stdenv,
-  lib,
-  dotnet-sdk,
   buildDotnetModule,
   customdata-core-binding-csharp
 }:
@@ -20,10 +17,10 @@ buildDotnetModule {
   postPatch = ''
     cp -rL ${customdata-core-binding-csharp}/generated/csharp/bindings ./src/csharp/generated/
   '';
-
+  packNupkg = true;
   doCheck = true;
 
-  meta = with lib; {
+  meta = {
     description = "MasterPilot CustomData - C# core transport layer";
   };
 }
