@@ -7,11 +7,11 @@
 #include <span>
 #include <vector>
 
+#include <google/protobuf/arena.h>
 #include <google/protobuf/message.h>
 #include <masterpilot/customdata-common.h>
 #include <masterpilot/customdata-protobuf-rx.hpp>
 #include <masterpilot/customdata-rx.h>
-#include <masterpilot/customdata-stream-rx.h>
 
 namespace masterpilot::customdata
 {
@@ -89,30 +89,6 @@ public:
         return { begin_it, data.end() };
     }
 
-    operator mp_rx_coordinator_t()
-    {
-        return mp_rx_coordinator_t{
-            .ctx = this,
-            .state_get = +[](void* ctx, mp_coordinate_t coord) -> const mp_rx_slice_state_t*
-            {
-                return &static_cast<Coordinator*>(ctx)->get_state(coord);
-            },
-            .state_put = +[](void* ctx, mp_coordinate_t coord, const mp_rx_slice_state_t* state)
-            {
-                static_cast<Coordinator*>(ctx)->set_state(coord, *state);
-            },
-            .payload_put = +[](void* ctx, mp_coordinate_t coord, const uint8_t* data, uint16_t size)
-            {
-                static_cast<Coordinator*>(ctx)->put_payload(coord, {data, size});
-            },
-            .payload_get = +[](void* ctx, mp_coordinate_t coord) -> const uint8_t*
-            {
-                auto view = static_cast<Coordinator*>(ctx)->get_payload(coord);
-                return view.data();
-            }
-        };
-    }
-
 private:
     std::array<Slot, 1u << (MP_SENDER_ID_BITS + MP_PACKAGE_ID_BITS)> _slots;
     struct
@@ -125,96 +101,117 @@ private:
 
 struct RxDecoder::Impl
 {
-    Coordinator _coordinator;
+    const mp_config_t               _config;
+    Coordinator                     _coordinator;
+    google::protobuf::Arena         _arena;
 
-    mp_rx_stream_t _stream;
-
-    std::function<void(MsgPtr)> _observer;
+    std::function<void(const google::protobuf::Message&)> _observer;
 
     const google::protobuf::Message& _prototype;
 
     Impl(int tu,
-         std::function<void(MsgPtr)> observer,
+         std::function<void(const google::protobuf::Message&)> observer,
          const google::protobuf::Message& prototype
         )
-        : _observer(std::move(observer))
+        : _config{ .transmission_unit = static_cast<uint16_t>(tu) }
+        , _observer(std::move(observer))
         , _prototype(prototype)
+    { }
+
+    void Push(std::span<const uint8_t> block)
     {
-        _stream = mp_rx_stream_t{
-            .config = {
-                .transmission_unit = static_cast<uint16_t>(tu)
-            },
-            .coordinator = _coordinator,
-            .on_event = +[](void* user, mp_rx_stream_event_t e,
-                           const mp_coordinate_t* coord,
-                           const mp_rx_coordinator_t* coordinator,
-                           const mp_rx_slice_state_t* state,
-                           uint32_t old_watermark,
-                           const uint8_t* payload, uint16_t payload_size) {
-                (void)old_watermark;
-                auto& self = *static_cast<Impl*>(user);
-                auto& specified_coordinator = *static_cast<Coordinator*>(coordinator->ctx);
+        if (block.size() < MP_HEADER_SIZE) return;
 
-                // 推进 sender generation, 触发 GC clock
-                specified_coordinator.gc_hook(
-                    coord->sender_id,
-                    coord->package_id
-                );
+        /* 1. 解包 header */
+        const auto hdr = mp_header_unpack(
+            MP_ARRAY_TO_PACKED_HEADER(block.data()));
+        const uint16_t max_payload  = mp_max_payload(_config);
+        const uint16_t payload_size = static_cast<uint16_t>(
+            std::min<size_t>(hdr.slice_payload_size, block.size() - MP_HEADER_SIZE));
+        const auto payload = block.subspan(MP_HEADER_SIZE, payload_size);
 
-                // 有payload存payload. 因为直接用了大数组, 按位置放进去, 是免疫乱序的
-                if (payload && payload_size > 0)
-                    coordinator->payload_put(coordinator->ctx, *coord, payload, payload_size);
+        /* 2. header → 坐标 */
+        const auto coord = mp_rx_header_to_coordinate(_config, hdr);
 
-                // 有了上面的内存连续铺垫, 理论组装完毕后的信号在这里直接解码
-                if (e == MP_RX_STREAM_COMPLETE)
-                {
+        // 推进 sender generation, 触发 GC clock
+        _coordinator.gc_hook(
+            coord.sender_id,
+            coord.package_id
+        );
 
-                    MsgPtr p_msg(self._prototype.New()); 
+        /* 3. 纯函数: slice 状态转移 + 事件分类 */
+        const auto& state = _coordinator.get_state(coord);
+        const auto  inst  = mp_rx_calc_slice_step(
+            state, hdr.slice_serial, payload_size, max_payload, hdr.eop
+        );
 
-                    mp_coordinate_t normalized_coord
-                    {
-                        .sender_id = coord->sender_id,
-                        .package_id = coord->package_id,
-                        .offset = 0
-                    };
+        /* 4. 分类处理 */
+        switch (inst.e)
+        {
+        case MP_RX_STREAM_DUPLICATE:
+            return;
 
-                    auto payload_view = specified_coordinator.get_payload(normalized_coord);
+        case MP_RX_STREAM_NEW_SLICE_OUT_OF_ORDER:
+        case MP_RX_STREAM_NEW_SLICE_IN_ORDER:
+            // 直接用了大数组, 按位置放进去, 免疫乱序
+            if (payload_size > 0)
+                _coordinator.put_payload(coord, payload);
+            _coordinator.set_state(coord, inst.next_state);
+            break;
 
-                    assert(payload_view.size() >= state->termination);
+        case MP_RX_STREAM_COMPLETE:
+        {
+            if (payload_size > 0)
+                _coordinator.put_payload(coord, payload);
+            _coordinator.set_state(coord, inst.next_state);
 
-                    const bool ok = p_msg->ParseFromArray(
-                        payload_view.data(),
-                        static_cast<int>(state->termination));
+            mp_coordinate_t normalized_coord
+            {
+                .sender_id = coord.sender_id,
+                .package_id = coord.package_id,
+                .offset = 0
+            };
 
-                    if (ok) self._observer(std::move(p_msg));
+            auto* p_msg = _prototype.New(&_arena);
 
-                    specified_coordinator.set_state(normalized_coord, {});
-                }
-            },
-            .user = this
-        };
+            auto payload_view = _coordinator.get_payload(normalized_coord);
+
+            assert(payload_view.size() >= inst.next_state.termination);
+
+            const bool ok = p_msg->ParseFromArray(
+                payload_view.data(),
+                static_cast<int>(inst.next_state.termination));
+
+            if (ok) _observer(*p_msg);
+
+            _coordinator.set_state(normalized_coord, {});
+            break;
+        }
+
+        default:
+            throw std::logic_error("mp_rx_stream_event_t: unknown event");
+        }
     }
 };
 
 
-std::unique_ptr<RxDecoder::Impl> RxDecoder::MakeImpl(
-    int tu,
-    std::function<void(MsgPtr)> observer,
-    const google::protobuf::Message& prototype)
-{
-    return std::make_unique<Impl>(tu, std::move(observer), prototype);
-}
 
 /* ========================================================================= */
 /* RxDecoder 成员函数                                                        */
 /* ========================================================================= */
 
+RxDecoder::RxDecoder(
+    int tu,
+    std::function<void(const google::protobuf::Message&)> observer,
+    const google::protobuf::Message& prototype)
+    : _pimpl(std::make_unique<Impl>(tu, std::move(observer), prototype))
+{ }
+
 RxDecoder::~RxDecoder() = default;
 
 void RxDecoder::Push(std::span<const uint8_t> block)
 {
-    mp_rx_stream_feed(&_pimpl->_stream, block.data(),
-                      static_cast<uint16_t>(block.size()));
+    _pimpl->Push(block);
 }
 
 }

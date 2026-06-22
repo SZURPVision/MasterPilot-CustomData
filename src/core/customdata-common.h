@@ -70,10 +70,10 @@ typedef uint32_t mp_header_packed_t;
 
 #define MP_PACKED_HEADER_TO_ARRAY(packed)  \
     (uint8_t[]){                        \
-        [0] = (packed) >> 0, \
-        [1] = (packed) >> 8, \
-        [2] = (packed) >> 16,\
-        [3] = (packed) >> 24 \
+        (uint8_t)((packed) >> 0), \
+        (uint8_t)((packed) >> 8), \
+        (uint8_t)((packed) >> 16),\
+        (uint8_t)((packed) >> 24) \
     }
 
 #define MP_ARRAY_TO_PACKED_HEADER(arr) (                        \
