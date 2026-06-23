@@ -1,13 +1,21 @@
 find_package(Protobuf REQUIRED)
 
-add_library(mp-customdata-cpp STATIC
+file(GLOB PROTO_CPP_SOURCES
+    "${CUSTOMDATA_GENERATED_DIR}/cpp/masterpilot/proto/*.pb.cc"
+    "${CUSTOMDATA_GENERATED_DIR}/cpp/masterpilot/proto/test/*.pb.cc"
+)
+
+add_library(mp-customdata-cpp
+    STATIC
     customdata-protobuf-tx.cpp
     customdata-protobuf-rx.cpp
+    ${PROTO_CPP_SOURCES}
 )
 add_library(mp::customdata::cpp ALIAS mp-customdata-cpp)
 target_include_directories(mp-customdata-cpp
     PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>"
+        "$<BUILD_INTERFACE:${CUSTOMDATA_GENERATED_DIR}/cpp>"
         "$<INSTALL_INTERFACE:include>"
 )
 target_link_libraries(mp-customdata-cpp
@@ -26,6 +34,13 @@ install(FILES
     customdata-protobuf-tx.hpp
     customdata-protobuf-rx.hpp
     DESTINATION include/masterpilot)
+
+# protobuf generated
+install(
+    DIRECTORY "${CUSTOMDATA_GENERATED_DIR}/cpp/masterpilot/proto/"
+    DESTINATION include/masterpilot/proto
+    FILES_MATCHING PATTERN "*.pb.h"
+)
 
 # ── CMake package config ──────────────────────────────────
 include(CMakePackageConfigHelpers)
