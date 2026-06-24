@@ -43,7 +43,7 @@ typedef struct {
  * @brief 计算终止大小
  */
 MP_PURE
-inline uint16_t mp_rx_calc_termination(
+MP_INLINE uint16_t mp_rx_calc_termination(
     const uint8_t slice_idx,
     const uint16_t payload_size,
     const uint16_t max_payload
@@ -56,7 +56,7 @@ inline uint16_t mp_rx_calc_termination(
  * @brief 终止大小 → slice 数
  */
 MP_PURE
-inline uint16_t mp_rx_termination_to_slice_count(
+MP_INLINE uint16_t mp_rx_termination_to_slice_count(
     const uint32_t termination,
     const uint16_t max_payload
 )
@@ -68,7 +68,7 @@ inline uint16_t mp_rx_termination_to_slice_count(
  * @brief 判断是否收齐
  */
 MP_PURE
-inline bool mp_rx_is_complete(
+MP_INLINE bool mp_rx_is_complete(
     const mp_rx_slice_state_t state,
     const uint16_t            max_payload
 )
@@ -81,7 +81,7 @@ inline bool mp_rx_is_complete(
  * @brief header → 坐标重建
  */
 MP_PURE
-inline mp_coordinate_t mp_rx_header_to_coordinate(
+MP_INLINE mp_coordinate_t mp_rx_header_to_coordinate(
     const mp_config_t config,
     const mp_header_meta_t header
 )
@@ -102,7 +102,7 @@ inline mp_coordinate_t mp_rx_header_to_coordinate(
  * 返回新的连续 offset。若 termination 已知且到达则返回 termination。
  */
 MP_PURE
-inline uint16_t mp_rx_advance_watermark(
+MP_INLINE uint16_t mp_rx_advance_watermark(
     const mp_rx_slice_state_t state,
     uint16_t       max_payload
 )
@@ -136,7 +136,7 @@ inline uint16_t mp_rx_advance_watermark(
  * 尾部切片会被 new_wm 自动截断。
  */
 MP_PURE
-inline uint16_t mp_rx_deliver_size(uint32_t cur_off, uint32_t new_wm, uint16_t max_payload)
+MP_INLINE uint16_t mp_rx_deliver_size(uint32_t cur_off, uint32_t new_wm, uint16_t max_payload)
 {
     if (cur_off + max_payload > new_wm)
         return (uint16_t)(new_wm - cur_off);
@@ -153,7 +153,7 @@ inline uint16_t mp_rx_deliver_size(uint32_t cur_off, uint32_t new_wm, uint16_t m
  * - COMPLETE: 包已完整
  */
 MP_PURE
-inline mp_rx_slice_inst_t mp_rx_calc_slice_step(
+MP_INLINE mp_rx_slice_inst_t mp_rx_calc_slice_step(
     const mp_rx_slice_state_t state,
     const uint8_t            slice_id,
     const uint16_t            payload_size,

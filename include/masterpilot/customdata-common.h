@@ -16,6 +16,19 @@ extern "C" {
     #endif
 #endif
 
+#ifndef MP_INLINE
+    #if defined(__GNUC__) || defined(__clang__)
+        /** @brief 强制内联, 保证零开销抽象 */
+        #define MP_INLINE static inline __attribute__((always_inline))
+    #elif defined(__CC_ARM) || defined(__ARMCC_VERSION)
+        /** @brief Keil ARMCC */
+        #define MP_INLINE static __inline
+    #else
+        /** @brief 通用 C99 inline (cmake 可通过 -DMP_INLINE= 覆盖为 FFI 导出模式) */
+        #define MP_INLINE static inline
+    #endif
+#endif
+
 #pragma region Data Models
 
 /*
@@ -87,7 +100,7 @@ typedef uint32_t mp_header_packed_t;
  * @brief 将header_meta打包为通信使用的header_packed
  */
 MP_PURE
-inline mp_header_packed_t mp_header_pack(const mp_header_meta_t meta)
+MP_INLINE mp_header_packed_t mp_header_pack(const mp_header_meta_t meta)
 {
     return ((uint32_t)(meta.package_serial)       << 0)  |
            ((uint32_t)(meta.slice_serial)         << 8)  |
@@ -101,7 +114,7 @@ inline mp_header_packed_t mp_header_pack(const mp_header_meta_t meta)
  * @brief 从通信中的header_packed解包为header_meta, 方便计算使用
  */
 MP_PURE
-inline mp_header_meta_t mp_header_unpack(const mp_header_packed_t packed)
+MP_INLINE mp_header_meta_t mp_header_unpack(const mp_header_packed_t packed)
 {
     mp_header_meta_t result = {
         .package_serial     = (uint8_t)(packed & 0xff),
@@ -118,7 +131,7 @@ inline mp_header_meta_t mp_header_unpack(const mp_header_packed_t packed)
  * @return 全部字段相等时返回 true
  */
 MP_PURE
-inline bool mp_header_equals(const mp_header_meta_t a, const mp_header_meta_t b)
+MP_INLINE bool mp_header_equals(const mp_header_meta_t a, const mp_header_meta_t b)
 {
     return (a.package_serial == b.package_serial)
         && (a.slice_serial == b.slice_serial)
@@ -135,7 +148,7 @@ inline bool mp_header_equals(const mp_header_meta_t a, const mp_header_meta_t b)
  * @brief 推导单`slice`内最大载荷
  */
 MP_PURE
-inline uint16_t mp_max_payload(const mp_config_t config)
+MP_INLINE uint16_t mp_max_payload(const mp_config_t config)
 {
     return (uint16_t)(config.transmission_unit - MP_HEADER_SIZE);
 }
@@ -144,13 +157,13 @@ inline uint16_t mp_max_payload(const mp_config_t config)
  * @brief slice 序号 → 包内 offset
  */
 MP_PURE
-inline uint16_t mp_slice_idx_to_offset(const uint8_t slice_idx, const uint16_t max_payload)
+MP_INLINE uint16_t mp_slice_idx_to_offset(const uint8_t slice_idx, const uint16_t max_payload)
 {
     return (uint16_t)(slice_idx * max_payload);
 }
 
 MP_PURE
-inline uint8_t mp_offset_to_slice_idx(const uint16_t offset, const uint16_t max_payload)
+MP_INLINE uint8_t mp_offset_to_slice_idx(const uint16_t offset, const uint16_t max_payload)
 {
     return (uint8_t)(offset / max_payload);
 }

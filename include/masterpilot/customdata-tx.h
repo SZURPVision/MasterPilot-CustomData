@@ -21,7 +21,7 @@ typedef struct {
  * @brief 推进坐标
  */
 MP_PURE
-inline mp_coordinate_t mp_tx_advance(
+MP_INLINE mp_coordinate_t mp_tx_advance(
     const mp_config_t     config,
     const mp_coordinate_t current
 )
@@ -40,7 +40,7 @@ inline mp_coordinate_t mp_tx_advance(
  * @param is_final 本 slice 是否为该 package 的最后一个 slice
  */
 MP_PURE
-inline mp_header_meta_t mp_tx_make_header(
+MP_INLINE mp_header_meta_t mp_tx_make_header(
     const mp_config_t     config,
     const mp_coordinate_t current,
     const uint16_t        payload_size,
@@ -62,7 +62,7 @@ inline mp_header_meta_t mp_tx_make_header(
  * @brief 一步完整准备 = mp_tx_make_header + mp_tx_advance
  */
 MP_PURE
-inline mp_tx_slice_t mp_tx_prepare(
+MP_INLINE mp_tx_slice_t mp_tx_prepare(
     const mp_config_t     config,
     const mp_coordinate_t current,
     const uint16_t        payload_size,
