@@ -1,10 +1,20 @@
 option(BUILD_CORE_SHARED "Build customdata-core as shared library" OFF)
+option(MP_FFI_EXPORT "Export inline functions for FFI/shared-library symbol visibility" OFF)
 
 set(CORE_SOURCES
     customdata-stream-tx.c
     customdata-stream-rx.c
     customdata-ffi.c
 )
+
+# 当开启 FFI 导出时, 单独对 ffi.c 覆盖 MP_INLINE 为空,
+# 使其生成外部符号 (而非 static inline), 便于 ClangSharp/FFI 绑定.
+# stream-*.c 仍保持 static inline, 各自持有私有无冲突副本.
+if(MP_FFI_EXPORT AND BUILD_CORE_SHARED)
+    set_source_files_properties(customdata-ffi.c PROPERTIES
+        COMPILE_DEFINITIONS "MP_INLINE="
+    )
+endif()
 
 if(BUILD_CORE_SHARED)
     add_library(mp-customdata-core SHARED ${CORE_SOURCES})
