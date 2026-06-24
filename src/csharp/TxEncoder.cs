@@ -33,14 +33,16 @@ public sealed class TxWritter<TState> : IBufferWriter<byte>, IDisposable
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	void EmitSlice(bool eop)
 	{
+		if (!eop && _fill == 0)
+			return;
+
 		var slice = mp_tx_prepare(_config, _cursor, _fill, eop);
 		var packed = mp_header_pack(slice.header);
 
 		PackedHeaderToSpan(packed, _buffer);
 		// 不用跑clear, 纯函数算出的长度和Complete信号准确, 允许垃圾数据填充
-		// _buffer.AsSpan(HeaderSize + _fill, _buffer.Length - HeaderSize - _fill).Clear();
 
-		_next(_buffer, _state);
+		_next(_buffer.AsSpan(0, _config.transmission_unit), _state);
 
 		_cursor = slice.next;
 		_fill = 0;
@@ -69,13 +71,13 @@ public sealed class TxWritter<TState> : IBufferWriter<byte>, IDisposable
 	public Memory<byte> GetMemory(int sizeHint = 0)
 	{
 		CheckSizeAndTryEmitSlice(sizeHint);
-		return _buffer.AsMemory(HeaderSize + _fill);
+		return _buffer.AsMemory(HeaderSize + _fill, mp_max_payload(_config) - _fill);
 	}
 
 	public Span<byte> GetSpan(int sizeHint = 0)
 	{
 		CheckSizeAndTryEmitSlice(sizeHint);
-		return _buffer.AsSpan(HeaderSize + _fill);
+		return _buffer.AsSpan(HeaderSize + _fill, mp_max_payload(_config) - _fill);
 	}
 }
 

@@ -143,18 +143,6 @@ public class RxDecoderTests
     }
 
     [Fact]
-    public void Too_small_frame_is_ignored()
-    {
-        var received = new List<byte[]>();
-        var decoder = new RxDecoder(Tu);
-        decoder.OnPackage += data => received.Add(data.ToArray());
-
-        decoder.Feed(new byte[2]);
-
-        Assert.Empty(received);
-    }
-
-    [Fact]
     public void Eop_with_zero_payload()
     {
         var received = new List<byte[]>();

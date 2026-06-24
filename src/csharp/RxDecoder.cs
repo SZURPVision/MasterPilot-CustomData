@@ -39,25 +39,22 @@ public sealed class RxDecoder(int transmissionUnit)
 		switch (step.e)
 		{
 			case MP_RX_STREAM_DUPLICATE:
-				break;
+				return;
 
-			case MP_RX_STREAM_COMPLETE:
-				var fullPayload = slot.Payload;
-				var termination = step.next_state.termination;
-
-				var span = fullPayload.AsSpan()[..termination];
-				OnPackage?.Invoke(span);
-
-				slot = slot with { State = default };
-
-				break;
-
-			case MP_RX_STREAM_NEW_SLICE_IN_ORDER or MP_RX_STREAM_NEW_SLICE_OUT_OF_ORDER:
+			case MP_RX_STREAM_COMPLETE
+			or MP_RX_STREAM_NEW_SLICE_IN_ORDER
+			or MP_RX_STREAM_NEW_SLICE_OUT_OF_ORDER:
 				slot.EnsurePayloadCapacity(coord.offset + payloadSize);
 				payload[..payloadSize].CopyTo(slot.Payload.AsSpan(coord.offset));
-
 				slot.State = step.next_state;
-				break;
+
+				if (step.e == MP_RX_STREAM_COMPLETE)
+				{
+					var span = slot.Payload.AsSpan(0, step.next_state.termination);
+					OnPackage?.Invoke(span);
+					slot = slot with { State = default };
+				}
+				return;
 
 			default:
 				throw new InvalidOperationException("This C# wrapper is out-of-date");
