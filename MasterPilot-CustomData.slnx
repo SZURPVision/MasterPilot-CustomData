@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/csharp/">
+    <Project Path="src/csharp/CustomData.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/CustomData.Tests/CustomData.Tests.csproj" />
+  </Folder>
+</Solution>

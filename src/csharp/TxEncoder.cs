@@ -1,111 +1,102 @@
-using System.Buffers.Binary;
+using System.Buffers;
 using System.Runtime.CompilerServices;
 using MasterPilot.Communicator.CustomData.Bindings;
 using static MasterPilot.Communicator.CustomData.Bindings.CoreMethods;
 
 namespace MasterPilot.Communicator.CustomData;
 
-file sealed class Stream(
-    mp_config_t config,
-    mp_coordinate_t cursor,
-    Action<ReadOnlySpan<byte>> transmit
-) : System.IO.Stream
+public sealed class TxWritter<TState> : IBufferWriter<byte>, IDisposable
 {
-    const ushort HeaderSize = (ushort)MP_HEADER_SIZE;
+	const ushort HeaderSize = (ushort)MP_HEADER_SIZE;
 
-    readonly byte[] _buffer = GC.AllocateUninitializedArray<byte>(config.transmission_unit);
-    mp_coordinate_t _cursor = cursor;
-    ushort _fill;
+	readonly byte[] _buffer;
+	readonly mp_config_t _config;
+	readonly Action<ReadOnlySpan<byte>, TState> _next;
+	readonly TState _state;
+	mp_coordinate_t _cursor;
+	ushort _fill;
 
-    public override void Write(ReadOnlySpan<byte> buffer)
-    {
-        var maxPayload = mp_max_payload(config);
-        var off = 0;
+	internal TxWritter(
+		mp_config_t config,
+		mp_coordinate_t cursor,
+		Action<ReadOnlySpan<byte>, TState> next,
+		TState state
+	)
+	{
+		_config = config;
+		_next = next;
+		_buffer = ArrayPool<byte>.Shared.Rent(config.transmission_unit);
+		_cursor = cursor;
+		_state = state;
+	}
 
-        while (off < buffer.Length)
-        {
-            var take = Math.Min(buffer.Length - off, maxPayload - _fill);
-            buffer.Slice(off, take).CopyTo(_buffer.AsSpan(HeaderSize + _fill));
-            _fill = (ushort)(_fill + take);
-            off += take;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	void EmitSlice(bool eop)
+	{
+		var slice = mp_tx_prepare(_config, _cursor, _fill, eop);
+		var packed = mp_header_pack(slice.header);
 
-            if (_fill == maxPayload)
-                EmitSlice(eop: false);
-        }
-    }
-
-    internal void Complete()
-    {
-        EmitSlice(eop: true);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    void EmitSlice(bool eop)
-    {
-        var slice = mp_tx_prepare(config, _cursor, _fill, eop);
-        var packed = mp_header_pack(slice.header);
-
-        PackedHeaderToSpan(packed,_buffer);
+		PackedHeaderToSpan(packed, _buffer);
 		// 不用跑clear, 纯函数算出的长度和Complete信号准确, 允许垃圾数据填充
-        // _buffer.AsSpan(HeaderSize + _fill, _buffer.Length - HeaderSize - _fill).Clear();
+		// _buffer.AsSpan(HeaderSize + _fill, _buffer.Length - HeaderSize - _fill).Clear();
 
-        transmit(_buffer);
+		_next(_buffer, _state);
 
-        _cursor = slice.next;
-        _fill = 0;
-    }
+		_cursor = slice.next;
+		_fill = 0;
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	void CheckSizeAndTryEmitSlice(int size)
+	{
+		var maxPayload = mp_max_payload(_config);
+		if (maxPayload - _fill < size)
+			EmitSlice(eop: false);
+	}
 
-    public override bool CanRead => false;
-    public override bool CanSeek => false;
-    public override bool CanWrite => true;
-    public override long Length => throw new InvalidOperationException();
-    public override long Position { get => throw new InvalidOperationException(); set => throw new InvalidOperationException(); }
-    public override void Flush() { }
-    public override int Read(byte[] buffer, int offset, int count) => throw new InvalidOperationException();
-    public override long Seek(long offset, SeekOrigin origin) => throw new InvalidOperationException();
-    public override void SetLength(long value) => throw new InvalidOperationException();
-    public override void Write(byte[] buffer, int offset, int count) => Write(new(buffer, offset, count));
+	public void Dispose()
+	{
+		EmitSlice(true);
+		ArrayPool<byte>.Shared.Return(_buffer);
+	}
+
+	public void Advance(int count)
+	{
+		_fill += (ushort)count;
+		if (_fill == mp_max_payload(_config))
+			EmitSlice(eop: false);
+	}
+
+	public Memory<byte> GetMemory(int sizeHint = 0)
+	{
+		CheckSizeAndTryEmitSlice(sizeHint);
+		return _buffer.AsMemory(HeaderSize + _fill);
+	}
+
+	public Span<byte> GetSpan(int sizeHint = 0)
+	{
+		CheckSizeAndTryEmitSlice(sizeHint);
+		return _buffer.AsSpan(HeaderSize + _fill);
+	}
 }
 
-public abstract class TxEncoder(ushort transmissionUnit, byte senderId)
+public class TxEncoder(ushort transmissionUnit, byte senderId)
 {
-    byte _currentPackageId;
+	int _currentPackageId = 0;
 
-    protected abstract void Transmit(ReadOnlySpan<byte> fullTU);
+	public TxWritter<TState> CreateWritter<TState>(TState state, Action<ReadOnlySpan<byte>, TState> next)
+	{
+		var cursor = new mp_coordinate_t
+		{
+			sender_id = senderId,
+			package_id = (byte)Interlocked.Increment(ref _currentPackageId),
+			offset = 0
+		};
 
-    public bool Send(Action<System.IO.Stream> write)
-    {
-        var stream = CreateStream();
-        try
-        {
-            write(stream);
-            ((Stream)stream).Complete();
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-        finally
-        {
-            stream.Dispose();
-        }
-    }
+		var config = new mp_config_t
+		{
+			transmission_unit = transmissionUnit
+		};
 
-    System.IO.Stream CreateStream()
-    {
-        var cursor = new mp_coordinate_t
-        {
-            sender_id = senderId,
-            package_id = _currentPackageId++,
-            offset = 0
-        };
-
-        var config = new mp_config_t
-        {
-            transmission_unit = transmissionUnit
-        };
-
-        return new Stream(config, cursor, Transmit);
-    }
+		return new(config, cursor, next, state);
+	}
 }
