@@ -10,7 +10,7 @@ buildDotnetModule {
   testProjectFile = "test/CustomData.Tests/CustomData.Tests.csproj";
   nugetDeps = ./nuget-deps.json;
   pname = "customdata-core-csharp";
-  version = "0.1.0";
+  version = "0.1.1";
 
   # ClangSharp 太权威了兄弟.
   # 转译的绑定是C# native, 不需要搞动态链接问题
@@ -30,9 +30,9 @@ buildDotnetModule {
       --configuration Release \
       --no-restore \
       --no-build
-    mkdir -p "$out/share/nuget/source/masterpilot.customdata.core/0.1.0"
-    cp "$out/share/nuget/source/MasterPilot.CustomData.Core.0.1.0.nupkg" \
-       "$out/share/nuget/source/masterpilot.customdata.core/0.1.0/masterpilot.customdata.core.0.1.0.nupkg"
+    mkdir -p "$out/share/nuget/source/masterpilot.customdata.core/$version"
+    cp "$out/share/nuget/source/MasterPilot.CustomData.Core.$version.nupkg" \
+       "$out/share/nuget/source/masterpilot.customdata.core/$version/masterpilot.customdata.core.0.1.0.nupkg"
   '';
 
   meta = {

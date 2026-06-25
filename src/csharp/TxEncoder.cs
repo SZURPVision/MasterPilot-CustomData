@@ -5,7 +5,7 @@ using static MasterPilot.Communicator.CustomData.Bindings.CoreMethods;
 
 namespace MasterPilot.Communicator.CustomData;
 
-public sealed class TxWritter<TState> : IBufferWriter<byte>, IDisposable
+public sealed class TxWriter<TState> : IBufferWriter<byte>, IDisposable
 {
 	const ushort HeaderSize = (ushort)MP_HEADER_SIZE;
 
@@ -16,7 +16,7 @@ public sealed class TxWritter<TState> : IBufferWriter<byte>, IDisposable
 	mp_coordinate_t _cursor;
 	ushort _fill;
 
-	internal TxWritter(
+	internal TxWriter(
 		mp_config_t config,
 		mp_coordinate_t cursor,
 		Action<ReadOnlySpan<byte>, TState> next,
@@ -33,8 +33,8 @@ public sealed class TxWritter<TState> : IBufferWriter<byte>, IDisposable
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	void EmitSlice(bool eop)
 	{
-		if (!eop && _fill == 0)
-			return;
+		// This defence is resonal, avoiding emitting empty package when disposed.
+		if (_fill == 0 && (!eop || _cursor.offset == 0)) return;
 
 		var slice = mp_tx_prepare(_config, _cursor, _fill, eop);
 		var packed = mp_header_pack(slice.header);
@@ -80,12 +80,11 @@ public sealed class TxWritter<TState> : IBufferWriter<byte>, IDisposable
 		return _buffer.AsSpan(HeaderSize + _fill, mp_max_payload(_config) - _fill);
 	}
 }
-
 public class TxEncoder(ushort transmissionUnit, byte senderId)
 {
 	int _currentPackageId = 0;
 
-	public TxWritter<TState> CreateWritter<TState>(TState state, Action<ReadOnlySpan<byte>, TState> next)
+	public TxWriter<TState> CreateWriter<TState>(in TState state, Action<ReadOnlySpan<byte>, TState> next)
 	{
 		var cursor = new mp_coordinate_t
 		{

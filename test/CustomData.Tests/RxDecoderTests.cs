@@ -30,13 +30,12 @@ public class RxDecoderTests
     {
         var received = new List<byte[]>();
         var decoder = new RxDecoder(Tu);
-        decoder.OnPackage += data => received.Add(data.ToArray());
 
         var payload = new byte[50];
         new Random(42).NextBytes(payload);
 
         var frame = BuildFrame(1, 0, 0, 50, true, payload);
-        decoder.Feed(frame);
+        decoder.Decode(frame, received, static (data, list) => list.Add(data.ToArray()));
 
         Assert.Single(received);
         Assert.Equal(payload, received[0]);
@@ -47,13 +46,12 @@ public class RxDecoderTests
     {
         var received = new List<byte[]>();
         var decoder = new RxDecoder(Tu);
-        decoder.OnPackage += data => received.Add(data.ToArray());
 
         var maxP = mp_max_payload(new mp_config_t { transmission_unit = Tu });
         var payload = new byte[maxP * 2 + 30]; // 2 full + 1 partial
         new Random(43).NextBytes(payload);
 
-        FeedInOrder(decoder, 0, 0, payload, maxP);
+        FeedInOrder(decoder, 0, 0, payload, maxP, received);
 
         Assert.Single(received);
         Assert.Equal(payload, received[0]);
@@ -64,16 +62,15 @@ public class RxDecoderTests
     {
         var received = new List<byte[]>();
         var decoder = new RxDecoder(Tu);
-        decoder.OnPackage += data => received.Add(data.ToArray());
 
         var maxP = mp_max_payload(new mp_config_t { transmission_unit = Tu });
         var payload = new byte[maxP * 2 + 40]; // 2 full + 1 partial (non-exact)
         new Random(44).NextBytes(payload);
 
         // Feed in reverse order, only last slice has eop
-        decoder.Feed(BuildFrame(0, 0, 2, 40, true,  payload.AsSpan(maxP * 2, 40)));
-        decoder.Feed(BuildFrame(0, 0, 1, maxP, false, payload.AsSpan(maxP, maxP)));
-        decoder.Feed(BuildFrame(0, 0, 0, maxP, false, payload.AsSpan(0, maxP)));
+        decoder.Decode(BuildFrame(0, 0, 2, 40, true,  payload.AsSpan(maxP * 2, 40)), received, static (data, list) => list.Add(data.ToArray()));
+        decoder.Decode(BuildFrame(0, 0, 1, maxP, false, payload.AsSpan(maxP, maxP)), received, static (data, list) => list.Add(data.ToArray()));
+        decoder.Decode(BuildFrame(0, 0, 0, maxP, false, payload.AsSpan(0, maxP)), received, static (data, list) => list.Add(data.ToArray()));
 
         Assert.Single(received);
         Assert.Equal(payload, received[0]);
@@ -84,16 +81,15 @@ public class RxDecoderTests
     {
         var received = new List<byte[]>();
         var decoder = new RxDecoder(Tu);
-        decoder.OnPackage += data => received.Add(data.ToArray());
 
         var maxP = mp_max_payload(new mp_config_t { transmission_unit = Tu });
         var payload = new byte[maxP * 2]; // 2 full slices
         new Random(45).NextBytes(payload);
 
         // Feed slice 0 twice (duplicate), then slice 1
-        decoder.Feed(BuildFrame(0, 0, 0, maxP, false, payload.AsSpan(0, maxP)));
-        decoder.Feed(BuildFrame(0, 0, 0, maxP, false, payload.AsSpan(0, maxP))); // duplicate
-        decoder.Feed(BuildFrame(0, 0, 1, maxP, true,  payload.AsSpan(maxP, maxP)));
+        decoder.Decode(BuildFrame(0, 0, 0, maxP, false, payload.AsSpan(0, maxP)), received, static (data, list) => list.Add(data.ToArray()));
+        decoder.Decode(BuildFrame(0, 0, 0, maxP, false, payload.AsSpan(0, maxP)), received, static (data, list) => list.Add(data.ToArray())); // duplicate
+        decoder.Decode(BuildFrame(0, 0, 1, maxP, true,  payload.AsSpan(maxP, maxP)), received, static (data, list) => list.Add(data.ToArray()));
 
         Assert.Single(received);
         Assert.Equal(payload, received[0]);
@@ -104,7 +100,6 @@ public class RxDecoderTests
     {
         var received = new List<byte[]>();
         var decoder = new RxDecoder(Tu);
-        decoder.OnPackage += data => received.Add(data.ToArray());
 
         var maxP = mp_max_payload(new mp_config_t { transmission_unit = Tu });
         var pkg0 = new byte[maxP * 2]; // 2 slices
@@ -113,9 +108,9 @@ public class RxDecoderTests
         new Random(47).NextBytes(pkg1);
 
         // Interleave: pkg0 slice 0, pkg1, pkg0 slice 1
-        decoder.Feed(BuildFrame(0, 0, 0, maxP, false, pkg0.AsSpan(0, maxP)));
-        decoder.Feed(BuildFrame(0, 1, 0, 30, true, pkg1.AsSpan(0, 30)));
-        decoder.Feed(BuildFrame(0, 0, 1, maxP, true, pkg0.AsSpan(maxP, maxP)));
+        decoder.Decode(BuildFrame(0, 0, 0, maxP, false, pkg0.AsSpan(0, maxP)), received, static (data, list) => list.Add(data.ToArray()));
+        decoder.Decode(BuildFrame(0, 1, 0, 30, true, pkg1.AsSpan(0, 30)), received, static (data, list) => list.Add(data.ToArray()));
+        decoder.Decode(BuildFrame(0, 0, 1, maxP, true, pkg0.AsSpan(maxP, maxP)), received, static (data, list) => list.Add(data.ToArray()));
 
         Assert.Equal(2, received.Count);
         Assert.Equal(pkg1, received[0]); // pkg1 先完成
@@ -127,15 +122,14 @@ public class RxDecoderTests
     {
         var received = new List<byte[]>();
         var decoder = new RxDecoder(Tu);
-        decoder.OnPackage += data => received.Add(data.ToArray());
 
         var pkgA = new byte[50];
         var pkgB = new byte[60];
         new Random(48).NextBytes(pkgA);
         new Random(49).NextBytes(pkgB);
 
-        decoder.Feed(BuildFrame(0, 0, 0, 50, true, pkgA));
-        decoder.Feed(BuildFrame(1, 0, 0, 60, true, pkgB));
+        decoder.Decode(BuildFrame(0, 0, 0, 50, true, pkgA), received, static (data, list) => list.Add(data.ToArray()));
+        decoder.Decode(BuildFrame(1, 0, 0, 60, true, pkgB), received, static (data, list) => list.Add(data.ToArray()));
 
         Assert.Equal(2, received.Count);
         Assert.Equal(pkgA, received[0]);
@@ -147,21 +141,20 @@ public class RxDecoderTests
     {
         var received = new List<byte[]>();
         var decoder = new RxDecoder(Tu);
-        decoder.OnPackage += data => received.Add(data.ToArray());
 
         var maxP = mp_max_payload(new mp_config_t { transmission_unit = Tu });
         var payload = new byte[maxP]; // exact one slice, eop=1, payload=maxP
         new Random(50).NextBytes(payload);
 
         // Simulate exact multiple: full slice eop false, then eop+zero slice
-        decoder.Feed(BuildFrame(0, 0, 0, maxP, false, payload.AsSpan(0, maxP)));
-        decoder.Feed(BuildFrame(0, 0, 1, 0, true, ReadOnlySpan<byte>.Empty));
+        decoder.Decode(BuildFrame(0, 0, 0, maxP, false, payload.AsSpan(0, maxP)), received, static (data, list) => list.Add(data.ToArray()));
+        decoder.Decode(BuildFrame(0, 0, 1, 0, true, ReadOnlySpan<byte>.Empty), received, static (data, list) => list.Add(data.ToArray()));
 
         Assert.Single(received);
         Assert.Equal(payload, received[0]);
     }
 
-    static void FeedInOrder(RxDecoder decoder, byte senderId, byte packageId, ReadOnlySpan<byte> payload, int maxP)
+    static void FeedInOrder(RxDecoder decoder, byte senderId, byte packageId, ReadOnlySpan<byte> payload, int maxP, List<byte[]> received)
     {
         var off = 0;
         byte sliceIdx = 0;
@@ -169,7 +162,7 @@ public class RxDecoderTests
         {
             var size = (ushort)Math.Min(maxP, payload.Length - off);
             var eop = off + size >= payload.Length;
-            decoder.Feed(BuildFrame(senderId, packageId, sliceIdx, size, eop, payload.Slice(off, size)));
+            decoder.Decode(BuildFrame(senderId, packageId, sliceIdx, size, eop, payload.Slice(off, size)), received, static (data, list) => list.Add(data.ToArray()));
             off += size;
             sliceIdx++;
         }

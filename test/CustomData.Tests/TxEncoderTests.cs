@@ -8,10 +8,10 @@ namespace CustomData.Tests;
 
 static class TxEncoderExtensions
 {
-	public static TxWritter<List<byte[]>> CreateWritter(
+	public static TxWriter<List<byte[]>> CreateWritter(
 		this TxEncoder encoder, List<byte[]> frames)
 	{
-		return encoder.CreateWritter(frames, static (span, s) => s.Add(span.ToArray()));
+		return encoder.CreateWriter(frames, static (span, s) => s.Add(span.ToArray()));
 	}
 }
 
@@ -125,6 +125,24 @@ public class TxEncoderTests
 		Assert.Equal(0, lastHeader.slice_payload_size);
 
 		Assert.Equal(payload, assembled);
+	}
+
+	/// <summary>
+	/// 模拟 protobuf 消息体全空场景: 创建 writer 后不写入任何数据直接释放,
+	/// 确认不会调用 next 来发包。
+	/// </summary>
+	[Fact]
+	public void Dispose_without_write_does_not_emit()
+	{
+		var encoder = new TxEncoder(Tu, SenderId);
+		var nextCalled = false;
+
+		using (var writer = encoder.CreateWriter(new object(), (_, _) => nextCalled = true))
+		{
+			// 不写入任何数据
+		}
+
+		Assert.False(nextCalled);
 	}
 
 	[Fact]

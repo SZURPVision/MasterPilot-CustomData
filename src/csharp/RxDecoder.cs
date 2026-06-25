@@ -1,4 +1,3 @@
-using System.Buffers.Binary;
 using MasterPilot.Communicator.CustomData.Bindings;
 
 namespace MasterPilot.Communicator.CustomData;
@@ -11,14 +10,13 @@ public sealed class RxDecoder(int transmissionUnit)
 	readonly mp_config_t _config = new() { transmission_unit = (ushort)transmissionUnit };
 	readonly RxCoordinator _coordinator = new();
 
-	public event Action<ReadOnlySpan<byte>>? OnPackage;
-
 	/// <summary>
-	/// 喂入通信层给的数据.
+	/// 喂入通信层给的数据. 
 	/// </summary>
-	/// <param name="frame"></param>
+	/// <param name="frame">传入的带解码单元. 长度必须严格等于tu, 外部调用自行校验</param>
+	/// <param name="next">完整解码后调用, 消费解码数据</param>
 	/// <exception cref="InvalidOperationException"></exception>
-	public void Feed(ReadOnlySpan<byte> frame)
+	public void Decode<TState>(ReadOnlySpan<byte> frame, in TState state, Action<ReadOnlySpan<byte>, TState> next)
 	{
 		var packed = PackedHeaderFromSpan(frame);
 		var header = mp_header_unpack(packed);
@@ -51,7 +49,7 @@ public sealed class RxDecoder(int transmissionUnit)
 				if (step.e == MP_RX_STREAM_COMPLETE)
 				{
 					var span = slot.Payload.AsSpan(0, step.next_state.termination);
-					OnPackage?.Invoke(span);
+					next(span,state);
 					slot = slot with { State = default };
 				}
 				return;
