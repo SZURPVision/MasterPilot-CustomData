@@ -34,7 +34,10 @@
             config.packages.clangsharp-generator
           ];
           shellHook = ''
+            rm -rf src/csharp/generated/bindings
             clangsharp-generator @core.rsp
+
+			rm -rf src/csharp/generated
             ln -sf $(realpath generated/csharp/bindings) src/csharp/generated
           '';
       };
