@@ -20,6 +20,21 @@ buildDotnetModule {
   packNupkg = true;
   doCheck = true;
 
+  # buildDotnetModule 的 dotnetPack 对纯类库使用 --runtime 时 nupkg 缺损。
+  # postFixup 在 normalization 之后执行，用 dotnet pack 重新打包并覆盖两处。
+  postFixup = ''
+    dotnet pack src/csharp/CustomData.csproj \
+      -p:ContinuousIntegrationBuild=true \
+      -p:Deterministic=true \
+      --output "$out/share/nuget/source" \
+      --configuration Release \
+      --no-restore \
+      --no-build
+    mkdir -p "$out/share/nuget/source/masterpilot.customdata.core/0.1.0"
+    cp "$out/share/nuget/source/MasterPilot.CustomData.Core.0.1.0.nupkg" \
+       "$out/share/nuget/source/masterpilot.customdata.core/0.1.0/masterpilot.customdata.core.0.1.0.nupkg"
+  '';
+
   meta = {
     description = "MasterPilot CustomData - C# core transport layer";
   };
