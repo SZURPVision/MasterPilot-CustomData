@@ -76,4 +76,16 @@ if(SRC_DIST)
     install(DIRECTORY "${CUSTOMDATA_GENERATED_DIR}/c/masterpilot/proto/"
         DESTINATION src
         FILES_MATCHING PATTERN "*.c")
+
+    # ── 产物 CMakeLists.txt ──────────────────────────────────────
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists-dist.txt.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/CMakeLists-dist.txt"
+        @ONLY
+    )
+    install(
+        FILES "${CMAKE_CURRENT_BINARY_DIR}/CMakeLists-dist.txt"
+        DESTINATION .
+        RENAME CMakeLists.txt
+    )
 endif()

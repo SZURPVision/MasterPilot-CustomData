@@ -2,7 +2,7 @@
 
 stdenv.mkDerivation {
   inherit src;
-  name = "customdata-enbedded-src";
+  name = "customdata-embedded-src";
   version = "0.1.0";
   meta = {
     description = "MasterPilot CustomData - Embedded source package";
@@ -27,6 +27,7 @@ stdenv.mkDerivation {
 
   doInstallCheck = true;
   installCheckPhase = ''
-    cc -I"$out/include" -fsyntax-only $out/src/*.c
+    cmake -B "$TMPDIR/build-test" -S "$out"
+    cmake --build "$TMPDIR/build-test"
   '';
 }
