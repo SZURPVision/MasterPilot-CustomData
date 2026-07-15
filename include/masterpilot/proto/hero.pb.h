@@ -10,6 +10,12 @@
 #error Regenerate this file with the current version of nanopb generator.
 #endif
 
+/* Enum definitions */
+typedef enum _MP_HeroCommands {
+    MP_HC_NONE = 0,
+    MP_HC_DEPLOY = 1 /* 进入部署模式 */
+} MP_HeroCommands;
+
 /* Struct definitions */
 /* 英雄发送给自定义客户端的数据 */
 typedef struct _MP_HeroDataPacketToClient {
@@ -25,6 +31,7 @@ typedef struct _MP_HeroDataPacketToClient {
     MP_LegInfo leg_state;
     bool has_radio_info;
     MP_RadioInfo radio_info;
+    pb_callback_t comands;
     /* 压缩后的相机画面 */
     pb_callback_t camera_frame;
 } MP_HeroDataPacketToClient;
@@ -34,9 +41,19 @@ typedef struct _MP_HeroDataPacketToClient {
 extern "C" {
 #endif
 
+/* Helper constants for enums */
+#define _MP_HeroCommands_MIN MP_HC_NONE
+#define _MP_HeroCommands_MAX MP_HC_DEPLOY
+#define _MP_HeroCommands_ARRAYSIZE ((MP_HeroCommands)(MP_HC_DEPLOY+1))
+#define MP_HeroCommands_HC_NONE MP_HC_NONE
+#define MP_HeroCommands_HC_DEPLOY MP_HC_DEPLOY
+
+#define MP_HeroDataPacketToClient_comands_ENUMTYPE MP_HeroCommands
+
+
 /* Initializer values for message structs */
-#define MP_HeroDataPacketToClient_init_default   {false, MP_WeaponState_init_default, false, MP_ChassisState_init_default, false, MP_VisionData_init_default, false, MP_PowerState_init_default, false, MP_LegInfo_init_default, false, MP_RadioInfo_init_default, {{NULL}, NULL}}
-#define MP_HeroDataPacketToClient_init_zero      {false, MP_WeaponState_init_zero, false, MP_ChassisState_init_zero, false, MP_VisionData_init_zero, false, MP_PowerState_init_zero, false, MP_LegInfo_init_zero, false, MP_RadioInfo_init_zero, {{NULL}, NULL}}
+#define MP_HeroDataPacketToClient_init_default   {false, MP_WeaponState_init_default, false, MP_ChassisState_init_default, false, MP_VisionData_init_default, false, MP_PowerState_init_default, false, MP_LegInfo_init_default, false, MP_RadioInfo_init_default, {{NULL}, NULL}, {{NULL}, NULL}}
+#define MP_HeroDataPacketToClient_init_zero      {false, MP_WeaponState_init_zero, false, MP_ChassisState_init_zero, false, MP_VisionData_init_zero, false, MP_PowerState_init_zero, false, MP_LegInfo_init_zero, false, MP_RadioInfo_init_zero, {{NULL}, NULL}, {{NULL}, NULL}}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define MP_HeroDataPacketToClient_weapon_tag     1
@@ -45,6 +62,7 @@ extern "C" {
 #define MP_HeroDataPacketToClient_power_tag      4
 #define MP_HeroDataPacketToClient_leg_state_tag  5
 #define MP_HeroDataPacketToClient_radio_info_tag 8
+#define MP_HeroDataPacketToClient_comands_tag    11
 #define MP_HeroDataPacketToClient_camera_frame_tag 200
 
 /* Struct field encoding specification for nanopb */
@@ -55,6 +73,7 @@ X(a, STATIC,   OPTIONAL, MESSAGE,  vision,            3) \
 X(a, STATIC,   OPTIONAL, MESSAGE,  power,             4) \
 X(a, STATIC,   OPTIONAL, MESSAGE,  leg_state,         5) \
 X(a, STATIC,   OPTIONAL, MESSAGE,  radio_info,        8) \
+X(a, CALLBACK, REPEATED, UENUM,    comands,          11) \
 X(a, CALLBACK, OPTIONAL, BYTES,    camera_frame,    200)
 #define MP_HeroDataPacketToClient_CALLBACK pb_default_field_callback
 #define MP_HeroDataPacketToClient_DEFAULT NULL
@@ -74,7 +93,11 @@ extern const pb_msgdesc_t MP_HeroDataPacketToClient_msg;
 /* MP_HeroDataPacketToClient_size depends on runtime parameters */
 
 /* Mapping from canonical names (mangle_names or overridden package name) */
+#define masterpilot_proto_HeroCommands MP_HeroCommands
 #define masterpilot_proto_HeroDataPacketToClient MP_HeroDataPacketToClient
+#define _masterpilot_proto_HeroCommands_MIN _MP_HeroCommands_MIN
+#define _masterpilot_proto_HeroCommands_MAX _MP_HeroCommands_MAX
+#define _masterpilot_proto_HeroCommands_ARRAYSIZE _MP_HeroCommands_ARRAYSIZE
 #define masterpilot_proto_HeroDataPacketToClient_init_default MP_HeroDataPacketToClient_init_default
 #define masterpilot_proto_HeroDataPacketToClient_init_zero MP_HeroDataPacketToClient_init_zero
 

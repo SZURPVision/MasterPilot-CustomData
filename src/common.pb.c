@@ -6,7 +6,10 @@
 #error Regenerate this file with the current version of nanopb generator.
 #endif
 
-PB_BIND(MP_LinearValue, MP_LinearValue, AUTO)
+PB_BIND(MP_SignedLinearValue, MP_SignedLinearValue, AUTO)
+
+
+PB_BIND(MP_UnsignedLinearValue, MP_UnsignedLinearValue, AUTO)
 
 
 PB_BIND(MP_VisionData, MP_VisionData, AUTO)
