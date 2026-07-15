@@ -1,3 +1,4 @@
 masterpilot/proto/hero.proto  package:"MP"  long_names:false
 
 MP.HeroDataPacketToClient.camera_frame type:FT_CALLBACK
+MP.HeroDataPacketToClient.commands  max_count:6

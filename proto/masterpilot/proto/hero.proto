@@ -5,7 +5,7 @@ import "masterpilot/proto/common.proto";
 package masterpilot.proto;
 option csharp_namespace = "MasterPilot.Communicator.ProtoMessages";
 
-enum HeroCommands
+enum HeroCommandType
 {
 	HC_NONE = 0;
 	HC_DEPLOY_ENTER = 1; // 进入部署模式
@@ -20,7 +20,7 @@ message HeroDataPacketToClient {
   optional PowerState power = 4;
   optional LegInfo leg_state = 5;
   optional RadioInfo radio_info = 8;
-  repeated HeroCommands comands = 11;
+  repeated HeroCommandType commands = 11;
   // 压缩后的相机画面
   optional bytes camera_frame = 200;
 }
