@@ -5,9 +5,14 @@ package masterpilot.proto;
 option csharp_namespace = "MasterPilot.Communicator.ProtoMessages";
 
 // 线性数据表示
-message LinearValue {
-	sint32 value = 1; // 当前数据值大小, 有符号
-	uint32 boundary = 2; // 数据范围, 表示value会被归一化到 [-boundary, +boundary], 闭区间
+message SignedLinearValue {
+  sint32 value = 1; // 当前数据值大小, 有符号
+  uint32 boundary = 2; // 数据范围, 表示value会被归一化到 [-boundary, +boundary], 闭区间
+}
+
+message UnsignedLinearValue {
+  uint32 value = 1; // 当前数据值大小, 无符号
+  uint32 max = 2; // 数据范围, 表示value会被归一化到 [0, max], 闭区间
 }
 
 // 视觉目标类型 (对应 VisionTargetType)
@@ -67,20 +72,20 @@ message PowerState {
 }
 
 enum LegMode {
-  LM_LOW = 0;
-  LM_MID = 1;
-  LM_HIGH = 2;
+  LM_OFF = 0;
+  LM_LOW = 1;
+  LM_MID = 2;
+  LM_HIGH = 3;
 }
 
 message LegInfo {
-	// 二选一发送
-	oneof state {
-		LegMode mode = 1; // 腿模式枚举, 提供高中低三档
-		LinearValue height = 2; // 腿高线性数据
-	};
-	float theta0 = 10;
-	float theta1 = 11;
-	float theta2 = 12;
+    // 二选一发送
+    oneof state {
+        LegMode mode = 1; // 腿模式枚举, 提供高中低三档
+        UnsignedLinearValue height = 2; // 腿高线性数据
+    };
+    float small_theta = 10; // 小腿thera, degree
+    float large_thera = 11; // 大腿thera, degree
 }
 
 enum BuffType {
