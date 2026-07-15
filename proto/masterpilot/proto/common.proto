@@ -4,6 +4,12 @@ package masterpilot.proto;
 
 option csharp_namespace = "MasterPilot.Communicator.ProtoMessages";
 
+// 线性数据表示
+message LinearValue {
+	sint32 value = 1; // 当前数据值大小, 有符号
+	uint32 boundary = 2; // 数据范围, 表示value会被归一化到 [-boundary, +boundary], 闭区间
+}
+
 // 视觉目标类型 (对应 VisionTargetType)
 enum VisionTarget {
   VT_NONE = 0;
@@ -33,24 +39,26 @@ message WeaponState {
   bool fric_on = 1;
   bool fric_online = 2;
   float pitch = 4; // degree
-  float yaw = 5;   // degree
+  float yaw = 5;   // 枪管相对前方 degree
 }
 
-message ChassisModeFlags {
-  bool top_flag = 1;    // 陀螺模式
-  bool upstep_flag = 2; // 上台阶模式
-  bool fly_flag = 3;    // 飞坡模式
-  bool jump_flag = 4;   // 跳跃模式
+enum ChassisMode {
+  CM_NORMAL = 0; // 正常状态
+  CM_GYRO = 1;    // 陀螺
+  CM_STEPUP = 2; // 上台阶
+  CM_STEPDOWN = 3; // 下台阶
+  CM_LAUNCH = 4;    // 飞坡
+  CM_JUMP = 5;   // 跳跃
 }
 
 // 底盘实时状态 (对应 ChassisStatus 部分字段)
 message ChassisState {
   float speed = 1;      // m/s
   float theta = 2;      // 摆角 degree
-  float yaw_offset = 3; // degree
-  float pitch = 4;      // degree
-  float roll = 5;       // degree
-  ChassisModeFlags mode_flags = 6;
+  float yaw = 3; // 速度相对底盘前方 degree
+  float pitch = 4;      // 底盘相对地面pitch degree
+  float roll = 5;       // 底盘相对地面roll degree
+  ChassisMode mode_flags = 6;
 }
 
 // 能源与电容状态
@@ -62,6 +70,17 @@ enum LegMode {
   LM_LOW = 0;
   LM_MID = 1;
   LM_HIGH = 2;
+}
+
+message LegInfo {
+	// 二选一发送
+	oneof state {
+		LegMode mode = 1; // 腿模式枚举, 提供高中低三档
+		LinearValue height = 2; // 腿高线性数据
+	};
+	float theta0 = 10;
+	float theta1 = 11;
+	float theta2 = 12;
 }
 
 enum BuffType {

@@ -1,10 +1,18 @@
 syntax = "proto3";
 
+import "masterpilot/proto/common.proto";
+
 package masterpilot.proto;
 option csharp_namespace = "MasterPilot.Communicator.ProtoMessages";
 
 // 英雄发送给自定义客户端的数据
 message HeroDataPacketToClient {
+  optional WeaponState weapon = 1;
+  optional ChassisState chassis = 2;
+  optional VisionData vision = 3;
+  optional PowerState power = 4;
+  optional LegInfo leg_state = 5;
+  optional RadioInfo radio_info = 8;
   // 压缩后的相机画面
   optional bytes camera_frame = 200;
 }
