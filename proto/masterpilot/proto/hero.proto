@@ -8,7 +8,8 @@ option csharp_namespace = "MasterPilot.Communicator.ProtoMessages";
 enum HeroCommands
 {
 	HC_NONE = 0;
-	HC_DEPLOY = 1; // 进入部署模式
+	HC_DEPLOY_ENTER = 1; // 进入部署模式
+	HC_DEPLOY_EXIT = 2; // 退出部署模式
 }
 
 // 英雄发送给自定义客户端的数据

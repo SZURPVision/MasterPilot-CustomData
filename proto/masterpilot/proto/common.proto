@@ -84,8 +84,8 @@ message LegInfo {
         LegMode mode = 1; // 腿模式枚举, 提供高中低三档
         UnsignedLinearValue height = 2; // 腿高线性数据
     };
-    float small_theta = 10; // 小腿thera, degree
-    float large_thera = 11; // 大腿thera, degree
+    float small_theta = 10; // 小腿theta, degree
+    float large_theta = 11; // 大腿theta, degree
 }
 
 enum BuffType {
