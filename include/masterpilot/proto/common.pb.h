@@ -100,8 +100,8 @@ typedef struct _MP_LegInfo {
         MP_LegMode mode; /* 腿模式枚举, 提供高中低三档 */
         MP_UnsignedLinearValue height; /* 腿高线性数据 */
     } state;
-    float small_theta; /* 小腿thera, degree */
-    float large_thera; /* 大腿thera, degree */
+    float small_theta; /* 小腿theta, degree */
+    float large_theta; /* 大腿theta, degree */
 } MP_LegInfo;
 
 typedef struct _MP_BuffInfo {
@@ -237,7 +237,7 @@ extern "C" {
 #define MP_LegInfo_mode_tag                      1
 #define MP_LegInfo_height_tag                    2
 #define MP_LegInfo_small_theta_tag               10
-#define MP_LegInfo_large_thera_tag               11
+#define MP_LegInfo_large_theta_tag               11
 #define MP_BuffInfo_type_tag                     1
 #define MP_BuffInfo_strength_tag                 2
 #define MP_RobotInfoFromRadio_id_tag             1
@@ -295,7 +295,7 @@ X(a, STATIC,   SINGULAR, FLOAT,    cap_voltage_ratio,   1)
 X(a, STATIC,   ONEOF,    UENUM,    (state,mode,state.mode),   1) \
 X(a, STATIC,   ONEOF,    MESSAGE,  (state,height,state.height),   2) \
 X(a, STATIC,   SINGULAR, FLOAT,    small_theta,      10) \
-X(a, STATIC,   SINGULAR, FLOAT,    large_thera,      11)
+X(a, STATIC,   SINGULAR, FLOAT,    large_theta,      11)
 #define MP_LegInfo_CALLBACK NULL
 #define MP_LegInfo_DEFAULT NULL
 #define MP_LegInfo_state_height_MSGTYPE MP_UnsignedLinearValue

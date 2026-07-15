@@ -13,7 +13,8 @@
 /* Enum definitions */
 typedef enum _MP_HeroCommands {
     MP_HC_NONE = 0,
-    MP_HC_DEPLOY = 1 /* 进入部署模式 */
+    MP_HC_DEPLOY_ENTER = 1, /* 进入部署模式 */
+    MP_HC_DEPLOY_EXIT = 2 /* 退出部署模式 */
 } MP_HeroCommands;
 
 /* Struct definitions */
@@ -43,10 +44,11 @@ extern "C" {
 
 /* Helper constants for enums */
 #define _MP_HeroCommands_MIN MP_HC_NONE
-#define _MP_HeroCommands_MAX MP_HC_DEPLOY
-#define _MP_HeroCommands_ARRAYSIZE ((MP_HeroCommands)(MP_HC_DEPLOY+1))
+#define _MP_HeroCommands_MAX MP_HC_DEPLOY_EXIT
+#define _MP_HeroCommands_ARRAYSIZE ((MP_HeroCommands)(MP_HC_DEPLOY_EXIT+1))
 #define MP_HeroCommands_HC_NONE MP_HC_NONE
-#define MP_HeroCommands_HC_DEPLOY MP_HC_DEPLOY
+#define MP_HeroCommands_HC_DEPLOY_ENTER MP_HC_DEPLOY_ENTER
+#define MP_HeroCommands_HC_DEPLOY_EXIT MP_HC_DEPLOY_EXIT
 
 #define MP_HeroDataPacketToClient_comands_ENUMTYPE MP_HeroCommands
 
