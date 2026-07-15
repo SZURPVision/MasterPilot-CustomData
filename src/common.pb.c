@@ -6,19 +6,22 @@
 #error Regenerate this file with the current version of nanopb generator.
 #endif
 
+PB_BIND(MP_LinearValue, MP_LinearValue, AUTO)
+
+
 PB_BIND(MP_VisionData, MP_VisionData, AUTO)
 
 
 PB_BIND(MP_WeaponState, MP_WeaponState, AUTO)
 
 
-PB_BIND(MP_ChassisModeFlags, MP_ChassisModeFlags, AUTO)
-
-
 PB_BIND(MP_ChassisState, MP_ChassisState, AUTO)
 
 
 PB_BIND(MP_PowerState, MP_PowerState, AUTO)
+
+
+PB_BIND(MP_LegInfo, MP_LegInfo, AUTO)
 
 
 PB_BIND(MP_BuffInfo, MP_BuffInfo, AUTO)
@@ -28,6 +31,8 @@ PB_BIND(MP_RobotInfoFromRadio, MP_RobotInfoFromRadio, AUTO)
 
 
 PB_BIND(MP_RadioInfo, MP_RadioInfo, 2)
+
+
 
 
 

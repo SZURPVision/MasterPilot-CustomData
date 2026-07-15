@@ -4,6 +4,7 @@
 #ifndef PB_MASTERPILOT_PROTO_MASTERPILOT_PROTO_HERO_PB_H_INCLUDED
 #define PB_MASTERPILOT_PROTO_MASTERPILOT_PROTO_HERO_PB_H_INCLUDED
 #include <pb.h>
+#include "masterpilot/proto/common.pb.h"
 
 #if PB_PROTO_HEADER_VERSION != 40
 #error Regenerate this file with the current version of nanopb generator.
@@ -12,6 +13,18 @@
 /* Struct definitions */
 /* 英雄发送给自定义客户端的数据 */
 typedef struct _MP_HeroDataPacketToClient {
+    bool has_weapon;
+    MP_WeaponState weapon;
+    bool has_chassis;
+    MP_ChassisState chassis;
+    bool has_vision;
+    MP_VisionData vision;
+    bool has_power;
+    MP_PowerState power;
+    bool has_leg_state;
+    MP_LegInfo leg_state;
+    bool has_radio_info;
+    MP_RadioInfo radio_info;
     /* 压缩后的相机画面 */
     pb_callback_t camera_frame;
 } MP_HeroDataPacketToClient;
@@ -22,17 +35,35 @@ extern "C" {
 #endif
 
 /* Initializer values for message structs */
-#define MP_HeroDataPacketToClient_init_default   {{{NULL}, NULL}}
-#define MP_HeroDataPacketToClient_init_zero      {{{NULL}, NULL}}
+#define MP_HeroDataPacketToClient_init_default   {false, MP_WeaponState_init_default, false, MP_ChassisState_init_default, false, MP_VisionData_init_default, false, MP_PowerState_init_default, false, MP_LegInfo_init_default, false, MP_RadioInfo_init_default, {{NULL}, NULL}}
+#define MP_HeroDataPacketToClient_init_zero      {false, MP_WeaponState_init_zero, false, MP_ChassisState_init_zero, false, MP_VisionData_init_zero, false, MP_PowerState_init_zero, false, MP_LegInfo_init_zero, false, MP_RadioInfo_init_zero, {{NULL}, NULL}}
 
 /* Field tags (for use in manual encoding/decoding) */
+#define MP_HeroDataPacketToClient_weapon_tag     1
+#define MP_HeroDataPacketToClient_chassis_tag    2
+#define MP_HeroDataPacketToClient_vision_tag     3
+#define MP_HeroDataPacketToClient_power_tag      4
+#define MP_HeroDataPacketToClient_leg_state_tag  5
+#define MP_HeroDataPacketToClient_radio_info_tag 8
 #define MP_HeroDataPacketToClient_camera_frame_tag 200
 
 /* Struct field encoding specification for nanopb */
 #define MP_HeroDataPacketToClient_FIELDLIST(X, a) \
+X(a, STATIC,   OPTIONAL, MESSAGE,  weapon,            1) \
+X(a, STATIC,   OPTIONAL, MESSAGE,  chassis,           2) \
+X(a, STATIC,   OPTIONAL, MESSAGE,  vision,            3) \
+X(a, STATIC,   OPTIONAL, MESSAGE,  power,             4) \
+X(a, STATIC,   OPTIONAL, MESSAGE,  leg_state,         5) \
+X(a, STATIC,   OPTIONAL, MESSAGE,  radio_info,        8) \
 X(a, CALLBACK, OPTIONAL, BYTES,    camera_frame,    200)
 #define MP_HeroDataPacketToClient_CALLBACK pb_default_field_callback
 #define MP_HeroDataPacketToClient_DEFAULT NULL
+#define MP_HeroDataPacketToClient_weapon_MSGTYPE MP_WeaponState
+#define MP_HeroDataPacketToClient_chassis_MSGTYPE MP_ChassisState
+#define MP_HeroDataPacketToClient_vision_MSGTYPE MP_VisionData
+#define MP_HeroDataPacketToClient_power_MSGTYPE MP_PowerState
+#define MP_HeroDataPacketToClient_leg_state_MSGTYPE MP_LegInfo
+#define MP_HeroDataPacketToClient_radio_info_MSGTYPE MP_RadioInfo
 
 extern const pb_msgdesc_t MP_HeroDataPacketToClient_msg;
 
