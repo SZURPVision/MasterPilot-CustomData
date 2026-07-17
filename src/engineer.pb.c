@@ -9,7 +9,7 @@
 PB_BIND(MP_ArmState, MP_ArmState, AUTO)
 
 
-PB_BIND(MP_RobotStatus, MP_RobotStatus, AUTO)
+PB_BIND(MP_EngineerStatus, MP_EngineerStatus, AUTO)
 
 
 PB_BIND(MP_EngineerDataPacketToClient, MP_EngineerDataPacketToClient, 2)

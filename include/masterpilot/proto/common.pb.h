@@ -23,9 +23,9 @@ typedef enum _MP_VisionTarget {
 
 /* 视觉自瞄状态 (对应 VisionStateType) */
 typedef enum _MP_VisionState {
-    MP_VS_INACTIVE = 0,
-    MP_VS_ACTIVE = 1,
-    MP_VS_TARGET_FOUND = 2
+    MP_VS_INACTIVE = 0, /* 未激活 */
+    MP_VS_ACTIVE = 1, /* 激活 */
+    MP_VS_TARGET_FOUND = 2 /* 已找到目标 */
 } MP_VisionState;
 
 typedef enum _MP_ChassisMode {
@@ -46,11 +46,11 @@ typedef enum _MP_LegMode {
 
 typedef enum _MP_BuffType {
     MP_B_NONE = 0,
-    MP_B_RECOVERY = 1,
-    MP_B_COOLING = 2,
-    MP_B_DEFENSE = 3,
-    MP_B_VULNERABILITY = 4,
-    MP_B_ATTACK = 5
+    MP_B_RECOVERY = 1, /* 恢复增益 */
+    MP_B_COOLING = 2, /* 冷却增益 */
+    MP_B_DEFENSE = 3, /* 防御增益 */
+    MP_B_VULNERABILITY = 4, /* 易伤 */
+    MP_B_ATTACK = 5 /* 攻击增益 */
 } MP_BuffType;
 
 /* Struct definitions */
@@ -67,32 +67,28 @@ typedef struct _MP_UnsignedLinearValue {
 
 /* 视觉状态 */
 typedef struct _MP_VisionData {
-    MP_VisionTarget target;
-    MP_VisionState state;
+    MP_VisionTarget target; /* 视觉识别目标类型 */
+    MP_VisionState state; /* 视觉/自瞄状态 */
 } MP_VisionData;
 
 /* 武器/发射机构状态 (对应 WeaponStatus) */
 typedef struct _MP_WeaponState {
     bool fric_on;
     bool fric_online;
-    float pitch; /* degree */
+    float pitch; /* 枪管相对地面 degree */
     float yaw; /* 枪管相对前方 degree */
 } MP_WeaponState;
 
-/* 底盘实时状态 (对应 ChassisStatus 部分字段) */
+/* 底盘状态 */
 typedef struct _MP_ChassisState {
-    float speed; /* m/s */
-    float theta; /* 摆角 degree */
+    float speed; /* 线速度 m/s */
     float yaw; /* 速度相对底盘前方 degree */
-    float pitch; /* 底盘相对地面pitch degree */
-    float roll; /* 底盘相对地面roll degree */
-    MP_ChassisMode mode_flags;
+    float pitch; /* 底盘相对地面pitch degree. */
+    float roll; /* 底盘相对地面roll degree. */
+    MP_ChassisMode mode; /* 底盘模式 */
+    float cap_ratio; /* 超电百分比 */
+    uint32_t rfid; /* RFID数据, 详见通信协议手册0x0209的说明 */
 } MP_ChassisState;
-
-/* 能源与电容状态 */
-typedef struct _MP_PowerState {
-    float cap_voltage_ratio; /* 电容电压比 */
-} MP_PowerState;
 
 typedef struct _MP_LegInfo {
     pb_size_t which_state;
@@ -184,8 +180,7 @@ extern "C" {
 #define MP_VisionData_state_ENUMTYPE MP_VisionState
 
 
-#define MP_ChassisState_mode_flags_ENUMTYPE MP_ChassisMode
-
+#define MP_ChassisState_mode_ENUMTYPE MP_ChassisMode
 
 #define MP_LegInfo_state_mode_ENUMTYPE MP_LegMode
 
@@ -199,8 +194,7 @@ extern "C" {
 #define MP_UnsignedLinearValue_init_default      {0, 0}
 #define MP_VisionData_init_default               {_MP_VisionTarget_MIN, _MP_VisionState_MIN}
 #define MP_WeaponState_init_default              {0, 0, 0, 0}
-#define MP_ChassisState_init_default             {0, 0, 0, 0, 0, _MP_ChassisMode_MIN}
-#define MP_PowerState_init_default               {0}
+#define MP_ChassisState_init_default             {0, 0, 0, 0, _MP_ChassisMode_MIN, 0, 0}
 #define MP_LegInfo_init_default                  {0, {_MP_LegMode_MIN}, 0, 0}
 #define MP_BuffInfo_init_default                 {_MP_BuffType_MIN, 0}
 #define MP_RobotInfoFromRadio_init_default       {0, 0, 0, 0, {MP_BuffInfo_init_default, MP_BuffInfo_init_default, MP_BuffInfo_init_default, MP_BuffInfo_init_default, MP_BuffInfo_init_default, MP_BuffInfo_init_default}}
@@ -209,8 +203,7 @@ extern "C" {
 #define MP_UnsignedLinearValue_init_zero         {0, 0}
 #define MP_VisionData_init_zero                  {_MP_VisionTarget_MIN, _MP_VisionState_MIN}
 #define MP_WeaponState_init_zero                 {0, 0, 0, 0}
-#define MP_ChassisState_init_zero                {0, 0, 0, 0, 0, _MP_ChassisMode_MIN}
-#define MP_PowerState_init_zero                  {0}
+#define MP_ChassisState_init_zero                {0, 0, 0, 0, _MP_ChassisMode_MIN, 0, 0}
 #define MP_LegInfo_init_zero                     {0, {_MP_LegMode_MIN}, 0, 0}
 #define MP_BuffInfo_init_zero                    {_MP_BuffType_MIN, 0}
 #define MP_RobotInfoFromRadio_init_zero          {0, 0, 0, 0, {MP_BuffInfo_init_zero, MP_BuffInfo_init_zero, MP_BuffInfo_init_zero, MP_BuffInfo_init_zero, MP_BuffInfo_init_zero, MP_BuffInfo_init_zero}}
@@ -228,12 +221,12 @@ extern "C" {
 #define MP_WeaponState_pitch_tag                 4
 #define MP_WeaponState_yaw_tag                   5
 #define MP_ChassisState_speed_tag                1
-#define MP_ChassisState_theta_tag                2
 #define MP_ChassisState_yaw_tag                  3
 #define MP_ChassisState_pitch_tag                4
 #define MP_ChassisState_roll_tag                 5
-#define MP_ChassisState_mode_flags_tag           6
-#define MP_PowerState_cap_voltage_ratio_tag      1
+#define MP_ChassisState_mode_tag                 6
+#define MP_ChassisState_cap_ratio_tag            7
+#define MP_ChassisState_rfid_tag                 8
 #define MP_LegInfo_mode_tag                      1
 #define MP_LegInfo_height_tag                    2
 #define MP_LegInfo_small_theta_tag               10
@@ -278,18 +271,14 @@ X(a, STATIC,   SINGULAR, FLOAT,    yaw,               5)
 
 #define MP_ChassisState_FIELDLIST(X, a) \
 X(a, STATIC,   SINGULAR, FLOAT,    speed,             1) \
-X(a, STATIC,   SINGULAR, FLOAT,    theta,             2) \
 X(a, STATIC,   SINGULAR, FLOAT,    yaw,               3) \
 X(a, STATIC,   SINGULAR, FLOAT,    pitch,             4) \
 X(a, STATIC,   SINGULAR, FLOAT,    roll,              5) \
-X(a, STATIC,   SINGULAR, UENUM,    mode_flags,        6)
+X(a, STATIC,   SINGULAR, UENUM,    mode,              6) \
+X(a, STATIC,   SINGULAR, FLOAT,    cap_ratio,         7) \
+X(a, STATIC,   SINGULAR, UINT32,   rfid,              8)
 #define MP_ChassisState_CALLBACK NULL
 #define MP_ChassisState_DEFAULT NULL
-
-#define MP_PowerState_FIELDLIST(X, a) \
-X(a, STATIC,   SINGULAR, FLOAT,    cap_voltage_ratio,   1)
-#define MP_PowerState_CALLBACK NULL
-#define MP_PowerState_DEFAULT NULL
 
 #define MP_LegInfo_FIELDLIST(X, a) \
 X(a, STATIC,   ONEOF,    UENUM,    (state,mode,state.mode),   1) \
@@ -329,7 +318,6 @@ extern const pb_msgdesc_t MP_UnsignedLinearValue_msg;
 extern const pb_msgdesc_t MP_VisionData_msg;
 extern const pb_msgdesc_t MP_WeaponState_msg;
 extern const pb_msgdesc_t MP_ChassisState_msg;
-extern const pb_msgdesc_t MP_PowerState_msg;
 extern const pb_msgdesc_t MP_LegInfo_msg;
 extern const pb_msgdesc_t MP_BuffInfo_msg;
 extern const pb_msgdesc_t MP_RobotInfoFromRadio_msg;
@@ -341,7 +329,6 @@ extern const pb_msgdesc_t MP_RadioInfo_msg;
 #define MP_VisionData_fields &MP_VisionData_msg
 #define MP_WeaponState_fields &MP_WeaponState_msg
 #define MP_ChassisState_fields &MP_ChassisState_msg
-#define MP_PowerState_fields &MP_PowerState_msg
 #define MP_LegInfo_fields &MP_LegInfo_msg
 #define MP_BuffInfo_fields &MP_BuffInfo_msg
 #define MP_RobotInfoFromRadio_fields &MP_RobotInfoFromRadio_msg
@@ -350,9 +337,8 @@ extern const pb_msgdesc_t MP_RadioInfo_msg;
 /* Maximum encoded size of messages (where known) */
 #define MASTERPILOT_PROTO_MASTERPILOT_PROTO_COMMON_PB_H_MAX_SIZE MP_RadioInfo_size
 #define MP_BuffInfo_size                         8
-#define MP_ChassisState_size                     27
+#define MP_ChassisState_size                     33
 #define MP_LegInfo_size                          24
-#define MP_PowerState_size                       5
 #define MP_RadioInfo_size                        498
 #define MP_RobotInfoFromRadio_size               78
 #define MP_SignedLinearValue_size                12
@@ -371,7 +357,6 @@ extern const pb_msgdesc_t MP_RadioInfo_msg;
 #define masterpilot_proto_VisionData MP_VisionData
 #define masterpilot_proto_WeaponState MP_WeaponState
 #define masterpilot_proto_ChassisState MP_ChassisState
-#define masterpilot_proto_PowerState MP_PowerState
 #define masterpilot_proto_LegInfo MP_LegInfo
 #define masterpilot_proto_BuffInfo MP_BuffInfo
 #define masterpilot_proto_RobotInfoFromRadio MP_RobotInfoFromRadio
@@ -396,7 +381,6 @@ extern const pb_msgdesc_t MP_RadioInfo_msg;
 #define masterpilot_proto_VisionData_init_default MP_VisionData_init_default
 #define masterpilot_proto_WeaponState_init_default MP_WeaponState_init_default
 #define masterpilot_proto_ChassisState_init_default MP_ChassisState_init_default
-#define masterpilot_proto_PowerState_init_default MP_PowerState_init_default
 #define masterpilot_proto_LegInfo_init_default MP_LegInfo_init_default
 #define masterpilot_proto_BuffInfo_init_default MP_BuffInfo_init_default
 #define masterpilot_proto_RobotInfoFromRadio_init_default MP_RobotInfoFromRadio_init_default
@@ -406,7 +390,6 @@ extern const pb_msgdesc_t MP_RadioInfo_msg;
 #define masterpilot_proto_VisionData_init_zero MP_VisionData_init_zero
 #define masterpilot_proto_WeaponState_init_zero MP_WeaponState_init_zero
 #define masterpilot_proto_ChassisState_init_zero MP_ChassisState_init_zero
-#define masterpilot_proto_PowerState_init_zero MP_PowerState_init_zero
 #define masterpilot_proto_LegInfo_init_zero MP_LegInfo_init_zero
 #define masterpilot_proto_BuffInfo_init_zero MP_BuffInfo_init_zero
 #define masterpilot_proto_RobotInfoFromRadio_init_zero MP_RobotInfoFromRadio_init_zero

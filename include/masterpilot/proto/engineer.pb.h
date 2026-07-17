@@ -12,24 +12,24 @@
 
 /* Enum definitions */
 /* 系统控制流程状态 */
-typedef enum _MP_AutoProcess {
-    MP_AP_NONE = 0,
-    MP_AP_RETURN_ORIGIN = 1,
-    MP_AP_CLIMBING = 2,
-    MP_AP_DOWN_STAIR = 3,
-    MP_AP_ENERGY_UNIT = 4,
-    MP_AP_EXCHANGE_ORE = 5,
-    MP_AP_STORE_ORE = 6,
-    MP_AP_GROUND_ORE = 7
-} MP_AutoProcess;
+typedef enum _MP_EngineerAutoProcessState {
+    MP_EAP_NONE = 0,
+    MP_EAP_RETURN_ORIGIN = 1,
+    MP_EAP_CLIMBING = 2,
+    MP_EAP_DOWN_STAIR = 3,
+    MP_EAP_ENERGY_UNIT = 4,
+    MP_EAP_EXCHANGE_ORE = 5,
+    MP_EAP_STORE_ORE = 6,
+    MP_EAP_GROUND_ORE = 7
+} MP_EngineerAutoProcessState;
 
 /* 控制模式 */
-typedef enum _MP_ControlMode {
-    MP_CM_NONE = 0,
-    MP_CM_RC = 1,
-    MP_CM_KEYBOARD = 2,
-    MP_CM_CONTROLLER = 3
-} MP_ControlMode;
+typedef enum _MP_EngineerControlMode {
+    MP_ECM_NONE = 0,
+    MP_ECM_RC = 1,
+    MP_ECM_KEYBOARD = 2,
+    MP_ECM_CONTROLLER = 3
+} MP_EngineerControlMode;
 
 /* Struct definitions */
 /* 机械臂实时数据 */
@@ -46,18 +46,18 @@ typedef struct _MP_ArmState {
 } MP_ArmState;
 
 /* 机器人全局标志位与裁判系统数据 */
-typedef struct _MP_RobotStatus {
+typedef struct _MP_EngineerStatus {
     bool p3_lock; /* P3锁定标志 */
     bool robot_init_ok; /* 初始化完成 */
     bool controlled_by_controller; /* 是否被遥控器控制 */
-} MP_RobotStatus;
+} MP_EngineerStatus;
 
 /* 发送给自定义客户端的大包 */
 typedef struct _MP_EngineerDataPacketToClient {
     bool has_current_process;
-    MP_AutoProcess current_process;
+    MP_EngineerAutoProcessState current_process;
     bool has_ctrl_mode;
-    MP_ControlMode ctrl_mode;
+    MP_EngineerControlMode ctrl_mode;
     bool has_chassis;
     MP_ChassisState chassis;
     bool has_arm;
@@ -67,7 +67,7 @@ typedef struct _MP_EngineerDataPacketToClient {
     bool has_vision;
     MP_VisionData vision;
     bool has_status;
-    MP_RobotStatus status;
+    MP_EngineerStatus status;
     bool has_radio_info;
     MP_RadioInfo radio_info;
 } MP_EngineerDataPacketToClient;
@@ -78,39 +78,39 @@ extern "C" {
 #endif
 
 /* Helper constants for enums */
-#define _MP_AutoProcess_MIN MP_AP_NONE
-#define _MP_AutoProcess_MAX MP_AP_GROUND_ORE
-#define _MP_AutoProcess_ARRAYSIZE ((MP_AutoProcess)(MP_AP_GROUND_ORE+1))
-#define MP_AutoProcess_AP_NONE MP_AP_NONE
-#define MP_AutoProcess_AP_RETURN_ORIGIN MP_AP_RETURN_ORIGIN
-#define MP_AutoProcess_AP_CLIMBING MP_AP_CLIMBING
-#define MP_AutoProcess_AP_DOWN_STAIR MP_AP_DOWN_STAIR
-#define MP_AutoProcess_AP_ENERGY_UNIT MP_AP_ENERGY_UNIT
-#define MP_AutoProcess_AP_EXCHANGE_ORE MP_AP_EXCHANGE_ORE
-#define MP_AutoProcess_AP_STORE_ORE MP_AP_STORE_ORE
-#define MP_AutoProcess_AP_GROUND_ORE MP_AP_GROUND_ORE
+#define _MP_EngineerAutoProcessState_MIN MP_EAP_NONE
+#define _MP_EngineerAutoProcessState_MAX MP_EAP_GROUND_ORE
+#define _MP_EngineerAutoProcessState_ARRAYSIZE ((MP_EngineerAutoProcessState)(MP_EAP_GROUND_ORE+1))
+#define MP_EngineerAutoProcessState_EAP_NONE MP_EAP_NONE
+#define MP_EngineerAutoProcessState_EAP_RETURN_ORIGIN MP_EAP_RETURN_ORIGIN
+#define MP_EngineerAutoProcessState_EAP_CLIMBING MP_EAP_CLIMBING
+#define MP_EngineerAutoProcessState_EAP_DOWN_STAIR MP_EAP_DOWN_STAIR
+#define MP_EngineerAutoProcessState_EAP_ENERGY_UNIT MP_EAP_ENERGY_UNIT
+#define MP_EngineerAutoProcessState_EAP_EXCHANGE_ORE MP_EAP_EXCHANGE_ORE
+#define MP_EngineerAutoProcessState_EAP_STORE_ORE MP_EAP_STORE_ORE
+#define MP_EngineerAutoProcessState_EAP_GROUND_ORE MP_EAP_GROUND_ORE
 
-#define _MP_ControlMode_MIN MP_CM_NONE
-#define _MP_ControlMode_MAX MP_CM_CONTROLLER
-#define _MP_ControlMode_ARRAYSIZE ((MP_ControlMode)(MP_CM_CONTROLLER+1))
-#define MP_ControlMode_CM_NONE MP_CM_NONE
-#define MP_ControlMode_CM_RC MP_CM_RC
-#define MP_ControlMode_CM_KEYBOARD MP_CM_KEYBOARD
-#define MP_ControlMode_CM_CONTROLLER MP_CM_CONTROLLER
+#define _MP_EngineerControlMode_MIN MP_ECM_NONE
+#define _MP_EngineerControlMode_MAX MP_ECM_CONTROLLER
+#define _MP_EngineerControlMode_ARRAYSIZE ((MP_EngineerControlMode)(MP_ECM_CONTROLLER+1))
+#define MP_EngineerControlMode_ECM_NONE MP_ECM_NONE
+#define MP_EngineerControlMode_ECM_RC MP_ECM_RC
+#define MP_EngineerControlMode_ECM_KEYBOARD MP_ECM_KEYBOARD
+#define MP_EngineerControlMode_ECM_CONTROLLER MP_ECM_CONTROLLER
 
 
 
-#define MP_EngineerDataPacketToClient_current_process_ENUMTYPE MP_AutoProcess
-#define MP_EngineerDataPacketToClient_ctrl_mode_ENUMTYPE MP_ControlMode
+#define MP_EngineerDataPacketToClient_current_process_ENUMTYPE MP_EngineerAutoProcessState
+#define MP_EngineerDataPacketToClient_ctrl_mode_ENUMTYPE MP_EngineerControlMode
 
 
 /* Initializer values for message structs */
 #define MP_ArmState_init_default                 {0, 0, 0, 0, 0, 0, 0, 0, 0}
-#define MP_RobotStatus_init_default              {0, 0, 0}
-#define MP_EngineerDataPacketToClient_init_default {false, _MP_AutoProcess_MIN, false, _MP_ControlMode_MIN, false, MP_ChassisState_init_default, false, MP_ArmState_init_default, false, MP_WeaponState_init_default, false, MP_VisionData_init_default, false, MP_RobotStatus_init_default, false, MP_RadioInfo_init_default}
+#define MP_EngineerStatus_init_default           {0, 0, 0}
+#define MP_EngineerDataPacketToClient_init_default {false, _MP_EngineerAutoProcessState_MIN, false, _MP_EngineerControlMode_MIN, false, MP_ChassisState_init_default, false, MP_ArmState_init_default, false, MP_WeaponState_init_default, false, MP_VisionData_init_default, false, MP_EngineerStatus_init_default, false, MP_RadioInfo_init_default}
 #define MP_ArmState_init_zero                    {0, 0, 0, 0, 0, 0, 0, 0, 0}
-#define MP_RobotStatus_init_zero                 {0, 0, 0}
-#define MP_EngineerDataPacketToClient_init_zero  {false, _MP_AutoProcess_MIN, false, _MP_ControlMode_MIN, false, MP_ChassisState_init_zero, false, MP_ArmState_init_zero, false, MP_WeaponState_init_zero, false, MP_VisionData_init_zero, false, MP_RobotStatus_init_zero, false, MP_RadioInfo_init_zero}
+#define MP_EngineerStatus_init_zero              {0, 0, 0}
+#define MP_EngineerDataPacketToClient_init_zero  {false, _MP_EngineerAutoProcessState_MIN, false, _MP_EngineerControlMode_MIN, false, MP_ChassisState_init_zero, false, MP_ArmState_init_zero, false, MP_WeaponState_init_zero, false, MP_VisionData_init_zero, false, MP_EngineerStatus_init_zero, false, MP_RadioInfo_init_zero}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define MP_ArmState_angle_yaw_tag                1
@@ -122,9 +122,9 @@ extern "C" {
 #define MP_ArmState_angle_end_roll_tag           7
 #define MP_ArmState_length_grip_tag              8
 #define MP_ArmState_grip_close_tag               9
-#define MP_RobotStatus_p3_lock_tag               1
-#define MP_RobotStatus_robot_init_ok_tag         2
-#define MP_RobotStatus_controlled_by_controller_tag 3
+#define MP_EngineerStatus_p3_lock_tag            1
+#define MP_EngineerStatus_robot_init_ok_tag      2
+#define MP_EngineerStatus_controlled_by_controller_tag 3
 #define MP_EngineerDataPacketToClient_current_process_tag 1
 #define MP_EngineerDataPacketToClient_ctrl_mode_tag 2
 #define MP_EngineerDataPacketToClient_chassis_tag 3
@@ -148,12 +148,12 @@ X(a, STATIC,   SINGULAR, BOOL,     grip_close,        9)
 #define MP_ArmState_CALLBACK NULL
 #define MP_ArmState_DEFAULT NULL
 
-#define MP_RobotStatus_FIELDLIST(X, a) \
+#define MP_EngineerStatus_FIELDLIST(X, a) \
 X(a, STATIC,   SINGULAR, BOOL,     p3_lock,           1) \
 X(a, STATIC,   SINGULAR, BOOL,     robot_init_ok,     2) \
 X(a, STATIC,   SINGULAR, BOOL,     controlled_by_controller,   3)
-#define MP_RobotStatus_CALLBACK NULL
-#define MP_RobotStatus_DEFAULT NULL
+#define MP_EngineerStatus_CALLBACK NULL
+#define MP_EngineerStatus_DEFAULT NULL
 
 #define MP_EngineerDataPacketToClient_FIELDLIST(X, a) \
 X(a, STATIC,   OPTIONAL, UENUM,    current_process,   1) \
@@ -170,41 +170,41 @@ X(a, STATIC,   OPTIONAL, MESSAGE,  radio_info,        8)
 #define MP_EngineerDataPacketToClient_arm_MSGTYPE MP_ArmState
 #define MP_EngineerDataPacketToClient_weapon_MSGTYPE MP_WeaponState
 #define MP_EngineerDataPacketToClient_vision_MSGTYPE MP_VisionData
-#define MP_EngineerDataPacketToClient_status_MSGTYPE MP_RobotStatus
+#define MP_EngineerDataPacketToClient_status_MSGTYPE MP_EngineerStatus
 #define MP_EngineerDataPacketToClient_radio_info_MSGTYPE MP_RadioInfo
 
 extern const pb_msgdesc_t MP_ArmState_msg;
-extern const pb_msgdesc_t MP_RobotStatus_msg;
+extern const pb_msgdesc_t MP_EngineerStatus_msg;
 extern const pb_msgdesc_t MP_EngineerDataPacketToClient_msg;
 
 /* Defines for backwards compatibility with code written before nanopb-0.4.0 */
 #define MP_ArmState_fields &MP_ArmState_msg
-#define MP_RobotStatus_fields &MP_RobotStatus_msg
+#define MP_EngineerStatus_fields &MP_EngineerStatus_msg
 #define MP_EngineerDataPacketToClient_fields &MP_EngineerDataPacketToClient_msg
 
 /* Maximum encoded size of messages (where known) */
 #define MASTERPILOT_PROTO_MASTERPILOT_PROTO_ENGINEER_PB_H_MAX_SIZE MP_EngineerDataPacketToClient_size
 #define MP_ArmState_size                         42
-#define MP_EngineerDataPacketToClient_size       608
-#define MP_RobotStatus_size                      6
+#define MP_EngineerDataPacketToClient_size       614
+#define MP_EngineerStatus_size                   6
 
 /* Mapping from canonical names (mangle_names or overridden package name) */
-#define masterpilot_proto_AutoProcess MP_AutoProcess
-#define masterpilot_proto_ControlMode MP_ControlMode
+#define masterpilot_proto_EngineerAutoProcessState MP_EngineerAutoProcessState
+#define masterpilot_proto_EngineerControlMode MP_EngineerControlMode
 #define masterpilot_proto_ArmState MP_ArmState
-#define masterpilot_proto_RobotStatus MP_RobotStatus
+#define masterpilot_proto_EngineerStatus MP_EngineerStatus
 #define masterpilot_proto_EngineerDataPacketToClient MP_EngineerDataPacketToClient
-#define _masterpilot_proto_AutoProcess_MIN _MP_AutoProcess_MIN
-#define _masterpilot_proto_AutoProcess_MAX _MP_AutoProcess_MAX
-#define _masterpilot_proto_AutoProcess_ARRAYSIZE _MP_AutoProcess_ARRAYSIZE
-#define _masterpilot_proto_ControlMode_MIN _MP_ControlMode_MIN
-#define _masterpilot_proto_ControlMode_MAX _MP_ControlMode_MAX
-#define _masterpilot_proto_ControlMode_ARRAYSIZE _MP_ControlMode_ARRAYSIZE
+#define _masterpilot_proto_EngineerAutoProcessState_MIN _MP_EngineerAutoProcessState_MIN
+#define _masterpilot_proto_EngineerAutoProcessState_MAX _MP_EngineerAutoProcessState_MAX
+#define _masterpilot_proto_EngineerAutoProcessState_ARRAYSIZE _MP_EngineerAutoProcessState_ARRAYSIZE
+#define _masterpilot_proto_EngineerControlMode_MIN _MP_EngineerControlMode_MIN
+#define _masterpilot_proto_EngineerControlMode_MAX _MP_EngineerControlMode_MAX
+#define _masterpilot_proto_EngineerControlMode_ARRAYSIZE _MP_EngineerControlMode_ARRAYSIZE
 #define masterpilot_proto_ArmState_init_default MP_ArmState_init_default
-#define masterpilot_proto_RobotStatus_init_default MP_RobotStatus_init_default
+#define masterpilot_proto_EngineerStatus_init_default MP_EngineerStatus_init_default
 #define masterpilot_proto_EngineerDataPacketToClient_init_default MP_EngineerDataPacketToClient_init_default
 #define masterpilot_proto_ArmState_init_zero MP_ArmState_init_zero
-#define masterpilot_proto_RobotStatus_init_zero MP_RobotStatus_init_zero
+#define masterpilot_proto_EngineerStatus_init_zero MP_EngineerStatus_init_zero
 #define masterpilot_proto_EngineerDataPacketToClient_init_zero MP_EngineerDataPacketToClient_init_zero
 
 #ifdef __cplusplus

@@ -11,29 +11,29 @@
 #endif
 
 /* Enum definitions */
-typedef enum _MP_PidMode {
-    MP_PM_INACTIVE = 0,
-    MP_PM_MEC = 1,
-    MP_PM_GYRO = 2,
-    MP_PM_VISION = 3
-} MP_PidMode;
+typedef enum _MP_DronePidMode {
+    MP_DPM_INACTIVE = 0,
+    MP_DPM_MEC = 1,
+    MP_DPM_GYRO = 2,
+    MP_DPM_VISION = 3
+} MP_DronePidMode;
 
-typedef enum _MP_LampCmd {
-    MP_LC_IDLE = 0,
-    MP_LC_RC_OFFLINE = 1,
-    MP_LC_AWAIT = 2,
-    MP_LC_BASE = 3,
-    MP_LC_OUTPOST = 4,
-    MP_LC_BUF = 5,
-    MP_LC_FORWARD = 6,
-    MP_LC_BACK = 7,
-    MP_LC_LEFT = 8,
-    MP_LC_RIGHT = 9,
-    MP_LC_CW_SPIN = 10,
-    MP_LC_CCW_SPIN = 11,
-    MP_LC_UP = 12,
-    MP_LC_DOWN = 13
-} MP_LampCmd;
+typedef enum _MP_DroneLampCmd {
+    MP_DLC_IDLE = 0,
+    MP_DLC_RC_OFFLINE = 1,
+    MP_DLC_AWAIT = 2,
+    MP_DLC_BASE = 3,
+    MP_DLC_OUTPOST = 4,
+    MP_DLC_BUF = 5,
+    MP_DLC_FORWARD = 6,
+    MP_DLC_BACK = 7,
+    MP_DLC_LEFT = 8,
+    MP_DLC_RIGHT = 9,
+    MP_DLC_CW_SPIN = 10,
+    MP_DLC_CCW_SPIN = 11,
+    MP_DLC_UP = 12,
+    MP_DLC_DOWN = 13
+} MP_DroneLampCmd;
 
 /* Struct definitions */
 typedef struct _MP_DroneDataPacketToClient {
@@ -42,9 +42,9 @@ typedef struct _MP_DroneDataPacketToClient {
     bool has_vision;
     MP_VisionData vision;
     bool has_lamp;
-    MP_LampCmd lamp;
+    MP_DroneLampCmd lamp;
     bool has_pid;
-    MP_PidMode pid;
+    MP_DronePidMode pid;
     bool has_radio_info;
     MP_RadioInfo radio_info;
 } MP_DroneDataPacketToClient;
@@ -55,39 +55,39 @@ extern "C" {
 #endif
 
 /* Helper constants for enums */
-#define _MP_PidMode_MIN MP_PM_INACTIVE
-#define _MP_PidMode_MAX MP_PM_VISION
-#define _MP_PidMode_ARRAYSIZE ((MP_PidMode)(MP_PM_VISION+1))
-#define MP_PidMode_PM_INACTIVE MP_PM_INACTIVE
-#define MP_PidMode_PM_MEC MP_PM_MEC
-#define MP_PidMode_PM_GYRO MP_PM_GYRO
-#define MP_PidMode_PM_VISION MP_PM_VISION
+#define _MP_DronePidMode_MIN MP_DPM_INACTIVE
+#define _MP_DronePidMode_MAX MP_DPM_VISION
+#define _MP_DronePidMode_ARRAYSIZE ((MP_DronePidMode)(MP_DPM_VISION+1))
+#define MP_DronePidMode_DPM_INACTIVE MP_DPM_INACTIVE
+#define MP_DronePidMode_DPM_MEC MP_DPM_MEC
+#define MP_DronePidMode_DPM_GYRO MP_DPM_GYRO
+#define MP_DronePidMode_DPM_VISION MP_DPM_VISION
 
-#define _MP_LampCmd_MIN MP_LC_IDLE
-#define _MP_LampCmd_MAX MP_LC_DOWN
-#define _MP_LampCmd_ARRAYSIZE ((MP_LampCmd)(MP_LC_DOWN+1))
-#define MP_LampCmd_LC_IDLE MP_LC_IDLE
-#define MP_LampCmd_LC_RC_OFFLINE MP_LC_RC_OFFLINE
-#define MP_LampCmd_LC_AWAIT MP_LC_AWAIT
-#define MP_LampCmd_LC_BASE MP_LC_BASE
-#define MP_LampCmd_LC_OUTPOST MP_LC_OUTPOST
-#define MP_LampCmd_LC_BUF MP_LC_BUF
-#define MP_LampCmd_LC_FORWARD MP_LC_FORWARD
-#define MP_LampCmd_LC_BACK MP_LC_BACK
-#define MP_LampCmd_LC_LEFT MP_LC_LEFT
-#define MP_LampCmd_LC_RIGHT MP_LC_RIGHT
-#define MP_LampCmd_LC_CW_SPIN MP_LC_CW_SPIN
-#define MP_LampCmd_LC_CCW_SPIN MP_LC_CCW_SPIN
-#define MP_LampCmd_LC_UP MP_LC_UP
-#define MP_LampCmd_LC_DOWN MP_LC_DOWN
+#define _MP_DroneLampCmd_MIN MP_DLC_IDLE
+#define _MP_DroneLampCmd_MAX MP_DLC_DOWN
+#define _MP_DroneLampCmd_ARRAYSIZE ((MP_DroneLampCmd)(MP_DLC_DOWN+1))
+#define MP_DroneLampCmd_DLC_IDLE MP_DLC_IDLE
+#define MP_DroneLampCmd_DLC_RC_OFFLINE MP_DLC_RC_OFFLINE
+#define MP_DroneLampCmd_DLC_AWAIT MP_DLC_AWAIT
+#define MP_DroneLampCmd_DLC_BASE MP_DLC_BASE
+#define MP_DroneLampCmd_DLC_OUTPOST MP_DLC_OUTPOST
+#define MP_DroneLampCmd_DLC_BUF MP_DLC_BUF
+#define MP_DroneLampCmd_DLC_FORWARD MP_DLC_FORWARD
+#define MP_DroneLampCmd_DLC_BACK MP_DLC_BACK
+#define MP_DroneLampCmd_DLC_LEFT MP_DLC_LEFT
+#define MP_DroneLampCmd_DLC_RIGHT MP_DLC_RIGHT
+#define MP_DroneLampCmd_DLC_CW_SPIN MP_DLC_CW_SPIN
+#define MP_DroneLampCmd_DLC_CCW_SPIN MP_DLC_CCW_SPIN
+#define MP_DroneLampCmd_DLC_UP MP_DLC_UP
+#define MP_DroneLampCmd_DLC_DOWN MP_DLC_DOWN
 
-#define MP_DroneDataPacketToClient_lamp_ENUMTYPE MP_LampCmd
-#define MP_DroneDataPacketToClient_pid_ENUMTYPE MP_PidMode
+#define MP_DroneDataPacketToClient_lamp_ENUMTYPE MP_DroneLampCmd
+#define MP_DroneDataPacketToClient_pid_ENUMTYPE MP_DronePidMode
 
 
 /* Initializer values for message structs */
-#define MP_DroneDataPacketToClient_init_default  {false, MP_WeaponState_init_default, false, MP_VisionData_init_default, false, _MP_LampCmd_MIN, false, _MP_PidMode_MIN, false, MP_RadioInfo_init_default}
-#define MP_DroneDataPacketToClient_init_zero     {false, MP_WeaponState_init_zero, false, MP_VisionData_init_zero, false, _MP_LampCmd_MIN, false, _MP_PidMode_MIN, false, MP_RadioInfo_init_zero}
+#define MP_DroneDataPacketToClient_init_default  {false, MP_WeaponState_init_default, false, MP_VisionData_init_default, false, _MP_DroneLampCmd_MIN, false, _MP_DronePidMode_MIN, false, MP_RadioInfo_init_default}
+#define MP_DroneDataPacketToClient_init_zero     {false, MP_WeaponState_init_zero, false, MP_VisionData_init_zero, false, _MP_DroneLampCmd_MIN, false, _MP_DronePidMode_MIN, false, MP_RadioInfo_init_zero}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define MP_DroneDataPacketToClient_weapon_tag    1
@@ -119,15 +119,15 @@ extern const pb_msgdesc_t MP_DroneDataPacketToClient_msg;
 #define MP_DroneDataPacketToClient_size          527
 
 /* Mapping from canonical names (mangle_names or overridden package name) */
-#define masterpilot_proto_PidMode MP_PidMode
-#define masterpilot_proto_LampCmd MP_LampCmd
+#define masterpilot_proto_DronePidMode MP_DronePidMode
+#define masterpilot_proto_DroneLampCmd MP_DroneLampCmd
 #define masterpilot_proto_DroneDataPacketToClient MP_DroneDataPacketToClient
-#define _masterpilot_proto_PidMode_MIN _MP_PidMode_MIN
-#define _masterpilot_proto_PidMode_MAX _MP_PidMode_MAX
-#define _masterpilot_proto_PidMode_ARRAYSIZE _MP_PidMode_ARRAYSIZE
-#define _masterpilot_proto_LampCmd_MIN _MP_LampCmd_MIN
-#define _masterpilot_proto_LampCmd_MAX _MP_LampCmd_MAX
-#define _masterpilot_proto_LampCmd_ARRAYSIZE _MP_LampCmd_ARRAYSIZE
+#define _masterpilot_proto_DronePidMode_MIN _MP_DronePidMode_MIN
+#define _masterpilot_proto_DronePidMode_MAX _MP_DronePidMode_MAX
+#define _masterpilot_proto_DronePidMode_ARRAYSIZE _MP_DronePidMode_ARRAYSIZE
+#define _masterpilot_proto_DroneLampCmd_MIN _MP_DroneLampCmd_MIN
+#define _masterpilot_proto_DroneLampCmd_MAX _MP_DroneLampCmd_MAX
+#define _masterpilot_proto_DroneLampCmd_ARRAYSIZE _MP_DroneLampCmd_ARRAYSIZE
 #define masterpilot_proto_DroneDataPacketToClient_init_default MP_DroneDataPacketToClient_init_default
 #define masterpilot_proto_DroneDataPacketToClient_init_zero MP_DroneDataPacketToClient_init_zero
 

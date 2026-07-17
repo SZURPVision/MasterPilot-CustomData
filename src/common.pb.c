@@ -21,9 +21,6 @@ PB_BIND(MP_WeaponState, MP_WeaponState, AUTO)
 PB_BIND(MP_ChassisState, MP_ChassisState, AUTO)
 
 
-PB_BIND(MP_PowerState, MP_PowerState, AUTO)
-
-
 PB_BIND(MP_LegInfo, MP_LegInfo, AUTO)
 
 
