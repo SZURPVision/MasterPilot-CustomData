@@ -28,22 +28,22 @@ enum VisionTarget {
 
 // 视觉自瞄状态 (对应 VisionStateType)
 enum VisionState {
-  VS_INACTIVE = 0;
-  VS_ACTIVE = 1;
-  VS_TARGET_FOUND = 2;
+  VS_INACTIVE = 0; // 未激活
+  VS_ACTIVE = 1; // 激活
+  VS_TARGET_FOUND = 2; // 已找到目标
 }
 
 // 视觉状态
 message VisionData {
-  VisionTarget target = 1;
-  VisionState state = 2;
+  VisionTarget target = 1; // 视觉识别目标类型
+  VisionState state = 2; // 视觉/自瞄状态
 }
 
 // 武器/发射机构状态 (对应 WeaponStatus)
 message WeaponState {
   bool fric_on = 1;
   bool fric_online = 2;
-  float pitch = 4; // degree
+  float pitch = 4; // 枪管相对地面 degree
   float yaw = 5;   // 枪管相对前方 degree
 }
 
@@ -56,19 +56,15 @@ enum ChassisMode {
   CM_JUMP = 5;   // 跳跃
 }
 
-// 底盘实时状态 (对应 ChassisStatus 部分字段)
+// 底盘状态 
 message ChassisState {
-  float speed = 1;      // m/s
-  float theta = 2;      // 摆角 degree
+  float speed = 1;      // 线速度 m/s
   float yaw = 3; // 速度相对底盘前方 degree
-  float pitch = 4;      // 底盘相对地面pitch degree
-  float roll = 5;       // 底盘相对地面roll degree
-  ChassisMode mode_flags = 6;
-}
-
-// 能源与电容状态
-message PowerState {
-  float cap_voltage_ratio = 1; // 电容电压比
+  float pitch = 4;      // 底盘相对地面pitch degree.
+  float roll = 5;       // 底盘相对地面roll degree.
+  ChassisMode mode = 6; // 底盘模式
+  float cap_ratio = 7; // 超电百分比
+  uint32 rfid = 8;	// RFID数据, 详见通信协议手册0x0209的说明
 }
 
 enum LegMode {
@@ -90,11 +86,11 @@ message LegInfo {
 
 enum BuffType {
   B_NONE = 0;
-  B_RECOVERY = 1;
-  B_COOLING = 2;
-  B_DEFENSE = 3;
-  B_VULNERABILITY = 4;
-  B_ATTACK = 5;
+  B_RECOVERY = 1; // 恢复增益
+  B_COOLING = 2; // 冷却增益
+  B_DEFENSE = 3; // 防御增益
+  B_VULNERABILITY = 4; // 易伤
+  B_ATTACK = 5; // 攻击增益
 }
 
 message BuffInfo {

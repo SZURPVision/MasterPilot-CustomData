@@ -6,34 +6,34 @@ package masterpilot.proto;
 option csharp_namespace = "MasterPilot.Communicator.ProtoMessages";
 
 
-enum PidMode {
-  PM_INACTIVE = 0;
-  PM_MEC = 1;
-  PM_GYRO = 2;
-  PM_VISION = 3;
+enum DronePidMode {
+  DPM_INACTIVE = 0;
+  DPM_MEC = 1;
+  DPM_GYRO = 2;
+  DPM_VISION = 3;
 }
 
-enum LampCmd {
-  LC_IDLE = 0;
-  LC_RC_OFFLINE = 1;
-  LC_AWAIT = 2;
-  LC_BASE = 3;
-  LC_OUTPOST = 4;
-  LC_BUF = 5;
-  LC_FORWARD = 6;
-  LC_BACK = 7;
-  LC_LEFT = 8;
-  LC_RIGHT = 9;
-  LC_CW_SPIN = 10;
-  LC_CCW_SPIN = 11;
-  LC_UP = 12;
-  LC_DOWN = 13;
+enum DroneLampCmd {
+  DLC_IDLE = 0;
+  DLC_RC_OFFLINE = 1;
+  DLC_AWAIT = 2;
+  DLC_BASE = 3;
+  DLC_OUTPOST = 4;
+  DLC_BUF = 5;
+  DLC_FORWARD = 6;
+  DLC_BACK = 7;
+  DLC_LEFT = 8;
+  DLC_RIGHT = 9;
+  DLC_CW_SPIN = 10;
+  DLC_CCW_SPIN = 11;
+  DLC_UP = 12;
+  DLC_DOWN = 13;
 }
 
 message DroneDataPacketToClient {
   optional WeaponState weapon = 1;
   optional VisionData vision = 2;
-  optional LampCmd lamp = 3;
-  optional PidMode pid = 4;
+  optional DroneLampCmd lamp = 3;
+  optional DronePidMode pid = 4;
   optional RadioInfo radio_info = 8;
 }

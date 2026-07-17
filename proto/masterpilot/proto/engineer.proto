@@ -7,23 +7,23 @@ option csharp_namespace = "MasterPilot.Communicator.ProtoMessages";
 
 
 // 系统控制流程状态
-enum AutoProcess {
-  AP_NONE = 0;
-  AP_RETURN_ORIGIN = 1;
-  AP_CLIMBING = 2;
-  AP_DOWN_STAIR = 3;
-  AP_ENERGY_UNIT = 4;
-  AP_EXCHANGE_ORE = 5;
-  AP_STORE_ORE = 6;
-  AP_GROUND_ORE = 7;
+enum EngineerAutoProcessState {
+  EAP_NONE = 0;
+  EAP_RETURN_ORIGIN = 1;
+  EAP_CLIMBING = 2;
+  EAP_DOWN_STAIR = 3;
+  EAP_ENERGY_UNIT = 4;
+  EAP_EXCHANGE_ORE = 5;
+  EAP_STORE_ORE = 6;
+  EAP_GROUND_ORE = 7;
 }
 
 // 控制模式
-enum ControlMode {
-  CM_NONE = 0;
-  CM_RC = 1;
-  CM_KEYBOARD = 2;
-  CM_CONTROLLER = 3;
+enum EngineerControlMode {
+  ECM_NONE = 0;
+  ECM_RC = 1;
+  ECM_KEYBOARD = 2;
+  ECM_CONTROLLER = 3;
 }
 
 // 机械臂实时数据
@@ -40,7 +40,7 @@ message ArmState {
 }
 
 // 机器人全局标志位与裁判系统数据
-message RobotStatus {
+message EngineerStatus {
   bool p3_lock = 1;                  // P3锁定标志
   bool robot_init_ok = 2;            // 初始化完成
   bool controlled_by_controller = 3; // 是否被遥控器控制
@@ -48,14 +48,14 @@ message RobotStatus {
 
 // 发送给自定义客户端的大包
 message EngineerDataPacketToClient {
-  optional AutoProcess current_process = 1;
-  optional ControlMode ctrl_mode = 2;
+  optional EngineerAutoProcessState current_process = 1;
+  optional EngineerControlMode ctrl_mode = 2;
 
   optional ChassisState chassis = 3;
   optional ArmState arm = 4;
   optional WeaponState weapon = 5;
   optional VisionData vision = 6;
-  optional RobotStatus status = 7;
+  optional EngineerStatus status = 7;
 
   optional RadioInfo radio_info = 8;
 }
