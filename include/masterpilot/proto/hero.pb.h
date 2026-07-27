@@ -30,6 +30,8 @@ typedef struct _MP_HeroDataPacketToClient {
     MP_LegInfo leg_state;
     bool has_radio_info;
     MP_RadioInfo radio_info;
+    bool has_vt_extrinsic;
+    MP_VTExtrinsic vt_extrinsic;
     pb_size_t commands_count;
     MP_HeroCommandType commands[6];
     /* 压缩后的相机画面 */
@@ -53,8 +55,8 @@ extern "C" {
 
 
 /* Initializer values for message structs */
-#define MP_HeroDataPacketToClient_init_default   {false, MP_WeaponState_init_default, false, MP_ChassisState_init_default, false, MP_VisionData_init_default, false, MP_LegInfo_init_default, false, MP_RadioInfo_init_default, 0, {_MP_HeroCommandType_MIN, _MP_HeroCommandType_MIN, _MP_HeroCommandType_MIN, _MP_HeroCommandType_MIN, _MP_HeroCommandType_MIN, _MP_HeroCommandType_MIN}, {{NULL}, NULL}}
-#define MP_HeroDataPacketToClient_init_zero      {false, MP_WeaponState_init_zero, false, MP_ChassisState_init_zero, false, MP_VisionData_init_zero, false, MP_LegInfo_init_zero, false, MP_RadioInfo_init_zero, 0, {_MP_HeroCommandType_MIN, _MP_HeroCommandType_MIN, _MP_HeroCommandType_MIN, _MP_HeroCommandType_MIN, _MP_HeroCommandType_MIN, _MP_HeroCommandType_MIN}, {{NULL}, NULL}}
+#define MP_HeroDataPacketToClient_init_default   {false, MP_WeaponState_init_default, false, MP_ChassisState_init_default, false, MP_VisionData_init_default, false, MP_LegInfo_init_default, false, MP_RadioInfo_init_default, false, MP_VTExtrinsic_init_default, 0, {_MP_HeroCommandType_MIN, _MP_HeroCommandType_MIN, _MP_HeroCommandType_MIN, _MP_HeroCommandType_MIN, _MP_HeroCommandType_MIN, _MP_HeroCommandType_MIN}, {{NULL}, NULL}}
+#define MP_HeroDataPacketToClient_init_zero      {false, MP_WeaponState_init_zero, false, MP_ChassisState_init_zero, false, MP_VisionData_init_zero, false, MP_LegInfo_init_zero, false, MP_RadioInfo_init_zero, false, MP_VTExtrinsic_init_zero, 0, {_MP_HeroCommandType_MIN, _MP_HeroCommandType_MIN, _MP_HeroCommandType_MIN, _MP_HeroCommandType_MIN, _MP_HeroCommandType_MIN, _MP_HeroCommandType_MIN}, {{NULL}, NULL}}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define MP_HeroDataPacketToClient_weapon_tag     1
@@ -62,6 +64,7 @@ extern "C" {
 #define MP_HeroDataPacketToClient_vision_tag     3
 #define MP_HeroDataPacketToClient_leg_state_tag  5
 #define MP_HeroDataPacketToClient_radio_info_tag 8
+#define MP_HeroDataPacketToClient_vt_extrinsic_tag 9
 #define MP_HeroDataPacketToClient_commands_tag   11
 #define MP_HeroDataPacketToClient_camera_frame_tag 200
 
@@ -72,6 +75,7 @@ X(a, STATIC,   OPTIONAL, MESSAGE,  chassis,           2) \
 X(a, STATIC,   OPTIONAL, MESSAGE,  vision,            3) \
 X(a, STATIC,   OPTIONAL, MESSAGE,  leg_state,         5) \
 X(a, STATIC,   OPTIONAL, MESSAGE,  radio_info,        8) \
+X(a, STATIC,   OPTIONAL, MESSAGE,  vt_extrinsic,      9) \
 X(a, STATIC,   REPEATED, UENUM,    commands,         11) \
 X(a, CALLBACK, OPTIONAL, BYTES,    camera_frame,    200)
 #define MP_HeroDataPacketToClient_CALLBACK pb_default_field_callback
@@ -81,6 +85,7 @@ X(a, CALLBACK, OPTIONAL, BYTES,    camera_frame,    200)
 #define MP_HeroDataPacketToClient_vision_MSGTYPE MP_VisionData
 #define MP_HeroDataPacketToClient_leg_state_MSGTYPE MP_LegInfo
 #define MP_HeroDataPacketToClient_radio_info_MSGTYPE MP_RadioInfo
+#define MP_HeroDataPacketToClient_vt_extrinsic_MSGTYPE MP_VTExtrinsic
 
 extern const pb_msgdesc_t MP_HeroDataPacketToClient_msg;
 

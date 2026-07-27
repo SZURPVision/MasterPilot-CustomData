@@ -22,6 +22,8 @@ typedef struct _MP_InfantryDataPacketToClient {
     MP_LegInfo leg_state;
     bool has_radio_info;
     MP_RadioInfo radio_info;
+    bool has_vt_extrinsic;
+    MP_VTExtrinsic vt_extrinsic;
 } MP_InfantryDataPacketToClient;
 
 
@@ -30,8 +32,8 @@ extern "C" {
 #endif
 
 /* Initializer values for message structs */
-#define MP_InfantryDataPacketToClient_init_default {false, MP_WeaponState_init_default, false, MP_ChassisState_init_default, false, MP_VisionData_init_default, false, MP_LegInfo_init_default, false, MP_RadioInfo_init_default}
-#define MP_InfantryDataPacketToClient_init_zero  {false, MP_WeaponState_init_zero, false, MP_ChassisState_init_zero, false, MP_VisionData_init_zero, false, MP_LegInfo_init_zero, false, MP_RadioInfo_init_zero}
+#define MP_InfantryDataPacketToClient_init_default {false, MP_WeaponState_init_default, false, MP_ChassisState_init_default, false, MP_VisionData_init_default, false, MP_LegInfo_init_default, false, MP_RadioInfo_init_default, false, MP_VTExtrinsic_init_default}
+#define MP_InfantryDataPacketToClient_init_zero  {false, MP_WeaponState_init_zero, false, MP_ChassisState_init_zero, false, MP_VisionData_init_zero, false, MP_LegInfo_init_zero, false, MP_RadioInfo_init_zero, false, MP_VTExtrinsic_init_zero}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define MP_InfantryDataPacketToClient_weapon_tag 1
@@ -39,6 +41,7 @@ extern "C" {
 #define MP_InfantryDataPacketToClient_vision_tag 3
 #define MP_InfantryDataPacketToClient_leg_state_tag 5
 #define MP_InfantryDataPacketToClient_radio_info_tag 8
+#define MP_InfantryDataPacketToClient_vt_extrinsic_tag 9
 
 /* Struct field encoding specification for nanopb */
 #define MP_InfantryDataPacketToClient_FIELDLIST(X, a) \
@@ -46,7 +49,8 @@ X(a, STATIC,   OPTIONAL, MESSAGE,  weapon,            1) \
 X(a, STATIC,   OPTIONAL, MESSAGE,  chassis,           2) \
 X(a, STATIC,   OPTIONAL, MESSAGE,  vision,            3) \
 X(a, STATIC,   OPTIONAL, MESSAGE,  leg_state,         5) \
-X(a, STATIC,   OPTIONAL, MESSAGE,  radio_info,        8)
+X(a, STATIC,   OPTIONAL, MESSAGE,  radio_info,        8) \
+X(a, STATIC,   OPTIONAL, MESSAGE,  vt_extrinsic,      9)
 #define MP_InfantryDataPacketToClient_CALLBACK NULL
 #define MP_InfantryDataPacketToClient_DEFAULT NULL
 #define MP_InfantryDataPacketToClient_weapon_MSGTYPE MP_WeaponState
@@ -54,6 +58,7 @@ X(a, STATIC,   OPTIONAL, MESSAGE,  radio_info,        8)
 #define MP_InfantryDataPacketToClient_vision_MSGTYPE MP_VisionData
 #define MP_InfantryDataPacketToClient_leg_state_MSGTYPE MP_LegInfo
 #define MP_InfantryDataPacketToClient_radio_info_MSGTYPE MP_RadioInfo
+#define MP_InfantryDataPacketToClient_vt_extrinsic_MSGTYPE MP_VTExtrinsic
 
 extern const pb_msgdesc_t MP_InfantryDataPacketToClient_msg;
 
@@ -62,7 +67,7 @@ extern const pb_msgdesc_t MP_InfantryDataPacketToClient_msg;
 
 /* Maximum encoded size of messages (where known) */
 #define MASTERPILOT_PROTO_MASTERPILOT_PROTO_INFANTRY_PB_H_MAX_SIZE MP_InfantryDataPacketToClient_size
-#define MP_InfantryDataPacketToClient_size       584
+#define MP_InfantryDataPacketToClient_size       624
 
 /* Mapping from canonical names (mangle_names or overridden package name) */
 #define masterpilot_proto_InfantryDataPacketToClient MP_InfantryDataPacketToClient

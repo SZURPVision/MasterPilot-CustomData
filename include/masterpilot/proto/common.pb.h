@@ -53,6 +53,16 @@ typedef enum _MP_BuffType {
     MP_B_ATTACK = 5 /* 攻击增益 */
 } MP_BuffType;
 
+/* 图传相关参数
+ 图传外参参考来源 */
+typedef enum _MP_VTRelative {
+    MP_VTR_NONE = 0, /* 无效 */
+    MP_VTR_WEAPON = 1, /* 枪管 */
+    MP_VTR_CHASSIS = 2, /* 底盘 */
+    MP_VTR_ARM = 3, /* 机械臂 */
+    MP_VTR_WORLD = 10 /* 场地(绝对坐标) */
+} MP_VTRelative;
+
 /* Struct definitions */
 /* 线性数据表示 */
 typedef struct _MP_SignedLinearValue {
@@ -88,6 +98,7 @@ typedef struct _MP_ChassisState {
     MP_ChassisMode mode; /* 底盘模式 */
     float cap_ratio; /* 超电百分比 */
     uint32_t rfid; /* RFID数据, 详见通信协议手册0x0209的说明 */
+    float height; /* 离地高度. 单位: m */
 } MP_ChassisState;
 
 typedef struct _MP_LegInfo {
@@ -121,6 +132,17 @@ typedef struct _MP_RadioInfo {
     pb_size_t enemy_robots_count;
     MP_RobotInfoFromRadio enemy_robots[6]; /* 对方机器人信息 */
 } MP_RadioInfo;
+
+/* 图传外参 */
+typedef struct _MP_VTExtrinsic {
+    float x; /* x偏移. x+ 表示在右边. 单位: m */
+    float y; /* y偏移. y+ 表示在上方. 单位: m */
+    float z; /* z偏移. z- 表示在前方. 单位: m */
+    float yaw; /* yaw弧度. 逆时针. 单位: rad */
+    float pitch; /* pitch弧度. 逆时针. 单位: rad */
+    float roll; /* roll弧度. 逆时针. 单位: rad */
+    MP_VTRelative relative;
+} MP_VTExtrinsic;
 
 
 #ifdef __cplusplus
@@ -174,6 +196,15 @@ extern "C" {
 #define MP_BuffType_B_VULNERABILITY MP_B_VULNERABILITY
 #define MP_BuffType_B_ATTACK MP_B_ATTACK
 
+#define _MP_VTRelative_MIN MP_VTR_NONE
+#define _MP_VTRelative_MAX MP_VTR_WORLD
+#define _MP_VTRelative_ARRAYSIZE ((MP_VTRelative)(MP_VTR_WORLD+1))
+#define MP_VTRelative_VTR_NONE MP_VTR_NONE
+#define MP_VTRelative_VTR_WEAPON MP_VTR_WEAPON
+#define MP_VTRelative_VTR_CHASSIS MP_VTR_CHASSIS
+#define MP_VTRelative_VTR_ARM MP_VTR_ARM
+#define MP_VTRelative_VTR_WORLD MP_VTR_WORLD
+
 
 
 #define MP_VisionData_target_ENUMTYPE MP_VisionTarget
@@ -188,26 +219,30 @@ extern "C" {
 
 
 
+#define MP_VTExtrinsic_relative_ENUMTYPE MP_VTRelative
+
 
 /* Initializer values for message structs */
 #define MP_SignedLinearValue_init_default        {0, 0}
 #define MP_UnsignedLinearValue_init_default      {0, 0}
 #define MP_VisionData_init_default               {_MP_VisionTarget_MIN, _MP_VisionState_MIN}
 #define MP_WeaponState_init_default              {0, 0, 0, 0}
-#define MP_ChassisState_init_default             {0, 0, 0, 0, _MP_ChassisMode_MIN, 0, 0}
+#define MP_ChassisState_init_default             {0, 0, 0, 0, _MP_ChassisMode_MIN, 0, 0, 0}
 #define MP_LegInfo_init_default                  {0, {_MP_LegMode_MIN}, 0, 0}
 #define MP_BuffInfo_init_default                 {_MP_BuffType_MIN, 0}
 #define MP_RobotInfoFromRadio_init_default       {0, 0, 0, 0, {MP_BuffInfo_init_default, MP_BuffInfo_init_default, MP_BuffInfo_init_default, MP_BuffInfo_init_default, MP_BuffInfo_init_default, MP_BuffInfo_init_default}}
 #define MP_RadioInfo_init_default                {0, 0, 0, 0, {MP_RobotInfoFromRadio_init_default, MP_RobotInfoFromRadio_init_default, MP_RobotInfoFromRadio_init_default, MP_RobotInfoFromRadio_init_default, MP_RobotInfoFromRadio_init_default, MP_RobotInfoFromRadio_init_default}}
+#define MP_VTExtrinsic_init_default              {0, 0, 0, 0, 0, 0, _MP_VTRelative_MIN}
 #define MP_SignedLinearValue_init_zero           {0, 0}
 #define MP_UnsignedLinearValue_init_zero         {0, 0}
 #define MP_VisionData_init_zero                  {_MP_VisionTarget_MIN, _MP_VisionState_MIN}
 #define MP_WeaponState_init_zero                 {0, 0, 0, 0}
-#define MP_ChassisState_init_zero                {0, 0, 0, 0, _MP_ChassisMode_MIN, 0, 0}
+#define MP_ChassisState_init_zero                {0, 0, 0, 0, _MP_ChassisMode_MIN, 0, 0, 0}
 #define MP_LegInfo_init_zero                     {0, {_MP_LegMode_MIN}, 0, 0}
 #define MP_BuffInfo_init_zero                    {_MP_BuffType_MIN, 0}
 #define MP_RobotInfoFromRadio_init_zero          {0, 0, 0, 0, {MP_BuffInfo_init_zero, MP_BuffInfo_init_zero, MP_BuffInfo_init_zero, MP_BuffInfo_init_zero, MP_BuffInfo_init_zero, MP_BuffInfo_init_zero}}
 #define MP_RadioInfo_init_zero                   {0, 0, 0, 0, {MP_RobotInfoFromRadio_init_zero, MP_RobotInfoFromRadio_init_zero, MP_RobotInfoFromRadio_init_zero, MP_RobotInfoFromRadio_init_zero, MP_RobotInfoFromRadio_init_zero, MP_RobotInfoFromRadio_init_zero}}
+#define MP_VTExtrinsic_init_zero                 {0, 0, 0, 0, 0, 0, _MP_VTRelative_MIN}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define MP_SignedLinearValue_value_tag           1
@@ -227,6 +262,7 @@ extern "C" {
 #define MP_ChassisState_mode_tag                 6
 #define MP_ChassisState_cap_ratio_tag            7
 #define MP_ChassisState_rfid_tag                 8
+#define MP_ChassisState_height_tag               11
 #define MP_LegInfo_mode_tag                      1
 #define MP_LegInfo_height_tag                    2
 #define MP_LegInfo_small_theta_tag               10
@@ -241,6 +277,13 @@ extern "C" {
 #define MP_RadioInfo_enemy_total_eco_tag         2
 #define MP_RadioInfo_rfid_tag                    3
 #define MP_RadioInfo_enemy_robots_tag            4
+#define MP_VTExtrinsic_x_tag                     1
+#define MP_VTExtrinsic_y_tag                     2
+#define MP_VTExtrinsic_z_tag                     3
+#define MP_VTExtrinsic_yaw_tag                   11
+#define MP_VTExtrinsic_pitch_tag                 12
+#define MP_VTExtrinsic_roll_tag                  13
+#define MP_VTExtrinsic_relative_tag              67
 
 /* Struct field encoding specification for nanopb */
 #define MP_SignedLinearValue_FIELDLIST(X, a) \
@@ -276,7 +319,8 @@ X(a, STATIC,   SINGULAR, FLOAT,    pitch,             4) \
 X(a, STATIC,   SINGULAR, FLOAT,    roll,              5) \
 X(a, STATIC,   SINGULAR, UENUM,    mode,              6) \
 X(a, STATIC,   SINGULAR, FLOAT,    cap_ratio,         7) \
-X(a, STATIC,   SINGULAR, UINT32,   rfid,              8)
+X(a, STATIC,   SINGULAR, UINT32,   rfid,              8) \
+X(a, STATIC,   SINGULAR, FLOAT,    height,           11)
 #define MP_ChassisState_CALLBACK NULL
 #define MP_ChassisState_DEFAULT NULL
 
@@ -313,6 +357,17 @@ X(a, STATIC,   REPEATED, MESSAGE,  enemy_robots,      4)
 #define MP_RadioInfo_DEFAULT NULL
 #define MP_RadioInfo_enemy_robots_MSGTYPE MP_RobotInfoFromRadio
 
+#define MP_VTExtrinsic_FIELDLIST(X, a) \
+X(a, STATIC,   SINGULAR, FLOAT,    x,                 1) \
+X(a, STATIC,   SINGULAR, FLOAT,    y,                 2) \
+X(a, STATIC,   SINGULAR, FLOAT,    z,                 3) \
+X(a, STATIC,   SINGULAR, FLOAT,    yaw,              11) \
+X(a, STATIC,   SINGULAR, FLOAT,    pitch,            12) \
+X(a, STATIC,   SINGULAR, FLOAT,    roll,             13) \
+X(a, STATIC,   SINGULAR, UENUM,    relative,         67)
+#define MP_VTExtrinsic_CALLBACK NULL
+#define MP_VTExtrinsic_DEFAULT NULL
+
 extern const pb_msgdesc_t MP_SignedLinearValue_msg;
 extern const pb_msgdesc_t MP_UnsignedLinearValue_msg;
 extern const pb_msgdesc_t MP_VisionData_msg;
@@ -322,6 +377,7 @@ extern const pb_msgdesc_t MP_LegInfo_msg;
 extern const pb_msgdesc_t MP_BuffInfo_msg;
 extern const pb_msgdesc_t MP_RobotInfoFromRadio_msg;
 extern const pb_msgdesc_t MP_RadioInfo_msg;
+extern const pb_msgdesc_t MP_VTExtrinsic_msg;
 
 /* Defines for backwards compatibility with code written before nanopb-0.4.0 */
 #define MP_SignedLinearValue_fields &MP_SignedLinearValue_msg
@@ -333,16 +389,18 @@ extern const pb_msgdesc_t MP_RadioInfo_msg;
 #define MP_BuffInfo_fields &MP_BuffInfo_msg
 #define MP_RobotInfoFromRadio_fields &MP_RobotInfoFromRadio_msg
 #define MP_RadioInfo_fields &MP_RadioInfo_msg
+#define MP_VTExtrinsic_fields &MP_VTExtrinsic_msg
 
 /* Maximum encoded size of messages (where known) */
 #define MASTERPILOT_PROTO_MASTERPILOT_PROTO_COMMON_PB_H_MAX_SIZE MP_RadioInfo_size
 #define MP_BuffInfo_size                         8
-#define MP_ChassisState_size                     33
+#define MP_ChassisState_size                     38
 #define MP_LegInfo_size                          24
 #define MP_RadioInfo_size                        498
 #define MP_RobotInfoFromRadio_size               78
 #define MP_SignedLinearValue_size                12
 #define MP_UnsignedLinearValue_size              12
+#define MP_VTExtrinsic_size                      33
 #define MP_VisionData_size                       4
 #define MP_WeaponState_size                      14
 
@@ -352,6 +410,7 @@ extern const pb_msgdesc_t MP_RadioInfo_msg;
 #define masterpilot_proto_ChassisMode MP_ChassisMode
 #define masterpilot_proto_LegMode MP_LegMode
 #define masterpilot_proto_BuffType MP_BuffType
+#define masterpilot_proto_VTRelative MP_VTRelative
 #define masterpilot_proto_SignedLinearValue MP_SignedLinearValue
 #define masterpilot_proto_UnsignedLinearValue MP_UnsignedLinearValue
 #define masterpilot_proto_VisionData MP_VisionData
@@ -361,6 +420,7 @@ extern const pb_msgdesc_t MP_RadioInfo_msg;
 #define masterpilot_proto_BuffInfo MP_BuffInfo
 #define masterpilot_proto_RobotInfoFromRadio MP_RobotInfoFromRadio
 #define masterpilot_proto_RadioInfo MP_RadioInfo
+#define masterpilot_proto_VTExtrinsic MP_VTExtrinsic
 #define _masterpilot_proto_VisionTarget_MIN _MP_VisionTarget_MIN
 #define _masterpilot_proto_VisionTarget_MAX _MP_VisionTarget_MAX
 #define _masterpilot_proto_VisionTarget_ARRAYSIZE _MP_VisionTarget_ARRAYSIZE
@@ -376,6 +436,9 @@ extern const pb_msgdesc_t MP_RadioInfo_msg;
 #define _masterpilot_proto_BuffType_MIN _MP_BuffType_MIN
 #define _masterpilot_proto_BuffType_MAX _MP_BuffType_MAX
 #define _masterpilot_proto_BuffType_ARRAYSIZE _MP_BuffType_ARRAYSIZE
+#define _masterpilot_proto_VTRelative_MIN _MP_VTRelative_MIN
+#define _masterpilot_proto_VTRelative_MAX _MP_VTRelative_MAX
+#define _masterpilot_proto_VTRelative_ARRAYSIZE _MP_VTRelative_ARRAYSIZE
 #define masterpilot_proto_SignedLinearValue_init_default MP_SignedLinearValue_init_default
 #define masterpilot_proto_UnsignedLinearValue_init_default MP_UnsignedLinearValue_init_default
 #define masterpilot_proto_VisionData_init_default MP_VisionData_init_default
@@ -385,6 +448,7 @@ extern const pb_msgdesc_t MP_RadioInfo_msg;
 #define masterpilot_proto_BuffInfo_init_default MP_BuffInfo_init_default
 #define masterpilot_proto_RobotInfoFromRadio_init_default MP_RobotInfoFromRadio_init_default
 #define masterpilot_proto_RadioInfo_init_default MP_RadioInfo_init_default
+#define masterpilot_proto_VTExtrinsic_init_default MP_VTExtrinsic_init_default
 #define masterpilot_proto_SignedLinearValue_init_zero MP_SignedLinearValue_init_zero
 #define masterpilot_proto_UnsignedLinearValue_init_zero MP_UnsignedLinearValue_init_zero
 #define masterpilot_proto_VisionData_init_zero MP_VisionData_init_zero
@@ -394,6 +458,7 @@ extern const pb_msgdesc_t MP_RadioInfo_msg;
 #define masterpilot_proto_BuffInfo_init_zero MP_BuffInfo_init_zero
 #define masterpilot_proto_RobotInfoFromRadio_init_zero MP_RobotInfoFromRadio_init_zero
 #define masterpilot_proto_RadioInfo_init_zero MP_RadioInfo_init_zero
+#define masterpilot_proto_VTExtrinsic_init_zero MP_VTExtrinsic_init_zero
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -33,6 +33,11 @@ PB_BIND(MP_RobotInfoFromRadio, MP_RobotInfoFromRadio, AUTO)
 PB_BIND(MP_RadioInfo, MP_RadioInfo, 2)
 
 
+PB_BIND(MP_VTExtrinsic, MP_VTExtrinsic, 2)
+
+
+
+
 
 
 

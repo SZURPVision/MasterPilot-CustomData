@@ -70,6 +70,8 @@ typedef struct _MP_EngineerDataPacketToClient {
     MP_EngineerStatus status;
     bool has_radio_info;
     MP_RadioInfo radio_info;
+    bool has_vt_extrinsic;
+    MP_VTExtrinsic vt_extrinsic;
 } MP_EngineerDataPacketToClient;
 
 
@@ -107,10 +109,10 @@ extern "C" {
 /* Initializer values for message structs */
 #define MP_ArmState_init_default                 {0, 0, 0, 0, 0, 0, 0, 0, 0}
 #define MP_EngineerStatus_init_default           {0, 0, 0}
-#define MP_EngineerDataPacketToClient_init_default {false, _MP_EngineerAutoProcessState_MIN, false, _MP_EngineerControlMode_MIN, false, MP_ChassisState_init_default, false, MP_ArmState_init_default, false, MP_WeaponState_init_default, false, MP_VisionData_init_default, false, MP_EngineerStatus_init_default, false, MP_RadioInfo_init_default}
+#define MP_EngineerDataPacketToClient_init_default {false, _MP_EngineerAutoProcessState_MIN, false, _MP_EngineerControlMode_MIN, false, MP_ChassisState_init_default, false, MP_ArmState_init_default, false, MP_WeaponState_init_default, false, MP_VisionData_init_default, false, MP_EngineerStatus_init_default, false, MP_RadioInfo_init_default, false, MP_VTExtrinsic_init_default}
 #define MP_ArmState_init_zero                    {0, 0, 0, 0, 0, 0, 0, 0, 0}
 #define MP_EngineerStatus_init_zero              {0, 0, 0}
-#define MP_EngineerDataPacketToClient_init_zero  {false, _MP_EngineerAutoProcessState_MIN, false, _MP_EngineerControlMode_MIN, false, MP_ChassisState_init_zero, false, MP_ArmState_init_zero, false, MP_WeaponState_init_zero, false, MP_VisionData_init_zero, false, MP_EngineerStatus_init_zero, false, MP_RadioInfo_init_zero}
+#define MP_EngineerDataPacketToClient_init_zero  {false, _MP_EngineerAutoProcessState_MIN, false, _MP_EngineerControlMode_MIN, false, MP_ChassisState_init_zero, false, MP_ArmState_init_zero, false, MP_WeaponState_init_zero, false, MP_VisionData_init_zero, false, MP_EngineerStatus_init_zero, false, MP_RadioInfo_init_zero, false, MP_VTExtrinsic_init_zero}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define MP_ArmState_angle_yaw_tag                1
@@ -133,6 +135,7 @@ extern "C" {
 #define MP_EngineerDataPacketToClient_vision_tag 6
 #define MP_EngineerDataPacketToClient_status_tag 7
 #define MP_EngineerDataPacketToClient_radio_info_tag 8
+#define MP_EngineerDataPacketToClient_vt_extrinsic_tag 9
 
 /* Struct field encoding specification for nanopb */
 #define MP_ArmState_FIELDLIST(X, a) \
@@ -163,7 +166,8 @@ X(a, STATIC,   OPTIONAL, MESSAGE,  arm,               4) \
 X(a, STATIC,   OPTIONAL, MESSAGE,  weapon,            5) \
 X(a, STATIC,   OPTIONAL, MESSAGE,  vision,            6) \
 X(a, STATIC,   OPTIONAL, MESSAGE,  status,            7) \
-X(a, STATIC,   OPTIONAL, MESSAGE,  radio_info,        8)
+X(a, STATIC,   OPTIONAL, MESSAGE,  radio_info,        8) \
+X(a, STATIC,   OPTIONAL, MESSAGE,  vt_extrinsic,      9)
 #define MP_EngineerDataPacketToClient_CALLBACK NULL
 #define MP_EngineerDataPacketToClient_DEFAULT NULL
 #define MP_EngineerDataPacketToClient_chassis_MSGTYPE MP_ChassisState
@@ -172,6 +176,7 @@ X(a, STATIC,   OPTIONAL, MESSAGE,  radio_info,        8)
 #define MP_EngineerDataPacketToClient_vision_MSGTYPE MP_VisionData
 #define MP_EngineerDataPacketToClient_status_MSGTYPE MP_EngineerStatus
 #define MP_EngineerDataPacketToClient_radio_info_MSGTYPE MP_RadioInfo
+#define MP_EngineerDataPacketToClient_vt_extrinsic_MSGTYPE MP_VTExtrinsic
 
 extern const pb_msgdesc_t MP_ArmState_msg;
 extern const pb_msgdesc_t MP_EngineerStatus_msg;
@@ -185,7 +190,7 @@ extern const pb_msgdesc_t MP_EngineerDataPacketToClient_msg;
 /* Maximum encoded size of messages (where known) */
 #define MASTERPILOT_PROTO_MASTERPILOT_PROTO_ENGINEER_PB_H_MAX_SIZE MP_EngineerDataPacketToClient_size
 #define MP_ArmState_size                         42
-#define MP_EngineerDataPacketToClient_size       614
+#define MP_EngineerDataPacketToClient_size       654
 #define MP_EngineerStatus_size                   6
 
 /* Mapping from canonical names (mangle_names or overridden package name) */

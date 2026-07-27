@@ -47,6 +47,8 @@ typedef struct _MP_DroneDataPacketToClient {
     MP_DronePidMode pid;
     bool has_radio_info;
     MP_RadioInfo radio_info;
+    bool has_vt_extrinsic;
+    MP_VTExtrinsic vt_extrinsic;
 } MP_DroneDataPacketToClient;
 
 
@@ -86,8 +88,8 @@ extern "C" {
 
 
 /* Initializer values for message structs */
-#define MP_DroneDataPacketToClient_init_default  {false, MP_WeaponState_init_default, false, MP_VisionData_init_default, false, _MP_DroneLampCmd_MIN, false, _MP_DronePidMode_MIN, false, MP_RadioInfo_init_default}
-#define MP_DroneDataPacketToClient_init_zero     {false, MP_WeaponState_init_zero, false, MP_VisionData_init_zero, false, _MP_DroneLampCmd_MIN, false, _MP_DronePidMode_MIN, false, MP_RadioInfo_init_zero}
+#define MP_DroneDataPacketToClient_init_default  {false, MP_WeaponState_init_default, false, MP_VisionData_init_default, false, _MP_DroneLampCmd_MIN, false, _MP_DronePidMode_MIN, false, MP_RadioInfo_init_default, false, MP_VTExtrinsic_init_default}
+#define MP_DroneDataPacketToClient_init_zero     {false, MP_WeaponState_init_zero, false, MP_VisionData_init_zero, false, _MP_DroneLampCmd_MIN, false, _MP_DronePidMode_MIN, false, MP_RadioInfo_init_zero, false, MP_VTExtrinsic_init_zero}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define MP_DroneDataPacketToClient_weapon_tag    1
@@ -95,6 +97,7 @@ extern "C" {
 #define MP_DroneDataPacketToClient_lamp_tag      3
 #define MP_DroneDataPacketToClient_pid_tag       4
 #define MP_DroneDataPacketToClient_radio_info_tag 8
+#define MP_DroneDataPacketToClient_vt_extrinsic_tag 9
 
 /* Struct field encoding specification for nanopb */
 #define MP_DroneDataPacketToClient_FIELDLIST(X, a) \
@@ -102,12 +105,14 @@ X(a, STATIC,   OPTIONAL, MESSAGE,  weapon,            1) \
 X(a, STATIC,   OPTIONAL, MESSAGE,  vision,            2) \
 X(a, STATIC,   OPTIONAL, UENUM,    lamp,              3) \
 X(a, STATIC,   OPTIONAL, UENUM,    pid,               4) \
-X(a, STATIC,   OPTIONAL, MESSAGE,  radio_info,        8)
+X(a, STATIC,   OPTIONAL, MESSAGE,  radio_info,        8) \
+X(a, STATIC,   OPTIONAL, MESSAGE,  vt_extrinsic,      9)
 #define MP_DroneDataPacketToClient_CALLBACK NULL
 #define MP_DroneDataPacketToClient_DEFAULT NULL
 #define MP_DroneDataPacketToClient_weapon_MSGTYPE MP_WeaponState
 #define MP_DroneDataPacketToClient_vision_MSGTYPE MP_VisionData
 #define MP_DroneDataPacketToClient_radio_info_MSGTYPE MP_RadioInfo
+#define MP_DroneDataPacketToClient_vt_extrinsic_MSGTYPE MP_VTExtrinsic
 
 extern const pb_msgdesc_t MP_DroneDataPacketToClient_msg;
 
@@ -116,7 +121,7 @@ extern const pb_msgdesc_t MP_DroneDataPacketToClient_msg;
 
 /* Maximum encoded size of messages (where known) */
 #define MASTERPILOT_PROTO_MASTERPILOT_PROTO_DRONE_PB_H_MAX_SIZE MP_DroneDataPacketToClient_size
-#define MP_DroneDataPacketToClient_size          527
+#define MP_DroneDataPacketToClient_size          562
 
 /* Mapping from canonical names (mangle_names or overridden package name) */
 #define masterpilot_proto_DronePidMode MP_DronePidMode
