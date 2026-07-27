@@ -58,4 +58,5 @@ message EngineerDataPacketToClient {
   optional EngineerStatus status = 7;
 
   optional RadioInfo radio_info = 8;
+  optional VTExtrinsic vt_extrinsic = 9;
 }

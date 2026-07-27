@@ -65,6 +65,7 @@ message ChassisState {
   ChassisMode mode = 6; // 底盘模式
   float cap_ratio = 7; // 超电百分比
   uint32 rfid = 8;	// RFID数据, 详见通信协议手册0x0209的说明
+  float height = 11; // 离地高度. 单位: m
 }
 
 enum LegMode {
@@ -111,4 +112,26 @@ message RadioInfo {
   uint32 enemy_total_eco = 2;                   // 对方总经济
   uint32 rfid = 3;                              // 对方一大堆RFID的状态 0x0a04
   repeated RobotInfoFromRadio enemy_robots = 4; // 对方机器人信息
+}
+
+// 图传相关参数
+// 图传外参参考来源
+enum VTRelative
+{
+	VTR_NONE = 0; // 无效
+	VTR_WEAPON = 1; // 枪管
+	VTR_CHASSIS = 2; // 底盘
+	VTR_ARM = 3; // 机械臂
+	VTR_WORLD = 10; // 场地(绝对坐标)
+}
+// 图传外参
+message VTExtrinsic
+{
+	VTRelative relative = 67;
+	float x = 1; // x偏移. x+ 表示在右边. 单位: m
+	float y = 2; // y偏移. y+ 表示在上方. 单位: m
+	float z = 3; // z偏移. z- 表示在前方. 单位: m
+	float yaw = 11; // yaw弧度. 逆时针. 单位: rad
+	float pitch = 12; // pitch弧度. 逆时针. 单位: rad
+	float roll = 13; // roll弧度. 逆时针. 单位: rad
 }
