@@ -64,7 +64,7 @@ message ChassisState {
   float roll = 5;       // 底盘相对地面roll degree.
   ChassisMode mode = 6; // 底盘模式
   float cap_ratio = 7; // 超电百分比
-  uint32 rfid = 8;	// RFID数据, 详见通信协议手册0x0209的说明
+  uint64 rfid = 8;	// RFID数据, 详见通信协议手册0x0209的说明
   float height = 11; // 离地高度. 单位: m
 }
 
