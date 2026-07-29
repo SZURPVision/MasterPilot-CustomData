@@ -67,7 +67,7 @@ extern const pb_msgdesc_t MP_InfantryDataPacketToClient_msg;
 
 /* Maximum encoded size of messages (where known) */
 #define MASTERPILOT_PROTO_MASTERPILOT_PROTO_INFANTRY_PB_H_MAX_SIZE MP_InfantryDataPacketToClient_size
-#define MP_InfantryDataPacketToClient_size       624
+#define MP_InfantryDataPacketToClient_size       629
 
 /* Mapping from canonical names (mangle_names or overridden package name) */
 #define masterpilot_proto_InfantryDataPacketToClient MP_InfantryDataPacketToClient

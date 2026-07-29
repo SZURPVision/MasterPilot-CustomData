@@ -97,7 +97,7 @@ typedef struct _MP_ChassisState {
     float roll; /* 底盘相对地面roll degree. */
     MP_ChassisMode mode; /* 底盘模式 */
     float cap_ratio; /* 超电百分比 */
-    uint32_t rfid; /* RFID数据, 详见通信协议手册0x0209的说明 */
+    uint64_t rfid; /* RFID数据, 详见通信协议手册0x0209的说明 */
     float height; /* 离地高度. 单位: m */
 } MP_ChassisState;
 
@@ -319,7 +319,7 @@ X(a, STATIC,   SINGULAR, FLOAT,    pitch,             4) \
 X(a, STATIC,   SINGULAR, FLOAT,    roll,              5) \
 X(a, STATIC,   SINGULAR, UENUM,    mode,              6) \
 X(a, STATIC,   SINGULAR, FLOAT,    cap_ratio,         7) \
-X(a, STATIC,   SINGULAR, UINT32,   rfid,              8) \
+X(a, STATIC,   SINGULAR, UINT64,   rfid,              8) \
 X(a, STATIC,   SINGULAR, FLOAT,    height,           11)
 #define MP_ChassisState_CALLBACK NULL
 #define MP_ChassisState_DEFAULT NULL
@@ -394,7 +394,7 @@ extern const pb_msgdesc_t MP_VTExtrinsic_msg;
 /* Maximum encoded size of messages (where known) */
 #define MASTERPILOT_PROTO_MASTERPILOT_PROTO_COMMON_PB_H_MAX_SIZE MP_RadioInfo_size
 #define MP_BuffInfo_size                         8
-#define MP_ChassisState_size                     38
+#define MP_ChassisState_size                     43
 #define MP_LegInfo_size                          24
 #define MP_RadioInfo_size                        498
 #define MP_RobotInfoFromRadio_size               78

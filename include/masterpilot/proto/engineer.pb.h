@@ -190,7 +190,7 @@ extern const pb_msgdesc_t MP_EngineerDataPacketToClient_msg;
 /* Maximum encoded size of messages (where known) */
 #define MASTERPILOT_PROTO_MASTERPILOT_PROTO_ENGINEER_PB_H_MAX_SIZE MP_EngineerDataPacketToClient_size
 #define MP_ArmState_size                         42
-#define MP_EngineerDataPacketToClient_size       654
+#define MP_EngineerDataPacketToClient_size       659
 #define MP_EngineerStatus_size                   6
 
 /* Mapping from canonical names (mangle_names or overridden package name) */
